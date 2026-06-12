@@ -1,32 +1,37 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Archivo } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
+import AnnouncementBanner from "@/components/layout/AnnouncementBanner";
+import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const cormorantGaramond = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["600", "700"],
+  variable: "--font-display",
+  display: "swap",
 });
 
-const archivo = Archivo({
-  variable: "--font-archivo",
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-body",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Sumedh Kumar | AI Builder & Trading Automation",
+  title:
+    "Vyntegra | AI Trading Software Agents, Expert Consultations & Custom Solutions",
   description:
-    "Building AI systems before they become mainstream. I document, test and implement AI workflows involving Claude, TradingView, AWS, Pine Script and automation.",
-  keywords: [
-    "AI Engineer",
-    "Trading Automation",
-    "Claude Integration",
-    "Pine Script",
-    "TradingView",
-    "AWS",
-    "MT5",
-  ],
+    "Explore AI trading software agents, book consultations with experienced professionals, and request tailored websites, software systems, workflow automation, and AI-enabled solutions from Vyntegra.",
+  openGraph: {
+    title:
+      "Vyntegra | AI Trading Software Agents, Expert Consultations & Custom Solutions",
+    description:
+      "Explore AI trading software agents, expert consultations, and tailored digital solutions from Vyntegra.",
+    siteName: "Vyntegra",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -37,11 +42,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${archivo.variable} dark`}
+      className={`${cormorantGaramond.variable} ${manrope.variable}`}
     >
-      <body className="min-h-screen bg-background text-foreground antialiased">
-        <div className="noise-overlay" aria-hidden="true" />
+      <body className={`${cormorantGaramond.variable} ${manrope.variable}`}>
+        <AnnouncementBanner />
+        <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

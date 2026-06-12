@@ -1,45 +1,80 @@
-"use client";
+import type {
+  CSSProperties,
+  MouseEventHandler,
+  ReactNode,
+} from "react";
 
-import { motion } from "motion/react";
+type ButtonVariant = "primary" | "secondary";
 
-type ButtonProps = {
-  children: React.ReactNode;
-  variant?: "primary" | "secondary" | "ghost";
-  href?: string;
-  onClick?: () => void;
+type CommonProps = {
+  children: ReactNode;
+  variant?: ButtonVariant;
   className?: string;
 };
 
-export default function Button({
-  children,
-  variant = "primary",
-  href,
-  onClick,
-  className = "",
-}: ButtonProps) {
-  const base =
-    "inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-all duration-200 cursor-pointer";
-
-  const variants = {
-    primary: "bg-accent text-black hover:bg-accent-hover glow",
-    secondary:
-      "border border-card-border bg-card text-foreground hover:border-accent/50 hover:text-accent",
-    ghost: "text-muted hover:text-foreground",
+type LinkButtonProps = CommonProps &
+  {
+    href: string;
+    disabled?: boolean;
+    onClick?: MouseEventHandler<HTMLAnchorElement>;
+    rel?: string;
+    style?: CSSProperties;
+    target?: string;
   };
 
-  const classes = `${base} ${variants[variant]} ${className}`;
+type NativeButtonProps = CommonProps & {
+  href?: never;
+  disabled?: boolean;
+  id?: string;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  style?: CSSProperties;
+  type?: "button" | "submit" | "reset";
+};
 
-  const MotionComponent = href ? motion.a : motion.button;
+type ButtonProps = LinkButtonProps | NativeButtonProps;
+
+function isLinkButton(props: ButtonProps): props is LinkButtonProps {
+  return typeof (props as LinkButtonProps).href === "string";
+}
+
+export default function Button(props: ButtonProps) {
+  const {
+    children,
+    variant = "primary",
+    className = "",
+  } = props;
+  const classes = `btn btn-${variant} ${className}`.trim();
+
+  if (isLinkButton(props)) {
+    const { href, disabled, onClick, rel, style, target } = props;
+
+    return (
+      <a
+        href={disabled ? undefined : href}
+        onClick={onClick}
+        rel={rel}
+        style={style}
+        target={target}
+        aria-disabled={disabled ? "true" : undefined}
+        className={`${classes}${disabled ? " btn-disabled" : ""}`}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  const { disabled, id, onClick, style, type = "button" } = props;
 
   return (
-    <MotionComponent
-      href={href}
+    <button
+      disabled={disabled}
+      id={id}
       onClick={onClick}
+      style={style}
+      type={type}
       className={classes}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
     >
       {children}
-    </MotionComponent>
+    </button>
   );
 }

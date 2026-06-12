@@ -1,35 +1,29 @@
-import Navbar from "@/components/sections/Navbar";
-import Hero from "@/components/sections/Hero";
-import About from "@/components/sections/About";
-import Experiments from "@/components/sections/Experiments";
-import Content from "@/components/sections/Content";
-import Services from "@/components/sections/Services";
-import Testimonials from "@/components/sections/Testimonials";
-import Blog from "@/components/sections/Blog";
-import Roadmap from "@/components/sections/Roadmap";
-import FAQ from "@/components/sections/FAQ";
-import FinalCTA from "@/components/sections/FinalCTA";
-import Footer from "@/components/sections/Footer";
-import CursorEffect from "@/components/ui/CursorEffect";
-import SpotlightBackground from "@/components/ui/SpotlightBackground";
+import AboutVyntegra from "@/components/home/AboutVyntegra";
+import Contact from "@/components/home/Contact";
+import CoreOfferings from "@/components/home/CoreOfferings";
+import CustomSolutionsForm from "@/components/home/CustomSolutionsForm";
+import ExpertsPreview from "@/components/home/ExpertsPreview";
+import FeaturedAgents from "@/components/home/FeaturedAgents";
+import Founder from "@/components/home/Founder";
+import Hero from "@/components/home/Hero";
+import Testimonials from "@/components/home/Testimonials";
+import TrustStrip from "@/components/home/TrustStrip";
+import WhyVyntegra from "@/components/home/WhyVyntegra";
 
 export default function Home() {
   return (
-    <>
-      <CursorEffect />
-      <SpotlightBackground />
-      <Navbar />
+    <main>
       <Hero />
-      <About />
-      <Experiments />
-      <Content />
-      <Services />
+      <TrustStrip />
+      <CoreOfferings />
+      <FeaturedAgents />
+      <ExpertsPreview />
+      <CustomSolutionsForm />
+      <WhyVyntegra />
+      <AboutVyntegra />
+      <Founder />
       <Testimonials />
-      <Blog />
-      <Roadmap />
-      <FAQ />
-      <FinalCTA />
-      <Footer />
-    </>
+      <Contact />
+    </main>
   );
 }
