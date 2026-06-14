@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { products } from "@/data/products";
@@ -27,7 +27,7 @@ function renderList(items: string[]) {
         >
           <CheckCircle2
             size={16}
-            color="#C7A56A"
+            color="#B8914A"
             strokeWidth={1.75}
             style={{ flex: "0 0 auto", marginTop: 4 }}
           />
@@ -69,7 +69,7 @@ export default async function ProductPage({ params }: PageProps) {
   const paymentsConfigured = hasAnyPaymentConfiguration();
 
   return (
-    <main className="section-bg-primary">
+    <main className="section-bg-primary product-page">
       <div className="product-detail">
         <div className="product-content">
           <header>
@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: PageProps) {
                     alt={`${product.name} product screenshot`}
                     style={{
                       width: "100%",
-                      borderRadius: 14,
+                      borderRadius: 8,
                       border: "1px solid rgba(255, 255, 255, 0.08)",
                     }}
                   />
@@ -166,3 +166,4 @@ export default async function ProductPage({ params }: PageProps) {
     </main>
   );
 }
+

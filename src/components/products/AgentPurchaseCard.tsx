@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Dispatch, SetStateAction, useState } from "react";
 import type { PaymentProvider, TradingAgentProduct } from "@/types";
@@ -154,7 +154,7 @@ export function AgentPurchaseForm({
           <span className="body-standard" style={{ fontWeight: 700 }}>
             Final Payable Amount
           </span>
-          <span className="body-standard" style={{ color: "#E7D2A5", fontWeight: 800 }}>
+          <span className="body-standard" style={{ color: "#D8CBA6", fontWeight: 800 }}>
             {formatUsd(state.finalAmountUsd)}
           </span>
         </div>
@@ -181,7 +181,7 @@ export function AgentPurchaseForm({
                     paymentProvider: option.value,
                   }))
                 }
-                style={{ accentColor: "#C7A56A" }}
+                style={{ accentColor: "#B8914A" }}
               />
               {option.label}
             </label>
@@ -205,7 +205,7 @@ export function AgentPurchaseForm({
           style={{
             width: 18,
             height: 18,
-            accentColor: "#C7A56A",
+            accentColor: "#B8914A",
             alignSelf: "flex-start",
             flex: "0 0 auto",
           }}
@@ -216,7 +216,7 @@ export function AgentPurchaseForm({
             href="/terms#ai-trading-software-agents-risk-disclaimer"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#E7D2A5", textDecoration: "underline" }}
+            style={{ color: "#D8CBA6", textDecoration: "underline" }}
           >
             Terms and Conditions
           </a>
@@ -227,13 +227,13 @@ export function AgentPurchaseForm({
       </label>
 
       {blockingMessage ? (
-        <p className="body-compact" style={{ color: "#C79252" }}>
+        <p className="body-compact" style={{ color: "#F59E0B" }}>
           {blockingMessage}
         </p>
       ) : null}
 
       {state.statusMessage ? (
-        <p className="body-compact" style={{ color: "#C79252" }}>
+        <p className="body-compact" style={{ color: "#F59E0B" }}>
           {state.statusMessage}
         </p>
       ) : null}
@@ -269,3 +269,4 @@ export default function AgentPurchaseCard({
     </aside>
   );
 }
+

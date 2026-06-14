@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, CircleAlert, Upload } from "lucide-react";
@@ -135,7 +135,7 @@ export default function CustomSolutionsForm() {
 
   const fileSummary = useMemo(() => {
     if (!file) {
-      return "PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG, or ZIP · Maximum 10 MB";
+      return "PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG, or ZIP - Maximum 10 MB";
     }
 
     return file.name;
@@ -226,19 +226,16 @@ export default function CustomSolutionsForm() {
             {categories.map((category) => (
               <div
                 key={category}
+                className="solution-chip standard-card"
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 12,
-                  background: "#0E1B24",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  borderRadius: 12,
-                  padding: 14,
                 }}
               >
                 <CheckCircle2
                   size={20}
-                  color="#C7A56A"
+                  color="#B8914A"
                   strokeWidth={1.75}
                   style={{ flex: "0 0 auto", marginTop: 2 }}
                 />
@@ -251,12 +248,9 @@ export default function CustomSolutionsForm() {
         <form
           onSubmit={submitForm}
           noValidate
+          className="depth-panel"
           style={{
-            background: "#10202A",
-            border: "1px solid rgba(199, 165, 106, 0.32)",
-            borderRadius: 18,
             padding: 32,
-            boxShadow: "0 18px 50px rgba(0, 0, 0, 0.28)",
             display: "grid",
             gap: 18,
           }}
@@ -459,11 +453,9 @@ export default function CustomSolutionsForm() {
             <span className="form-label">Supporting File</span>
             <label
               htmlFor="supportingFile"
+              className="upload-panel"
               style={{
                 minHeight: 104,
-                border: "1px dashed rgba(199, 165, 106, 0.60)",
-                background: "#0E1B24",
-                borderRadius: 12,
                 display: "grid",
                 placeItems: "center",
                 gap: 8,
@@ -473,7 +465,7 @@ export default function CustomSolutionsForm() {
                 cursor: "pointer",
               }}
             >
-              <Upload size={20} color="#C7A56A" strokeWidth={1.75} />
+              <Upload size={20} color="#B8914A" strokeWidth={1.75} />
               <span className="body-standard">
                 Upload an optional supporting file
               </span>
@@ -501,7 +493,7 @@ export default function CustomSolutionsForm() {
                 display: "flex",
                 alignItems: "flex-start",
                 gap: 10,
-                color: status.type === "success" ? "#6E9C81" : "#B96565",
+                color: status.type === "success" ? "#35C486" : "#EF6F6C",
               }}
             >
               {status.type === "success" ? (
@@ -523,3 +515,4 @@ export default function CustomSolutionsForm() {
     </section>
   );
 }
+

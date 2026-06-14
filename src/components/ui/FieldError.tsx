@@ -9,7 +9,7 @@ export default function FieldError({ id, message }: FieldErrorProps) {
   }
 
   return (
-    <p id={id} className="body-compact" style={{ color: "#B96565" }}>
+    <p id={id} className="body-compact" style={{ color: "#EF6F6C" }}>
       {message}
     </p>
   );

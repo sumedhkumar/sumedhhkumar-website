@@ -19,9 +19,11 @@ declare global {
 export default function CalendlyEmbed({
   expert,
   enabled,
+  bookingAccessToken,
 }: {
   expert: Expert;
   enabled: boolean;
+  bookingAccessToken: string;
 }) {
   const router = useRouter();
   const parentRef = useRef<HTMLDivElement>(null);
@@ -99,16 +101,22 @@ export default function CalendlyEmbed({
         fetch("/api/bookings/calendly-confirmation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ expertId: expert.id, payload: event.data }),
+          body: JSON.stringify({
+            expertId: expert.id,
+            bookingAccessToken,
+            payload: event.data,
+          }),
         }).finally(() => {
-          router.push(`/experts/${expert.slug}/confirmation`);
+          router.push(
+            `/experts/${expert.slug}/confirmation?token=${encodeURIComponent(bookingAccessToken)}`,
+          );
         });
       }
     }
 
     window.addEventListener("message", handleCalendlyMessage);
     return () => window.removeEventListener("message", handleCalendlyMessage);
-  }, [expert.id, expert.slug, router]);
+  }, [bookingAccessToken, expert.id, expert.slug, router]);
 
   if (message) {
     return (

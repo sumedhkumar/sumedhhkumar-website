@@ -16,10 +16,7 @@ export default function Contact() {
           <p className="body-standard">We aim to respond within 24 hours.</p>
         </div>
 
-        <div
-          className="standard-card"
-          style={{ padding: 28, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.20)" }}
-        >
+        <div className="depth-panel contact-panel" style={{ padding: 28 }}>
           {hasContact ? (
             <div style={{ display: "grid", gap: 12 }}>
               {contact.email ? (

@@ -39,7 +39,7 @@ export default function FeaturedAgents() {
             alignItems: "center",
             gap: 8,
             marginTop: 28,
-            color: "#E7D2A5",
+            color: "#D8CBA6",
             fontWeight: 700,
           }}
         >
@@ -49,3 +49,4 @@ export default function FeaturedAgents() {
     </section>
   );
 }
+

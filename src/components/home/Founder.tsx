@@ -1,47 +1,97 @@
+import { CheckCircle2 } from "lucide-react";
 import { site } from "@/data/site";
 import SectionIntro from "@/components/ui/SectionIntro";
-
-const socialLabels = {
-  YouTube: "YT",
-  Instagram: "IG",
-  LinkedIn: "in",
-};
+import SocialIcon from "@/components/ui/SocialIcon";
 
 export default function Founder() {
   return (
     <section id="founder" className="section section-bg-primary">
       <div className="container founder-grid">
         <div
+          className="founder-portrait depth-panel"
           style={{
             aspectRatio: "4 / 5",
-            borderRadius: 18,
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            background: "#132731",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#8F98A0",
-            textAlign: "center",
-            padding: 20,
+            overflow: "hidden",
           }}
         >
-          Founder photograph pending
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={site.founderPhoto}
+            alt={`${site.founderName} professional portrait`}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
         </div>
 
-        <div>
+        <div className="founder-copy-panel depth-panel">
           <SectionIntro heading="Founder" />
           <h3 className="subsection-title">{site.founderName}</h3>
           <p className="body-standard" style={{ marginTop: 8 }}>
             {site.founderSubtitle}
           </p>
           <p className="body-standard" style={{ marginTop: 24 }}>
-            {site.founderTemporaryCopy}
+            {site.founderBio}
           </p>
+          <p className="body-standard" style={{ marginTop: 16 }}>
+            {site.founderProfile}
+          </p>
+
+          <ul
+            style={{
+              display: "grid",
+              gap: 10,
+              listStyle: "none",
+              margin: "20px 0 0",
+              padding: 0,
+            }}
+          >
+            {site.founderHighlights.map((highlight) => (
+              <li
+                key={highlight}
+                className="body-compact"
+                style={{ display: "flex", gap: 8, alignItems: "flex-start" }}
+              >
+                <CheckCircle2
+                  size={16}
+                  color="#B8914A"
+                  strokeWidth={1.75}
+                  style={{ flex: "0 0 auto", marginTop: 2 }}
+                />
+                <span>{highlight}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              marginTop: 22,
+            }}
+          >
+            {site.founderFocusAreas.map((area) => (
+              <span
+                key={area}
+                className="tag"
+                style={{
+                  border: "1px solid rgba(184, 145, 74, 0.30)",
+                  borderRadius: 999,
+                  padding: "7px 10px",
+                  color: "#D8CBA6",
+                }}
+              >
+                {area}
+              </span>
+            ))}
+          </div>
 
           <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
             {site.founderSocialLinks.map((link) => {
-              const label = socialLabels[link.label as keyof typeof socialLabels];
-
               return (
                 <a
                   key={link.href}
@@ -51,7 +101,7 @@ export default function Founder() {
                   aria-label={link.label}
                   className="social-button"
                 >
-                  <span className="tag">{label}</span>
+                  <SocialIcon label={link.label} size={18} />
                 </a>
               );
             })}
@@ -61,3 +111,4 @@ export default function Founder() {
     </section>
   );
 }
+

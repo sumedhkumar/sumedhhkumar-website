@@ -9,7 +9,7 @@ import Button from "@/components/ui/Button";
 const navLinks = [
   { label: "AI Trading Agents", href: "/ai-trading-agents" },
   { label: "Talk to Experts", href: "/experts" },
-  { label: "Custom Solutions", href: "/#custom-solutions" },
+  { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "About Vyntegra", href: "/#about-vyntegra" },
   { label: "Contact", href: "/#contact" },
 ];
@@ -30,19 +30,24 @@ export default function Navbar() {
         </Link>
 
         <div className="desktop-nav">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`nav-link${isActive(link.href) ? " nav-link-active" : ""}`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={`nav-link${active ? " nav-link-active" : ""}`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="navbar-cta">
-          <Button href="/#custom-solutions" variant="primary">
+          <Button href="/custom-solutions" variant="secondary">
             Request a Quote
           </Button>
         </div>
@@ -60,19 +65,24 @@ export default function Navbar() {
 
       <div className={`mobile-menu${open ? " mobile-menu-open" : ""}`}>
         <div className="mobile-menu-list">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className={`nav-link${isActive(link.href) ? " nav-link-active" : ""}`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setOpen(false)}
+                className={`nav-link${active ? " nav-link-active" : ""}`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Button
-            href="/#custom-solutions"
-            variant="primary"
+            href="/custom-solutions"
+            variant="secondary"
             onClick={() => setOpen(false)}
           >
             Request a Quote

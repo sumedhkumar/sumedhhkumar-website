@@ -1,49 +1,49 @@
 import {
   BadgeDollarSign,
-  Clock3,
   Headphones,
   IdCard,
   ShieldCheck,
   SlidersHorizontal,
   Wrench,
 } from "lucide-react";
-import SectionIntro from "@/components/ui/SectionIntro";
 
-const cards = [
+const pillars = [
   {
-    title: "Practical Product-Building Experience",
+    title: "Build With Context",
     icon: Wrench,
-    copy: "Vyntegra focuses on usable digital products designed for real requirements.",
+    copy:
+      "Digital products, automations, and AI systems are shaped around real business requirements instead of generic packages.",
   },
   {
-    title: "Tailored Solutions Instead of Generic Packages",
-    icon: SlidersHorizontal,
-    copy: "Each custom enquiry is reviewed against the customer’s actual needs.",
-  },
-  {
-    title: "Transparent Pricing",
+    title: "Buy With Clarity",
     icon: BadgeDollarSign,
-    copy: "Ready-to-purchase products and consultations display clear USD pricing.",
+    copy:
+      "Product details, consultation flows, and USD pricing stay visible before a customer makes a decision.",
   },
   {
-    title: "Detailed Expert Profiles",
-    icon: IdCard,
-    copy: "Expert profiles publish real experience, qualifications, and professional links.",
-  },
-  {
-    title: "Secure Payment Options",
-    icon: ShieldCheck,
-    copy: "Customers can choose from configured Razorpay, Stripe, and crypto-payment options.",
-  },
-  {
-    title: "Direct Customer Support",
+    title: "Work With Experts",
     icon: Headphones,
-    copy: "Customers can contact Vyntegra for product, consultation, and enquiry support.",
+    copy:
+      "Customers can review professional profiles, ask for support, and move from enquiry to next step with less friction.",
+  },
+];
+
+const proofPoints = [
+  {
+    label: "Secure payment options",
+    icon: ShieldCheck,
   },
   {
-    title: "Clear Response Timelines",
-    icon: Clock3,
-    copy: "Custom-solutions enquiries receive a response within 24 hours.",
+    label: "Detailed expert profiles",
+    icon: IdCard,
+  },
+  {
+    label: "Tailored solution scope",
+    icon: SlidersHorizontal,
+  },
+  {
+    label: "Direct customer support",
+    icon: Headphones,
   },
 ];
 
@@ -51,20 +51,42 @@ export default function WhyVyntegra() {
   return (
     <section id="why-vyntegra" className="section section-bg-primary">
       <div className="container">
-        <SectionIntro heading="Why Vyntegra" />
+        <div className="why-layout">
+          <div className="why-copy">
+            <p className="eyebrow">Why Vyntegra</p>
+            <h2 className="section-title" style={{ marginTop: 12 }}>
+              Built for serious digital work.
+            </h2>
+            <p className="body-large">
+              A tighter process for customers who want usable software,
+              transparent buying paths, and technical guidance without the
+              usual ambiguity.
+            </p>
+            <div className="why-rule" aria-hidden="true" />
+          </div>
 
-        <div className="why-grid">
-          {cards.map((card) => (
-            <article key={card.title} className="standard-card">
-              <card.icon size={20} color="#C7A56A" strokeWidth={1.75} />
-              <h3 className="card-title" style={{ marginTop: 18 }}>
-                {card.title}
-              </h3>
-              <p className="body-standard" style={{ marginTop: 12 }}>
-                {card.copy}
-              </p>
-            </article>
-          ))}
+          <div className="why-content">
+            <div className="why-pillars">
+              {pillars.map((pillar) => (
+                <article key={pillar.title} className="standard-card why-pillar">
+                  <span className="why-pillar-icon">
+                    <pillar.icon size={18} strokeWidth={1.75} />
+                  </span>
+                  <h3 className="card-title">{pillar.title}</h3>
+                  <p className="body-compact">{pillar.copy}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="why-proof-strip" aria-label="Vyntegra proof points">
+              {proofPoints.map((point) => (
+                <div key={point.label} className="why-proof-item">
+                  <point.icon size={17} strokeWidth={1.75} />
+                  <span>{point.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

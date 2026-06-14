@@ -67,7 +67,7 @@ export async function sendCustomSolutionsEmails(
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: appConfig.customSolutionsRecipientEmail,
-    subject: `New Custom Solutions Enquiry — ${input.fullName}`,
+    subject: `New Custom Solutions Enquiry - ${input.fullName}`,
     text: buildRecipientBody(input),
     attachments,
   });
@@ -75,7 +75,7 @@ export async function sendCustomSolutionsEmails(
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: input.emailAddress,
-    subject: "We Received Your Requirements — Vyntegra",
+    subject: "We Received Your Requirements - Vyntegra",
     text:
       "Thank you for sharing your requirements with Vyntegra. Our team will review your enquiry and respond within 24 hours with the next steps and a quotation.",
   });

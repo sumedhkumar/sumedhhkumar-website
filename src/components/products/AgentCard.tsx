@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+﻿import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { TradingAgentProduct } from "@/types";
 import Button from "@/components/ui/Button";
 
@@ -15,41 +15,43 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
   const capabilities = product.keyCapabilities.slice(0, 3);
   const platformOrMarket = [product.platform, product.market]
     .filter(Boolean)
-    .join(" · ");
+    .join(" - ");
 
   return (
     <article
-      className="standard-card clickable-card"
+      className="standard-card clickable-card agent-showcase-card"
       style={{ padding: 0, overflow: "hidden" }}
     >
       {product.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          className="agent-showcase-image"
           src={product.image}
           alt={`${product.name} product visual`}
           style={{
             aspectRatio: "16 / 10",
             width: "100%",
             objectFit: "cover",
-            background: "#132731",
+            background: "#1B1E23",
           }}
         />
       ) : (
         <div
+          className="agent-showcase-image"
           style={{
             aspectRatio: "16 / 10",
-            background: "#132731",
+            background: "#1B1E23",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#8F98A0",
+            color: "#9CA0A7",
           }}
         >
           <span className="body-compact">Product visual pending</span>
         </div>
       )}
 
-      <div style={{ padding: 24 }}>
+      <div className="agent-showcase-content">
         <h3 className="card-title">{product.name}</h3>
         <p className="body-standard" style={{ marginTop: 12 }}>
           {product.shortDescription}
@@ -77,7 +79,7 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
             >
               <CheckCircle2
                 size={16}
-                color="#C7A56A"
+                color="#B8914A"
                 strokeWidth={1.75}
                 style={{ flex: "0 0 auto", marginTop: 2 }}
               />
@@ -112,3 +114,4 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
     </article>
   );
 }
+

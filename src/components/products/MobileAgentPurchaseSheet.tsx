@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { X } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
@@ -36,10 +36,10 @@ export default function MobileAgentPurchaseSheet({
           style={{
             width: 44,
             height: 44,
-            border: "1px solid rgba(199, 165, 106, 0.32)",
-            borderRadius: 12,
+            border: "1px solid rgba(184, 145, 74, 0.32)",
+            borderRadius: 8,
             background: "transparent",
-            color: "#E7D2A5",
+            color: "#D8CBA6",
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
@@ -60,3 +60,4 @@ export default function MobileAgentPurchaseSheet({
     </>
   );
 }
+

@@ -13,7 +13,7 @@ export default function AiTradingAgentsPage() {
   const activeProducts = products.filter((product) => product.active);
 
   return (
-    <main className="listing-page">
+    <main className="listing-page agents-page">
       <div className="listing-container">
         <header className="listing-hero">
           <h1 className="page-title">AI Trading Software Agents</h1>

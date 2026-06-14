@@ -16,30 +16,32 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
 
   return (
     <article
-      className="standard-card clickable-card"
+      className="standard-card clickable-card expert-showcase-card"
       style={{ padding: 0, overflow: "hidden" }}
     >
       {expert.professionalPhoto ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          className="expert-showcase-image"
           src={expert.professionalPhoto}
           alt={`${expert.fullName} professional photograph`}
           style={{
             aspectRatio: "4 / 5",
             width: "100%",
             objectFit: "cover",
-            background: "#132731",
+            background: "#1B1E23",
           }}
         />
       ) : (
         <div
+          className="expert-showcase-image"
           style={{
             aspectRatio: "4 / 5",
-            background: "#132731",
+            background: "#1B1E23",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#8F98A0",
+            color: "#9CA0A7",
             padding: 20,
             textAlign: "center",
           }}
@@ -48,7 +50,7 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
         </div>
       )}
 
-      <div style={{ padding: 24 }}>
+      <div className="expert-showcase-content">
         <h3 className="card-title">{expert.fullName}</h3>
         <p className="body-standard" style={{ marginTop: 8 }}>
           {expert.specialization}
@@ -65,7 +67,7 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
             fontSize: 20,
             fontWeight: 800,
             lineHeight: 1.2,
-            color: "#E7D2A5",
+            color: "#D8CBA6",
           }}
         >
           {session ? formatUsd(session.feeUsd) : "Consultation slots are being prepared."}
@@ -81,3 +83,4 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
     </article>
   );
 }
+

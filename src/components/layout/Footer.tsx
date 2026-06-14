@@ -4,7 +4,7 @@ import { getPublicContactDetails } from "@/data/site";
 const navigationLinks = [
   { label: "AI Trading Agents", href: "/ai-trading-agents" },
   { label: "Talk to Experts", href: "/experts" },
-  { label: "Custom Solutions", href: "/#custom-solutions" },
+  { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "About Vyntegra", href: "/#about-vyntegra" },
   { label: "Contact", href: "/#contact" },
 ];
@@ -74,13 +74,15 @@ export default function Footer() {
               ) : (
                 <p className="body-compact">Contact details will be added soon.</p>
               )}
-              <p className="body-compact">Razorpay · Stripe · Crypto</p>
+              <p className="body-compact">Multiple secure payment methods available.</p>
             </div>
           </div>
         </div>
 
         <div className="footer-bottom-divider" />
-        <p className="body-compact">© Vyntegra. All rights reserved.</p>
+        <p className="body-compact">
+          © {new Date().getFullYear()} Vyntegra. All rights reserved.
+        </p>
       </div>
     </footer>
   );

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
@@ -30,7 +30,7 @@ export default function ProductFAQ({ faqs }: { faqs: ProductFaqItem[] }) {
                 padding: "18px 0",
                 background: "transparent",
                 border: 0,
-                color: "#F8F4EC",
+                color: "#F7F3EA",
                 fontSize: 16,
                 fontWeight: 700,
                 lineHeight: 1.45,
@@ -39,9 +39,9 @@ export default function ProductFAQ({ faqs }: { faqs: ProductFaqItem[] }) {
             >
               <span>{faq.question}</span>
               {open ? (
-                <Minus size={20} color="#C7A56A" strokeWidth={1.75} />
+                <Minus size={20} color="#B8914A" strokeWidth={1.75} />
               ) : (
-                <Plus size={20} color="#C7A56A" strokeWidth={1.75} />
+                <Plus size={20} color="#B8914A" strokeWidth={1.75} />
               )}
             </button>
             {open ? (
@@ -55,3 +55,4 @@ export default function ProductFAQ({ faqs }: { faqs: ProductFaqItem[] }) {
     </div>
   );
 }
+

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { experts } from "@/data/experts";
+import { validateBookingAccessToken } from "@/lib/server/payment-tokens";
 import EmptyState from "@/components/ui/EmptyState";
 
 type PageProps = {
@@ -27,13 +28,13 @@ export default async function ExpertConfirmationPage({
 
   const token = typeof query.token === "string" ? query.token : "";
 
-  if (!token) {
+  if (!token || !validateBookingAccessToken(token)) {
     return (
       <main className="listing-page">
         <div className="listing-container">
           <EmptyState
             heading="Booking access unavailable."
-            copy="Complete a verified consultation payment before selecting a slot."
+            copy="Select an appointment during checkout and complete a verified consultation payment before confirmation."
           />
         </div>
       </main>
@@ -45,7 +46,7 @@ export default async function ExpertConfirmationPage({
       <div className="listing-container">
         <EmptyState
           heading="Confirmation details are pending."
-          copy="Please contact Vyntegra support with your payment confirmation."
+          copy="Your appointment will appear here after successful payment verification and booking confirmation."
         />
       </div>
     </main>

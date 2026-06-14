@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+﻿import { ArrowRight } from "lucide-react";
 import type { Expert } from "@/types";
 import { availabilityText } from "@/data/site";
 import Button from "@/components/ui/Button";
@@ -17,35 +17,22 @@ export default function ExpertProfileSummary({ expert }: { expert: Expert }) {
   const firstSession = activeSessions[0];
 
   return (
-    <aside
-      style={{
-        background: "#132731",
-        border: "1px solid rgba(199, 165, 106, 0.32)",
-        borderRadius: 18,
-        padding: 24,
-        boxShadow: "0 18px 50px rgba(0, 0, 0, 0.28)",
-      }}
-    >
-      <div style={{ display: "grid", gap: 18 }}>
-        <div>
+    <aside className="expert-summary-card">
+      <div className="expert-summary-stack">
+        <div className="expert-summary-header">
+          <p>Consultation</p>
           <h2 className="card-title">Available Sessions</h2>
+        </div>
+
+        <div>
           {activeSessions.length > 0 ? (
-            <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+            <div className="expert-session-list">
               {activeSessions.map((session) => (
-                <div
-                  key={session.id}
-                  style={{
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    borderRadius: 12,
-                    padding: 14,
-                  }}
-                >
-                  <p className="body-standard" style={{ fontWeight: 700 }}>
-                    {session.label}
-                  </p>
-                  <p className="body-compact">
+                <div key={session.id} className="expert-session-row">
+                  <strong>{session.label}</strong>
+                  <span>
                     {session.durationMinutes} minutes
-                  </p>
+                  </span>
                 </div>
               ))}
             </div>
@@ -57,14 +44,15 @@ export default function ExpertProfileSummary({ expert }: { expert: Expert }) {
         </div>
 
         {firstSession ? (
-          <p className="product-price">{formatUsd(firstSession.feeUsd)}</p>
+          <div className="expert-price-row">
+            <span>Starting at</span>
+            <strong>{formatUsd(firstSession.feeUsd)}</strong>
+          </div>
         ) : null}
 
-        <div>
+        <div className="expert-availability-block">
           <h2 className="card-title">General Availability</h2>
-          <p className="body-compact" style={{ marginTop: 12 }}>
-            {availabilityText}
-          </p>
+          <p>{availabilityText}</p>
         </div>
 
         <Button

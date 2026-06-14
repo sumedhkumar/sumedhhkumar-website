@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadgeDollarSign,
   Headphones,
   IdCard,
@@ -20,7 +20,7 @@ export default function TrustStrip() {
       <div className="trust-grid">
         {items.map((item) => (
           <div key={item.label} className="trust-item">
-            <item.icon size={18} color="#C7A56A" strokeWidth={1.75} />
+            <item.icon size={18} color="#B8914A" strokeWidth={1.75} />
             <span>{item.label}</span>
           </div>
         ))}
@@ -28,3 +28,4 @@ export default function TrustStrip() {
     </section>
   );
 }
+

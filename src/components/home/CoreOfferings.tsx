@@ -1,4 +1,4 @@
-import { ArrowRight, Code2, Cpu, Users } from "lucide-react";
+﻿import { ArrowRight, Code2, Cpu, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import SectionIntro from "@/components/ui/SectionIntro";
 
@@ -25,7 +25,7 @@ const offerings = [
     description:
       "Share your requirements for a website, software system, AI-enabled solution, workflow automation, or tailored digital product.",
     cta: "Submit Requirements",
-    target: "/#custom-solutions",
+    target: "/custom-solutions",
   },
 ];
 
@@ -47,7 +47,7 @@ export default function CoreOfferings() {
             >
               <offering.icon
                 size={20}
-                color="#C7A56A"
+                color="#B8914A"
                 strokeWidth={1.75}
                 style={{ marginBottom: 20 }}
               />
@@ -71,3 +71,4 @@ export default function CoreOfferings() {
     </section>
   );
 }
+

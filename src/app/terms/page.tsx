@@ -30,7 +30,7 @@ export default function TermsPage() {
             className="legal-section"
           >
             <h2 className="subsection-title">
-              AI Trading Software Agents — Risk Disclaimer
+              AI Trading Software Agents - Risk Disclaimer
             </h2>
             <p>
               Trading and investing involve substantial financial risk. The
@@ -49,7 +49,7 @@ export default function TermsPage() {
               market volatility, liquidity, slippage, spreads, execution delays,
               platform limitations, broker conditions, technical failures,
               software configuration, user decisions, and other factors outside
-              Vyntegra’s control.
+              Vyntegra control.
             </p>
             <p>
               Vyntegra provides software tools only. Vyntegra does not provide

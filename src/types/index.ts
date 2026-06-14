@@ -38,6 +38,11 @@ export type ExpertSession = {
   active: boolean;
 };
 
+export type SocialLink = {
+  label: "YouTube" | "Instagram" | "LinkedIn" | "Portfolio";
+  href: string;
+};
+
 export type Expert = {
   id: string;
   slug: string;
@@ -50,6 +55,7 @@ export type Expert = {
   relevantExperience: string[];
   qualifications: string[];
   linkedInUrl: string;
+  socialLinks?: SocialLink[];
   consultationTopics: string[];
   sessions: ExpertSession[];
   featured: boolean;

@@ -25,7 +25,9 @@ export const appConfig = {
   cryptoWalletNetwork: readValue("CRYPTO_WALLET_NETWORK"),
   expertBookingEnabled: readFlag("EXPERT_BOOKING_ENABLED"),
   productAccessEnabled: readFlag("PRODUCT_ACCESS_ENABLED"),
-  customSolutionsRecipientEmail: readValue("CUSTOM_SOLUTIONS_RECIPIENT_EMAIL"),
+  customSolutionsRecipientEmail:
+    readValue("CUSTOM_SOLUTIONS_RECIPIENT_EMAIL") ||
+    "mahajanshardul1@gmail.com",
   smtpHost: readValue("SMTP_HOST"),
   smtpPort: readValue("SMTP_PORT"),
   smtpUser: readValue("SMTP_USER"),
