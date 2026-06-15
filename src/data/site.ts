@@ -13,10 +13,6 @@ const founderSocialLinks: SocialLink[] = [
     label: "LinkedIn",
     href: "https://www.linkedin.com/in/sumedhkumar-bhalerao/",
   },
-  {
-    label: "Portfolio",
-    href: "https://sumedhhkumar-ai.vercel.app/",
-  },
 ];
 
 export const site = {

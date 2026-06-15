@@ -29,68 +29,22 @@ export default function Founder() {
 
         <div className="founder-copy-panel depth-panel">
           <SectionIntro heading="Founder" />
-          <h3 className="subsection-title">{site.founderName}</h3>
-          <p className="body-standard" style={{ marginTop: 8 }}>
-            {site.founderSubtitle}
-          </p>
+          <h3 className="subsection-title">Sumedh Kumar</h3>
           <p className="body-standard" style={{ marginTop: 24 }}>
-            {site.founderBio}
+            Sumedh Kumar leads Vyntegra with a focus on building practical trading technology, AI-assisted workflows, and custom software systems for serious users.
           </p>
           <p className="body-standard" style={{ marginTop: 16 }}>
-            {site.founderProfile}
+            Vyntegra was created to bring more structure, clarity, and technical discipline into trading software and automation. The focus is not on hype or profit promises, but on building systems that users can understand, review, and operate responsibly.
           </p>
-
-          <ul
-            style={{
-              display: "grid",
-              gap: 10,
-              listStyle: "none",
-              margin: "20px 0 0",
-              padding: 0,
-            }}
-          >
-            {site.founderHighlights.map((highlight) => (
-              <li
-                key={highlight}
-                className="body-compact"
-                style={{ display: "flex", gap: 8, alignItems: "flex-start" }}
-              >
-                <CheckCircle2
-                  size={16}
-                  color="#B8914A"
-                  strokeWidth={1.75}
-                  style={{ flex: "0 0 auto", marginTop: 2 }}
-                />
-                <span>{highlight}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-              marginTop: 22,
-            }}
-          >
-            {site.founderFocusAreas.map((area) => (
-              <span
-                key={area}
-                className="tag"
-                style={{
-                  border: "1px solid rgba(184, 145, 74, 0.30)",
-                  borderRadius: 999,
-                  padding: "7px 10px",
-                  color: "#D8CBA6",
-                }}
-              >
-                {area}
-              </span>
-            ))}
+          <div style={{ marginTop: 24 }}>
+            <a href="/experts" className="button button-secondary">
+              Connect with Sumedh
+            </a>
           </div>
-
-          <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+          <div style={{ marginTop: 40 }}>
+            <h4 className="body-standard" style={{ fontWeight: 700 }}>Follow and connect</h4>
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
             {site.founderSocialLinks.map((link) => {
               return (
                 <a

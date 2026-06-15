@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Dispatch, SetStateAction, useState } from "react";
 import type { PaymentProvider, TradingAgentProduct } from "@/types";
@@ -83,7 +83,7 @@ export function AgentPurchaseForm({
 
     setState((current) => ({
       ...current,
-      couponMessage: result.message ?? "Coupon code is invalid or inactive.",
+      couponMessage: result.message ?? "This coupon code is not valid.",
       discountAmountUsd: result.discountAmountUsd ?? 0,
       finalAmountUsd: result.finalAmountUsd ?? product.priceUsd,
     }));
@@ -103,9 +103,9 @@ export function AgentPurchaseForm({
   return (
     <div className="purchase-stack">
       <div>
-        <h2 className="card-title">{product.name}</h2>
+        <h2 className="card-title">Purchase this agent</h2>
         <p className="body-compact" style={{ marginTop: 8 }}>
-          {product.shortDescription}
+          Complete your purchase only after reviewing the agent details, risk note, and terms.
         </p>
       </div>
 
@@ -113,7 +113,7 @@ export function AgentPurchaseForm({
 
       <div>
         <label className="form-label" htmlFor={`${product.id}-coupon`}>
-          Coupon Code
+          Coupon code
         </label>
         <input
           id={`${product.id}-coupon`}
@@ -211,18 +211,16 @@ export function AgentPurchaseForm({
           }}
         />
         <span>
-          I confirm that I have read and understood the{" "}
+          I have read the risk disclaimer and agree to the{" "}
           <a
             href="/terms#ai-trading-software-agents-risk-disclaimer"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#D8CBA6", textDecoration: "underline" }}
           >
-            Terms and Conditions
+            Terms & Conditions
           </a>
-          . I understand that trading involves financial risk, that profits are
-          not guaranteed, and that Vyntegra is not responsible for losses arising
-          from my use of the software.
+          .
         </span>
       </label>
 

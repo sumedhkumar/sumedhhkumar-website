@@ -190,7 +190,9 @@ export default async function ExpertProfilePage({ params }: PageProps) {
               </div>
             </div>
 
-            <p className="expert-summary-lede">{expert.professionalSummary}</p>
+            <p className="expert-summary-lede">
+              Book a focused consultation to discuss your requirement and understand the right technical direction before implementation.
+            </p>
 
             <div className="expert-credibility-grid" aria-label="Expert highlights">
               {credibility.map((item) => (
@@ -254,10 +256,17 @@ export default async function ExpertProfilePage({ params }: PageProps) {
             </ExpertPanel>
 
             <ExpertPanel
-              title="Consultation Focus"
+              title="What you can discuss"
               icon={<Award size={18} strokeWidth={1.8} />}
             >
-              <ExpertBulletList items={expert.consultationTopics} compact />
+              <ExpertBulletList items={[
+                "Trading software workflow planning",
+                "Strategy-to-automation feasibility",
+                "Platform connection requirements",
+                "AI tool usage for trading workflows",
+                "Custom agent or software implementation",
+                "Technical doubts before purchasing an agent"
+              ]} compact />
             </ExpertPanel>
           </aside>
         </div>

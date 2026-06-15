@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { products } from "@/data/products";
@@ -73,20 +73,34 @@ export default async function ProductPage({ params }: PageProps) {
       <div className="product-detail">
         <div className="product-content">
           <header>
+            <p className="eyebrow" style={{ marginBottom: 8 }}>AI Trading Software Agent</p>
             <h1 className="page-title">{product.name}</h1>
             <p className="body-large" style={{ marginTop: 16 }}>
-              {product.shortDescription}
+              A structured software agent built to support trading workflow execution, automation logic, and disciplined system use.
             </p>
           </header>
 
           <section>
-            <h2 className="subsection-title">Key Capabilities</h2>
-            {renderList(product.keyCapabilities)}
+            <h2 className="subsection-title">Overview</h2>
+            <p className="body-standard" style={{ marginTop: 16 }}>
+              This agent is designed to help users work with a defined trading workflow in a more structured way. It may support automation logic, platform-connected execution steps, or strategy-based workflow management depending on the agent configuration.
+            </p>
           </section>
 
           <section>
-            <h2 className="subsection-title">Compatibility and Requirements</h2>
-            {renderList(product.requirements)}
+            <h2 className="subsection-title">What this agent helps with</h2>
+            {renderList([
+              "Structuring trading rules into a usable software workflow",
+              "Reducing manual repetition in execution-related processes",
+              "Supporting platform-connected trading workflows",
+              "Improving consistency in how a strategy is followed",
+              "Helping users review and operate defined trading logic"
+            ])}
+          </section>
+
+          <section>
+            <h2 className="subsection-title">Product Details</h2>
+            {renderList(product.keyCapabilities.concat(product.requirements))}
           </section>
 
           <section>
@@ -118,8 +132,21 @@ export default async function ProductPage({ params }: PageProps) {
           </section>
 
           <section>
-            <h2 className="subsection-title">Setup Process</h2>
-            {renderList(product.setupSteps)}
+            <h2 className="subsection-title">Before you use this agent</h2>
+            {renderList([
+              "Review the agent details carefully.",
+              "Understand the strategy or workflow it is designed for.",
+              "Test the setup before using it in live market conditions.",
+              "Use appropriate capital allocation and risk management.",
+              "Do not rely on any software as a guarantee of profit."
+            ])}
+          </section>
+
+          <section>
+            <h2 className="subsection-title">Important note</h2>
+            <p className="body-standard" style={{ marginTop: 16 }}>
+              This agent does not guarantee profitable trades. It does not replace trading knowledge, backtesting, risk management, or user judgment. Users are responsible for how they configure, test, and use the software.
+            </p>
           </section>
 
           <section>

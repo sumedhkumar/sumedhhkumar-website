@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Code2, Cpu, Users } from "lucide-react";
+import { ArrowRight, Code2, Cpu, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import SectionIntro from "@/components/ui/SectionIntro";
 
@@ -7,24 +7,24 @@ const offerings = [
     icon: Cpu,
     title: "AI Trading Software Agents",
     description:
-      "Explore ready-to-purchase software products developed for structured trading workflows.",
-    cta: "Explore Agents",
+      "Ready-to-use trading software agents designed for defined strategies, structured execution, and platform-connected workflows.",
+    cta: "View Agents",
     target: "/ai-trading-agents",
   },
   {
     icon: Users,
-    title: "Talk to Experts",
+    title: "Strategy-to-Automation Systems",
     description:
-      "Book focused, one-to-one consultations with experienced professionals based on your requirements.",
-    cta: "Explore Experts",
+      "Convert trading ideas, indicators, and rules into practical software workflows that can be tested, reviewed, and deployed with discipline.",
+    cta: "Build a Trading System",
     target: "/experts",
   },
   {
     icon: Code2,
-    title: "Custom Solutions",
+    title: "Custom Software Solutions",
     description:
-      "Share your requirements for a website, software system, AI-enabled solution, workflow automation, or tailored digital product.",
-    cta: "Submit Requirements",
+      "Custom websites, dashboards, automation tools, and business software built around your exact workflow requirements.",
+    cta: "Request a Custom Solution",
     target: "/custom-solutions",
   },
 ];
@@ -34,8 +34,8 @@ export default function CoreOfferings() {
     <section className="section section-bg-primary">
       <div className="container">
         <SectionIntro
-          heading="Explore Vyntegra"
-          copy="Choose a ready-to-use AI trading software agent, book a one-to-one consultation with an expert, or share your requirements for a tailored digital solution."
+          heading="What Vyntegra builds"
+          copy="Technology for traders, teams, and businesses that need reliable software workflows instead of scattered manual processes."
         />
 
         <div className="offering-grid">

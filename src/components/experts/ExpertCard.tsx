@@ -51,12 +51,13 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
       )}
 
       <div className="expert-showcase-content">
+        <p className="eyebrow" style={{ marginBottom: 8 }}>Consultation</p>
         <h3 className="card-title">{expert.fullName}</h3>
-        <p className="body-standard" style={{ marginTop: 8 }}>
-          {expert.specialization}
+        <p className="body-standard" style={{ marginTop: 12 }}>
+          Book a focused session to discuss your trading software requirement, automation workflow, or implementation questions.
         </p>
         <p className="body-compact" style={{ marginTop: 12 }}>
-          {expert.relevantExperience[0] ?? ""}
+          {expert.specialization}
         </p>
         <p className="body-compact" style={{ marginTop: 8 }}>
           {expert.qualifications[0] ?? ""}
@@ -72,13 +73,24 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
         >
           {session ? formatUsd(session.feeUsd) : "Consultation slots are being prepared."}
         </p>
-        <Button
-          href={`/experts/${expert.slug}`}
-          variant="secondary"
-          style={{ marginTop: 20 }}
+        <div
+          style={{
+            marginTop: 20,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 10,
+          }}
         >
-          View Profile <ArrowRight size={16} strokeWidth={1.75} />
-        </Button>
+          <Button href={`/experts/${expert.slug}`} variant="secondary">
+            View Profile
+          </Button>
+          <Button
+            href={`/experts/${expert.slug}#booking`}
+            variant="primary"
+          >
+            Book Consultation <ArrowRight size={16} strokeWidth={1.75} />
+          </Button>
+        </div>
       </div>
     </article>
   );

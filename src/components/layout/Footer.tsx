@@ -2,15 +2,15 @@ import Link from "next/link";
 import { getPublicContactDetails } from "@/data/site";
 
 const navigationLinks = [
-  { label: "AI Trading Agents", href: "/ai-trading-agents" },
+  { label: "AI Trading Software Agents", href: "/ai-trading-agents" },
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
-  { label: "About Vyntegra", href: "/#about-vyntegra" },
+  { label: "Founder", href: "/#founder" },
+  { label: "Terms & Conditions", href: "/terms" },
   { label: "Contact", href: "/#contact" },
 ];
 
 const legalLinks = [
-  { label: "Terms and Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Refund Policy", href: "/refund-policy" },
 ];
@@ -28,13 +28,12 @@ export default function Footer() {
               Vyntegra
             </Link>
             <p className="body-compact" style={{ marginTop: 16 }}>
-              AI trading software agents, expert consultations, and tailored
-              digital solutions.
+              AI Trading Software Agents and custom software solutions built with clarity, discipline, and risk awareness.
             </p>
           </div>
 
           <div>
-            <h2 className="card-title">Navigation</h2>
+            <h2 className="card-title">Quick Links</h2>
             <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
               {navigationLinks.map((link) => (
                 <Link key={link.href} href={link.href} className="body-compact">
@@ -80,6 +79,9 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom-divider" />
+        <p className="body-compact" style={{ marginBottom: 16, color: "var(--foreground-muted)", fontSize: "0.85rem" }}>
+          Trading involves risk. Vyntegra does not guarantee profit and is not responsible for trading losses.
+        </p>
         <p className="body-compact">
           © {new Date().getFullYear()} Vyntegra. All rights reserved.
         </p>

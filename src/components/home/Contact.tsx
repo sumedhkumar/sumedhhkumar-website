@@ -10,10 +10,9 @@ export default function Contact() {
       <div className="container contact-grid">
         <div>
           <SectionIntro
-            heading="Contact"
-            copy="Have a question or need assistance? Reach out to Vyntegra and we will respond as soon as possible."
+            heading="Contact Vyntegra"
+            copy="Reach out for agent purchases, expert consultations, custom software requirements, or general questions."
           />
-          <p className="body-standard">We aim to respond within 24 hours.</p>
         </div>
 
         <div className="depth-panel contact-panel" style={{ padding: 28 }}>

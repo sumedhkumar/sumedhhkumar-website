@@ -10,6 +10,17 @@ export const metadata: Metadata = {
 export default function CustomSolutionsPage() {
   return (
     <main className="custom-solutions-page">
+      <header className="section section-bg-primary" style={{ paddingBottom: 0 }}>
+        <div className="container">
+          <h1 className="page-title">Custom Solutions</h1>
+          <p className="body-large" style={{ marginTop: 16 }}>
+            Custom software, trading systems, websites, dashboards, and automation tools built around your workflow.
+          </p>
+          <p className="body-standard" style={{ marginTop: 16 }}>
+            Vyntegra builds custom solutions for users who need something beyond ready-made agents. This can include trading-related systems, platform-connected workflows, business websites, internal dashboards, automation tools, and custom software products.
+          </p>
+        </div>
+      </header>
       <CustomSolutionsForm />
     </main>
   );

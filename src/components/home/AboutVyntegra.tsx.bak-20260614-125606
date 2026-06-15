@@ -1,0 +1,50 @@
+import { BadgeCheck, Compass, Layers3, ShieldCheck } from "lucide-react";
+import SectionIntro from "@/components/ui/SectionIntro";
+
+const visualCards = [
+  { icon: Compass, label: "Clear Direction" },
+  { icon: Layers3, label: "Structured Execution" },
+  { icon: ShieldCheck, label: "Reliable Delivery" },
+  { icon: BadgeCheck, label: "Premium Standards" },
+];
+
+export default function AboutVyntegra() {
+  return (
+    <section id="about-vyntegra" className="section section-bg-secondary">
+      <div className="container about-grid">
+        <div>
+          <SectionIntro heading="About Vyntegra" />
+          <div style={{ display: "grid", gap: 16 }}>
+            <p className="body-standard">
+              Vyntegra develops practical technology solutions for real-world
+              requirements. The brand is built around clarity, disciplined
+              planning, premium presentation, and systems that feel usable from
+              the first interaction.
+            </p>
+            <p className="body-standard">
+              We focus on usability, transparent communication, and thoughtful
+              execution so customers can move from idea to outcome without the
+              usual ambiguity.
+            </p>
+          </div>
+        </div>
+
+        <div className="about-visual-grid">
+          {visualCards.map((card) => (
+            <article
+              key={card.label}
+              className="standard-card"
+              style={{ minHeight: 132, padding: 20 }}
+            >
+              <card.icon size={20} color="#A88E5A" strokeWidth={1.75} />
+              <p className="card-title" style={{ marginTop: 18 }}>
+                {card.label}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+

@@ -1,6 +1,5 @@
-﻿import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { Expert } from "@/types";
-import { availabilityText } from "@/data/site";
 import Button from "@/components/ui/Button";
 
 function formatUsd(value: number) {
@@ -52,7 +51,11 @@ export default function ExpertProfileSummary({ expert }: { expert: Expert }) {
 
         <div className="expert-availability-block">
           <h2 className="card-title">General Availability</h2>
-          <p>{availabilityText}</p>
+          <p>
+            Weekdays run from 6 PM to 10 PM IST, and weekends run from 12 PM
+            to 8 PM IST. Start times are available every 15 minutes, with each
+            session ending inside the booking window.
+          </p>
         </div>
 
         <Button
@@ -60,8 +63,11 @@ export default function ExpertProfileSummary({ expert }: { expert: Expert }) {
           variant="primary"
           disabled={activeSessions.length === 0}
         >
-          Book a Consultation <ArrowRight size={16} strokeWidth={1.75} />
+          Book Consultation <ArrowRight size={16} strokeWidth={1.75} />
         </Button>
+        <p className="body-compact" style={{ marginTop: 12, color: "var(--foreground-muted)", fontSize: "0.85rem" }}>
+          Consultations are for technical and workflow guidance only. They are not financial advice and do not guarantee trading profit.
+        </p>
       </div>
     </aside>
   );

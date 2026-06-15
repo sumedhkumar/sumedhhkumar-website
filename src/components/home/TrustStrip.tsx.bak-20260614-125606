@@ -1,0 +1,31 @@
+import {
+  BadgeDollarSign,
+  Headphones,
+  IdCard,
+  PanelsTopLeft,
+  ShieldCheck,
+} from "lucide-react";
+
+const items = [
+  { label: "Transparent USD Pricing", icon: BadgeDollarSign },
+  { label: "Detailed Expert Profiles", icon: IdCard },
+  { label: "Secure Payment Options", icon: ShieldCheck },
+  { label: "Tailored Software Solutions", icon: PanelsTopLeft },
+  { label: "Direct Customer Support", icon: Headphones },
+];
+
+export default function TrustStrip() {
+  return (
+    <section className="trust-strip" aria-label="Vyntegra trust highlights">
+      <div className="trust-grid">
+        {items.map((item) => (
+          <div key={item.label} className="trust-item">
+            <item.icon size={18} color="#A88E5A" strokeWidth={1.75} />
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+

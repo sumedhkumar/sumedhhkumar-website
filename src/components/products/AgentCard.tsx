@@ -1,4 +1,4 @@
-﻿import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { TradingAgentProduct } from "@/types";
 import Button from "@/components/ui/Button";
 
@@ -52,9 +52,13 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
       )}
 
       <div className="agent-showcase-content">
+        <p className="eyebrow" style={{ marginBottom: 8 }}>AI Trading Software Agent</p>
         <h3 className="card-title">{product.name}</h3>
         <p className="body-standard" style={{ marginTop: 12 }}>
-          {product.shortDescription}
+          Built for traders who want a structured software workflow for {product.shortDescription.replace(/^[Aa]\s+/, '').replace(/\.$/, '')}.
+        </p>
+        <p className="body-small" style={{ marginTop: 8, color: "var(--foreground-muted)" }}>
+          No profit guarantee. Use with proper testing and risk control.
         </p>
         {platformOrMarket ? (
           <p className="tag" style={{ marginTop: 12 }}>
@@ -107,7 +111,12 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
             href={`/ai-trading-agents/${product.slug}#purchase`}
             variant="primary"
           >
-            Buy Now <ArrowRight size={16} strokeWidth={1.75} />
+            Buy Agent <ArrowRight size={16} strokeWidth={1.75} />
+          </Button>
+        </div>
+        <div style={{ marginTop: 12, display: "grid" }}>
+          <Button href="/experts" variant="secondary" style={{ width: "100%" }}>
+            Discuss Before Buying
           </Button>
         </div>
       </div>

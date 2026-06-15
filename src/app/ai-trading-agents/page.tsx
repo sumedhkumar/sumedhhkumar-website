@@ -18,8 +18,10 @@ export default function AiTradingAgentsPage() {
         <header className="listing-hero">
           <h1 className="page-title">AI Trading Software Agents</h1>
           <p className="body-large">
-            Explore ready-to-purchase AI trading software agents with
-            transparent USD pricing and detailed product information.
+            Explore software agents built to support structured trading workflows, strategy execution, and platform-connected automation.
+          </p>
+          <p className="body-standard" style={{ marginTop: 16 }}>
+            Each Vyntegra agent is designed around a defined use case. These agents are not profit machines, signal guarantees, or financial advice. They are software tools built to help users execute and manage trading workflows with more structure.
           </p>
         </header>
 
@@ -31,8 +33,8 @@ export default function AiTradingAgentsPage() {
           </div>
         ) : (
           <EmptyState
-            heading="AI trading software agents will be available soon."
-            copy="Product details and purchase options are being prepared."
+            heading="No agents are available at the moment."
+            copy="Please check back later or contact Vyntegra for a custom requirement."
           />
         )}
       </div>

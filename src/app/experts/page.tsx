@@ -18,8 +18,10 @@ export default function ExpertsPage() {
         <header className="listing-hero">
           <h1 className="page-title">Talk to Experts</h1>
           <p className="body-large">
-            Browse experienced professionals, review their expertise, and book a
-            focused one-to-one consultation based on your requirements.
+            Book a focused consultation to discuss trading software, automation workflows, platform setup, or custom implementation needs.
+          </p>
+          <p className="body-standard" style={{ marginTop: 16 }}>
+            Use this section if you want expert guidance before choosing an agent, building a custom trading system, or converting your strategy into software. Consultations are for technical and workflow guidance only. They do not guarantee trading results.
           </p>
         </header>
 
@@ -31,8 +33,8 @@ export default function ExpertsPage() {
           </div>
         ) : (
           <EmptyState
-            heading="Expert consultations will be available soon."
-            copy="Detailed expert profiles are being prepared."
+            heading="No expert consultations are available at the moment."
+            copy="Please check back later."
           />
         )}
       </div>

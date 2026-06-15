@@ -9,23 +9,31 @@ import {
 
 const pillars = [
   {
-    title: "Build With Context",
+    title: "Workflow first",
+    icon: SlidersHorizontal,
+    copy: "We map the trading or business workflow before recommending software, so the build starts with a clear operational shape.",
+  },
+  {
+    title: "Execution-ready systems",
     icon: Wrench,
-    copy:
-      "Digital products, automations, and AI systems are shaped around real business requirements instead of generic packages.",
+    copy: "Agents, automations, and custom tools are built around structured logic, handoff clarity, and practical implementation.",
   },
   {
-    title: "Buy With Clarity",
+    title: "Commercial clarity",
     icon: BadgeDollarSign,
-    copy:
-      "Product details, consultation flows, and USD pricing stay visible before a customer makes a decision.",
+    copy: "Scope, pricing paths, and next steps stay visible, so customers know what they are buying before they commit.",
   },
   {
-    title: "Work With Experts",
-    icon: Headphones,
-    copy:
-      "Customers can review professional profiles, ask for support, and move from enquiry to next step with less friction.",
+    title: "Risk-conscious delivery",
+    icon: ShieldCheck,
+    copy: "No profit promises. Every trading software workflow is positioned as a tool that still needs review, testing, and risk control.",
   },
+];
+
+const highlights = [
+  { value: "01", label: "Map the requirement" },
+  { value: "02", label: "Choose the right path" },
+  { value: "03", label: "Build with accountability" },
 ];
 
 const proofPoints = [
@@ -38,7 +46,7 @@ const proofPoints = [
     icon: IdCard,
   },
   {
-    label: "Tailored solution scope",
+    label: "Tailored software scope",
     icon: SlidersHorizontal,
   },
   {
@@ -55,14 +63,20 @@ export default function WhyVyntegra() {
           <div className="why-copy">
             <p className="eyebrow">Why Vyntegra</p>
             <h2 className="section-title" style={{ marginTop: 12 }}>
-              Built for serious digital work.
+              Clear software thinking from idea to execution.
             </h2>
             <p className="body-large">
-              A tighter process for customers who want usable software,
-              transparent buying paths, and technical guidance without the
-              usual ambiguity.
+              Vyntegra is built for users who want practical software, transparent buying paths, and technical guidance without inflated claims.
             </p>
             <div className="why-rule" aria-hidden="true" />
+            <div className="why-highlights" aria-label="Vyntegra process highlights">
+              {highlights.map((highlight) => (
+                <div key={highlight.value} className="why-highlight">
+                  <strong>{highlight.value}</strong>
+                  <span>{highlight.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="why-content">

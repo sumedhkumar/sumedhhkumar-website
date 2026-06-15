@@ -33,6 +33,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--navbar-height) + 16px);
   background: #050506;
   overflow-x: hidden;
 }
@@ -56,7 +57,6 @@ body {
   writing-mode: horizontal-tb;
   text-orientation: mixed;
   overflow-x: hidden;
-  perspective: 1200px;
 }
 
 body::before {
@@ -576,6 +576,7 @@ textarea.form-control {
 }
 
 .announcement-banner {
+  margin-top: var(--navbar-height);
   min-height: 36px;
   display: flex;
   align-items: center;
@@ -595,9 +596,11 @@ textarea.form-control {
 }
 
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 90;
+  right: 0;
+  left: 0;
+  z-index: 1000;
   height: var(--navbar-height);
   background: rgba(10, 11, 13, 0.96);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -812,12 +815,30 @@ textarea.form-control {
   max-width: 680px;
 }
 
+.hero-support-copy {
+  max-width: 720px;
+  margin-top: 6px;
+  color: #D3CEC4;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.72;
+}
+
 .hero-actions {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 18px;
+}
+
+.hero-risk-note {
+  max-width: 620px;
+  margin-top: 4px;
+  color: #9CA0A7;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.58;
 }
 
 .hero-pill {
@@ -1314,17 +1335,20 @@ textarea.form-control {
 
 .why-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
-  gap: 56px;
-  align-items: start;
+  grid-template-columns: minmax(300px, 0.86fr) minmax(0, 1.14fr);
+  gap: 52px;
+  align-items: center;
 }
 
 .why-copy {
-  max-width: 430px;
+  max-width: 480px;
 }
 
 .why-copy .body-large {
   margin-top: 16px;
+  color: #D5CFC3;
+  font-size: 19px;
+  line-height: 1.72;
 }
 
 .why-rule {
@@ -1334,20 +1358,61 @@ textarea.form-control {
   background: linear-gradient(90deg, rgba(184, 145, 74, 0.72), transparent);
 }
 
+.why-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 26px;
+  border: 1px solid rgba(225, 201, 133, 0.16);
+  border-radius: 8px;
+  background: rgba(225, 201, 133, 0.12);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+.why-highlight {
+  min-height: 96px;
+  padding: 16px;
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.040), transparent),
+    rgba(16, 18, 22, 0.92);
+}
+
+.why-highlight strong {
+  color: #E1C985;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.why-highlight span {
+  color: #CFC8B8;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
 .why-content {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 
 .why-pillars {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
 .why-pillar {
-  min-height: 214px;
-  padding: 20px;
+  min-height: 228px;
+  padding: 22px;
+  display: grid;
+  align-content: start;
   transform-style: preserve-3d;
 }
 
@@ -1375,11 +1440,16 @@ textarea.form-control {
 }
 
 .why-pillar .card-title {
-  margin-top: 18px;
+  margin-top: 20px;
+  font-size: 20px;
+  line-height: 1.25;
 }
 
 .why-pillar .body-compact {
   margin-top: 10px;
+  color: #BFB8AA;
+  font-size: 14px;
+  line-height: 1.66;
 }
 
 .why-proof-strip {
@@ -1395,8 +1465,8 @@ textarea.form-control {
 }
 
 .why-proof-item {
-  min-height: 76px;
-  padding: 16px;
+  min-height: 82px;
+  padding: 17px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1745,16 +1815,16 @@ textarea.form-control {
 }
 
 .home-page .why-layout {
-  gap: 40px;
+  gap: 52px;
 }
 
 .home-page .why-copy {
-  max-width: 470px;
+  max-width: 500px;
 }
 
 .home-page .why-pillar {
-  min-height: 184px;
-  padding: 18px;
+  min-height: 228px;
+  padding: 22px;
 }
 
 .home-page .why-proof-strip {
@@ -3664,6 +3734,14 @@ textarea.form-control {
     width: 100%;
   }
 
+  .hero-support-copy {
+    font-size: 16px;
+  }
+
+  .hero-risk-note {
+    font-size: 12px;
+  }
+
   .expert-hero-card {
     padding: 16px;
     gap: 20px;
@@ -3823,6 +3901,18 @@ textarea.form-control {
     gap: 28px;
   }
 
+  .why-copy .body-large {
+    font-size: 17px;
+  }
+
+  .why-highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .why-highlight {
+    min-height: 76px;
+  }
+
   .why-pillars,
   .why-proof-strip {
     grid-template-columns: 1fr;
@@ -3830,6 +3920,11 @@ textarea.form-control {
 
   .why-pillar {
     min-height: auto;
+  }
+
+  .home-page .why-pillar {
+    min-height: auto;
+    padding: 18px;
   }
 
   .why-proof-item {

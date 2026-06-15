@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, CircleAlert, Upload } from "lucide-react";
@@ -7,20 +7,34 @@ import FieldError from "@/components/ui/FieldError";
 import SectionIntro from "@/components/ui/SectionIntro";
 
 const categories = [
-  "Websites and Web Platforms",
-  "Custom Software Systems",
-  "AI-Enabled Solutions",
-  "Workflow Automation",
-  "Custom Trading Software",
-  "Other Tailored Digital Solutions",
+  {
+    title: "Custom Trading Systems",
+    body: "Convert your strategy, indicator logic, or execution process into a structured software workflow.",
+  },
+  {
+    title: "Trading Automation Workflows",
+    body: "Build workflows that connect trading logic with tools, platforms, alerts, execution steps, or review systems where technically possible.",
+  },
+  {
+    title: "Business Websites",
+    body: "Build premium websites for brands, services, products, consultants, and businesses that need a professional online presence.",
+  },
+  {
+    title: "Dashboards and Internal Tools",
+    body: "Create dashboards, trackers, admin panels, reporting tools, and workflow systems for business operations.",
+  },
+  {
+    title: "AI Tool Integrations",
+    body: "Use AI tools to support workflows, content systems, internal operations, decision support, or software automation.",
+  },
 ];
 
 const solutionOptions = [
-  "Website or Web Platform",
-  "Custom Software System",
-  "AI-Enabled Solution",
-  "Workflow Automation",
-  "Custom Trading Software",
+  "Custom Trading Systems",
+  "Trading Automation Workflows",
+  "Business Websites",
+  "Dashboards and Internal Tools",
+  "AI Tool Integrations",
   "Other Tailored Digital Solution",
 ];
 
@@ -159,6 +173,10 @@ export default function CustomSolutionsForm() {
     setStatus(null);
 
     if (Object.keys(nextErrors).length > 0) {
+      setStatus({
+        type: "error",
+        message: "Please complete the required fields before submitting."
+      });
       return;
     }
 
@@ -191,7 +209,7 @@ export default function CustomSolutionsForm() {
           type: "error",
           message:
             result.message ??
-            "Your requirements could not be submitted. Please try again.",
+            "Something went wrong. Please try again.",
         });
         return;
       }
@@ -202,12 +220,12 @@ export default function CustomSolutionsForm() {
       setStatus({
         type: "success",
         message:
-          "Thank you for sharing your requirements. Our team will review your enquiry and respond within 24 hours with the next steps and a quotation.",
+          "Your requirement has been submitted. Vyntegra will review it and respond within 24 hours.",
       });
     } catch {
       setStatus({
         type: "error",
-        message: "Your requirements could not be submitted. Please try again.",
+        message: "Something went wrong. Please try again.",
       });
     } finally {
       setSending(false);
@@ -219,13 +237,13 @@ export default function CustomSolutionsForm() {
       <div className="container custom-solutions-grid">
         <div>
           <SectionIntro
-            heading="Tell us what you need."
-            copy="Share your requirements with us. We will review your enquiry and respond within 24 hours with the next steps and a quotation."
+            heading="What you can build with Vyntegra"
+            copy=""
           />
           <div style={{ display: "grid", gap: 12 }}>
             {categories.map((category) => (
               <div
-                key={category}
+                key={category.title}
                 className="solution-chip standard-card"
                 style={{
                   display: "flex",
@@ -239,7 +257,10 @@ export default function CustomSolutionsForm() {
                   strokeWidth={1.75}
                   style={{ flex: "0 0 auto", marginTop: 2 }}
                 />
-                <span className="body-standard">{category}</span>
+                <div>
+                  <span className="body-standard" style={{ fontWeight: 700 }}>{category.title}</span>
+                  <p className="body-compact" style={{ marginTop: 4 }}>{category.body}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -267,8 +288,12 @@ export default function CustomSolutionsForm() {
           />
 
           <div>
+            <h2 className="section-title" style={{ fontSize: 24, marginBottom: 8 }}>Tell us what you want to build</h2>
+            <p className="body-standard" style={{ marginBottom: 24, color: "var(--foreground-muted)" }}>
+              Share your requirement in detail. The more specific you are, the better we can understand the scope.
+            </p>
             <label className="form-label" htmlFor="fullName">
-              Full Name *
+              Name *
             </label>
             <input
               id="fullName"
@@ -287,7 +312,7 @@ export default function CustomSolutionsForm() {
 
           <div>
             <label className="form-label" htmlFor="emailAddress">
-              Email Address *
+              Email *
             </label>
             <input
               id="emailAddress"
@@ -308,7 +333,7 @@ export default function CustomSolutionsForm() {
 
           <div>
             <label className="form-label" htmlFor="phoneOrWhatsapp">
-              Phone or WhatsApp Number *
+              Phone / WhatsApp *
             </label>
             <input
               id="phoneOrWhatsapp"
@@ -376,7 +401,7 @@ export default function CustomSolutionsForm() {
 
           <div>
             <label className="form-label" htmlFor="requirementsDescription">
-              Describe Your Requirements *
+              Project requirement *
             </label>
             <textarea
               id="requirementsDescription"
@@ -385,7 +410,7 @@ export default function CustomSolutionsForm() {
               rows={6}
               minLength={30}
               maxLength={3000}
-              placeholder="Describe the website, software system, automation, AI-enabled solution, custom trading software, or other tailored digital solution you need."
+              placeholder="Describe what you want to build, the problem it should solve, and any platforms or tools it should connect with."
               value={values.requirementsDescription}
               onChange={(event) =>
                 updateField("requirementsDescription", event.target.value)
@@ -402,7 +427,7 @@ export default function CustomSolutionsForm() {
 
           <div>
             <label className="form-label" htmlFor="preferredTimeline">
-              Preferred Timeline *
+              Expected timeline *
             </label>
             <select
               id="preferredTimeline"
@@ -433,7 +458,7 @@ export default function CustomSolutionsForm() {
 
           <div>
             <label className="form-label" htmlFor="approximateBudget">
-              Approximate Budget
+              Approximate budget
             </label>
             <input
               id="approximateBudget"
@@ -508,7 +533,7 @@ export default function CustomSolutionsForm() {
           ) : null}
 
           <Button type="submit" variant="primary" disabled={sending}>
-            Submit Requirements
+            Submit Requirement
           </Button>
         </form>
       </div>

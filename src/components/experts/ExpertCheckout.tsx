@@ -20,15 +20,31 @@ const paymentOptions: { value: PaymentProvider; label: string }[] = [
   { value: "crypto", label: "Pay with Crypto" },
 ];
 
-/** Weekday → available time slots (0 = Sun … 6 = Sat). */
-const weekdayAvailability: Record<number, string[]> = {
-  1: ["10:30 AM", "12:00 PM", "6:00 PM"],
-  2: ["12:00 PM", "3:30 PM"],
-  3: ["10:30 AM", "3:30 PM", "6:00 PM"],
-  4: ["12:00 PM", "6:00 PM"],
-  5: ["10:30 AM", "12:00 PM"],
-  6: ["11:30 AM", "2:00 PM"],
+/** Availability windows and booking buffers are measured in minutes after midnight. */
+const SLOT_INTERVAL_MINUTES = 15;
+const BOOKING_BUFFER_MINUTES = 15;
+const BOOKING_LOOKAHEAD_DAYS = 60;
+
+const availabilityWindows = {
+  weekday: {
+    startMinutes: 18 * 60,
+    endMinutes: 22 * 60,
+  },
+  weekend: {
+    startMinutes: 12 * 60,
+    endMinutes: 20 * 60,
+  },
 };
+
+type BookedSlot = {
+  expertId: string;
+  dateKey: string;
+  startMinutes: number;
+  endMinutes: number;
+};
+
+// Replace this with persisted confirmed bookings when booking storage is enabled.
+const confirmedBookings: BookedSlot[] = [];
 
 const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -70,15 +86,79 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-/** Build a map of dateKey → time‑slot[] for the next 60 days. */
-function buildAvailabilityMap(): Map<string, string[]> {
+function minutesToTimeLabel(minutes: number) {
+  const hours24 = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const period = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+
+  return `${hours12}:${String(mins).padStart(2, "0")} ${period}`;
+}
+
+function formatSlotRange(startMinutes: number, durationMinutes: number) {
+  return `${minutesToTimeLabel(startMinutes)} - ${minutesToTimeLabel(startMinutes + durationMinutes)}`;
+}
+
+function getAvailabilityWindow(day: number) {
+  return day === 0 || day === 6
+    ? availabilityWindows.weekend
+    : availabilityWindows.weekday;
+}
+
+function isBlockedByBookedSlot(
+  dateKeyValue: string,
+  expertId: string,
+  slotStartMinutes: number,
+  slotEndMinutes: number,
+) {
+  return confirmedBookings.some((booking) => {
+    if (booking.expertId !== expertId || booking.dateKey !== dateKeyValue) {
+      return false;
+    }
+
+    const blockedStart = booking.startMinutes - BOOKING_BUFFER_MINUTES;
+    const blockedEnd = booking.endMinutes + BOOKING_BUFFER_MINUTES;
+
+    return slotStartMinutes < blockedEnd && slotEndMinutes > blockedStart;
+  });
+}
+
+function buildSlotsForDate(
+  d: Date,
+  expertId: string,
+  durationMinutes: number,
+) {
+  const window = getAvailabilityWindow(d.getDay());
+  const key = dateKey(d);
+  const slots: string[] = [];
+
+  for (
+    let startMinutes = window.startMinutes;
+    startMinutes + durationMinutes <= window.endMinutes;
+    startMinutes += SLOT_INTERVAL_MINUTES
+  ) {
+    const endMinutes = startMinutes + durationMinutes;
+
+    if (!isBlockedByBookedSlot(key, expertId, startMinutes, endMinutes)) {
+      slots.push(formatSlotRange(startMinutes, durationMinutes));
+    }
+  }
+
+  return slots;
+}
+
+function buildAvailabilityMap(
+  expertId: string,
+  durationMinutes: number,
+): Map<string, string[]> {
   const map = new Map<string, string[]>();
   const today = new Date();
-  for (let offset = 1; offset <= 60; offset++) {
+  for (let offset = 1; offset <= BOOKING_LOOKAHEAD_DAYS; offset++) {
     const d = new Date(today);
     d.setDate(today.getDate() + offset);
-    const slots = weekdayAvailability[d.getDay()];
-    if (slots && slots.length > 0) {
+
+    const slots = buildSlotsForDate(d, expertId, durationMinutes);
+    if (slots.length > 0) {
       map.set(dateKey(d), slots);
     }
   }
@@ -170,7 +250,7 @@ function CalendarMonth({
         <span className="cal-day-num">{day}</span>
         {hasSlots && !isPast && (
           <span className="cal-dot-row">
-            {slots.map((_, i) => (
+            {slots.slice(0, 4).map((_, i) => (
               <span key={i} className="cal-avail-dot" />
             ))}
           </span>
@@ -285,7 +365,6 @@ export default function ExpertCheckout({
   paymentsConfigured: boolean;
 }) {
   const sessions = expert.sessions.filter((s) => s.active);
-  const availMap = useMemo(() => buildAvailabilityMap(), []);
 
   /* state */
   const [selectedSessionId, setSelectedSessionId] = useState(
@@ -331,6 +410,11 @@ export default function ExpertCheckout({
 
   /* derived */
   const selectedSession = sessions.find((s) => s.id === selectedSessionId);
+  const selectedDurationMinutes = selectedSession?.durationMinutes ?? 30;
+  const availMap = useMemo(
+    () => buildAvailabilityMap(expert.id, selectedDurationMinutes),
+    [expert.id, selectedDurationMinutes],
+  );
   const slotsForDate = selectedDate
     ? (availMap.get(dateKey(selectedDate)) ?? [])
     : [];
@@ -442,8 +526,10 @@ export default function ExpertCheckout({
                   checked={isSelected}
                   onChange={() => {
                     setSelectedSessionId(session.id);
+                    setSelectedSlot("");
                     setDiscountAmountUsd(0);
                     setCouponMessage("");
+                    setStatusMessage("");
                   }}
                   className="sr-only"
                 />

@@ -7,10 +7,10 @@ import { Menu, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 const navLinks = [
-  { label: "AI Trading Agents", href: "/ai-trading-agents" },
+  { label: "Home", href: "/" },
+  { label: "AI Trading Software Agents", href: "/ai-trading-agents" },
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
-  { label: "About Vyntegra", href: "/#about-vyntegra" },
   { label: "Contact", href: "/#contact" },
 ];
 
