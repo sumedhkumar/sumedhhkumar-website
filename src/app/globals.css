@@ -2267,6 +2267,206 @@ textarea.form-control {
   letter-spacing: 0;
 }
 
+.crypto-payment-screen {
+  max-width: 980px;
+}
+
+.crypto-payment-panel {
+  display: grid;
+  gap: 22px;
+  padding: 26px;
+  border: 1px solid rgba(184, 145, 74, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.012)),
+    rgba(17, 19, 25, 0.92);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.crypto-payment-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.crypto-payment-badge {
+  min-height: 32px;
+  padding: 8px 11px;
+  border: 1px solid rgba(225, 201, 133, 0.28);
+  border-radius: 8px;
+  color: #E1C985;
+  background: rgba(184, 145, 74, 0.06);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.crypto-payment-copy,
+.crypto-form {
+  display: grid;
+  gap: 12px;
+}
+
+.crypto-payment-copy p,
+.crypto-query-callout p,
+.crypto-payment-warning,
+.crypto-verification-note {
+  color: #C8C1B3;
+  font-size: 14px;
+  line-height: 1.66;
+}
+
+.crypto-query-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid rgba(225, 201, 133, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(225, 201, 133, 0.050), transparent),
+    rgba(12, 13, 17, 0.80);
+}
+
+.crypto-query-callout strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #F7F3EA;
+  font-size: 15px;
+}
+
+.crypto-payment-details {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.crypto-qr-frame {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #F7F7F7;
+}
+
+.crypto-qr-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.crypto-detail-list {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.crypto-detail-list div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  background: rgba(14, 16, 20, 0.92);
+}
+
+.crypto-detail-list dt {
+  color: #8F949C;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.crypto-detail-list dd {
+  margin: 0;
+  color: #F7F3EA;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.crypto-wallet-address {
+  color: #E1C985 !important;
+}
+
+.crypto-payment-warning {
+  padding: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.06);
+  color: #F5C16C;
+  font-weight: 700;
+}
+
+.crypto-form {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), transparent),
+    rgba(12, 13, 17, 0.82);
+}
+
+.crypto-form .form-label {
+  display: grid;
+  gap: 8px;
+}
+
+.crypto-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.crypto-checkbox-row input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: #B8914A;
+}
+
+.crypto-verification-note {
+  color: #9CA0A7;
+}
+
+.crypto-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(9, 10, 12, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.crypto-dialog {
+  width: min(100%, 460px);
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(216, 203, 166, 0.3);
+  border-radius: 8px;
+  background: #171A1F;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.crypto-dialog .body-standard {
+  color: var(--foreground-muted);
+}
+
 .mobile-purchase-bar,
 .mobile-purchase-sheet,
 .mobile-purchase-backdrop {
@@ -3747,6 +3947,21 @@ textarea.form-control {
     gap: 20px;
     width: 100%;
     max-width: calc(100vw - 36px);
+  }
+
+  .crypto-payment-panel {
+    padding: 18px;
+  }
+
+  .crypto-payment-heading,
+  .crypto-query-callout,
+  .crypto-payment-details,
+  .crypto-detail-list div {
+    grid-template-columns: 1fr;
+  }
+
+  .crypto-payment-heading {
+    display: grid;
   }
 
   .expert-page .listing-container,

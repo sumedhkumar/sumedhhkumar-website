@@ -67,7 +67,7 @@ export function getPublicContactDetails() {
   return {
     email:
       process.env.NEXT_PUBLIC_VYNTEGRA_CONTACT_EMAIL ??
-      "mahajanshardul1@gmail.com",
+      "ai.vyntegra@gmail.com",
     phone: process.env.NEXT_PUBLIC_VYNTEGRA_CONTACT_PHONE ?? "",
   };
 }

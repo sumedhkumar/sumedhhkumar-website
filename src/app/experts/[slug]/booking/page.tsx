@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description: "Select a consultation slot after verified payment access.",
 };
 
+export function generateStaticParams() {
+  return experts.map((expert) => ({ slug: expert.slug }));
+}
+
 export default async function ExpertBookingPage({
   params,
   searchParams,

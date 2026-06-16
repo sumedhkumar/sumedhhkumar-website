@@ -1,7 +1,7 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { CheckCircle2, CircleAlert, Upload } from "lucide-react";
+import { FormEvent, useState } from "react";
+import { CheckCircle2, CircleAlert } from "lucide-react";
 import Button from "@/components/ui/Button";
 import FieldError from "@/components/ui/FieldError";
 import SectionIntro from "@/components/ui/SectionIntro";
@@ -45,53 +45,29 @@ const timelineOptions = [
   "Flexible or To Be Discussed",
 ];
 
-const allowedExtensions = [
-  ".pdf",
-  ".doc",
-  ".docx",
-  ".xls",
-  ".xlsx",
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".zip",
-];
-
-const maxFileSizeBytes = 10 * 1024 * 1024;
-
 type FormValues = {
   fullName: string;
   emailAddress: string;
   phoneOrWhatsapp: string;
-  companyOrOrganization: string;
   solutionType: string;
   requirementsDescription: string;
   preferredTimeline: string;
-  approximateBudget: string;
   website: string;
 };
 
-type FormErrors = Partial<Record<keyof FormValues | "supportingFile", string>>;
+type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 const initialValues: FormValues = {
   fullName: "",
   emailAddress: "",
   phoneOrWhatsapp: "",
-  companyOrOrganization: "",
   solutionType: "",
   requirementsDescription: "",
   preferredTimeline: "",
-  approximateBudget: "",
   website: "",
 };
 
-function hasAllowedExtension(fileName: string) {
-  return allowedExtensions.some((extension) =>
-    fileName.toLowerCase().endsWith(extension),
-  );
-}
-
-function validate(values: FormValues, file: File | null) {
+function validate(values: FormValues) {
   const errors: FormErrors = {};
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -125,35 +101,17 @@ function validate(values: FormValues, file: File | null) {
     errors.preferredTimeline = "Select your preferred timeline.";
   }
 
-  if (file && !hasAllowedExtension(file.name)) {
-    errors.supportingFile =
-      "Upload a PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG, or ZIP file.";
-  }
-
-  if (file && file.size > maxFileSizeBytes) {
-    errors.supportingFile = "Upload a file smaller than or equal to 10 MB.";
-  }
-
   return errors;
 }
 
 export default function CustomSolutionsForm() {
   const [values, setValues] = useState<FormValues>(initialValues);
-  const [file, setFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
   const [sending, setSending] = useState(false);
-
-  const fileSummary = useMemo(() => {
-    if (!file) {
-      return "PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG, or ZIP - Maximum 10 MB";
-    }
-
-    return file.name;
-  }, [file]);
 
   function updateField(
     field: keyof FormValues,
@@ -162,13 +120,9 @@ export default function CustomSolutionsForm() {
     setValues((current) => ({ ...current, [field]: value }));
   }
 
-  function updateFile(event: ChangeEvent<HTMLInputElement>) {
-    setFile(event.target.files?.[0] ?? null);
-  }
-
   async function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validate(values, file);
+    const nextErrors = validate(values);
     setErrors(nextErrors);
     setStatus(null);
 
@@ -187,10 +141,6 @@ export default function CustomSolutionsForm() {
       formData.append(key, value);
     });
     formData.append("sourcePage", "Homepage Custom Solutions Section");
-
-    if (file) {
-      formData.append("supportingFile", file);
-    }
 
     try {
       const response = await fetch("/api/custom-solutions", {
@@ -215,7 +165,6 @@ export default function CustomSolutionsForm() {
       }
 
       setValues(initialValues);
-      setFile(null);
       setErrors({});
       setStatus({
         type: "success",
@@ -356,24 +305,6 @@ export default function CustomSolutionsForm() {
           </div>
 
           <div>
-            <label className="form-label" htmlFor="companyOrOrganization">
-              Company or Organization
-            </label>
-            <input
-              id="companyOrOrganization"
-              name="companyOrOrganization"
-              type="text"
-              placeholder="Optional"
-              value={values.companyOrOrganization}
-              onChange={(event) =>
-                updateField("companyOrOrganization", event.target.value)
-              }
-              className="form-control"
-              style={{ marginTop: 8 }}
-            />
-          </div>
-
-          <div>
             <label className="form-label" htmlFor="solutionType">
               Type of Solution Required *
             </label>
@@ -453,61 +384,6 @@ export default function CustomSolutionsForm() {
             <FieldError
               id="preferredTimeline-error"
               message={errors.preferredTimeline}
-            />
-          </div>
-
-          <div>
-            <label className="form-label" htmlFor="approximateBudget">
-              Approximate budget
-            </label>
-            <input
-              id="approximateBudget"
-              name="approximateBudget"
-              type="text"
-              placeholder="Optional"
-              value={values.approximateBudget}
-              onChange={(event) =>
-                updateField("approximateBudget", event.target.value)
-              }
-              className="form-control"
-              style={{ marginTop: 8 }}
-            />
-          </div>
-
-          <div>
-            <span className="form-label">Supporting File</span>
-            <label
-              htmlFor="supportingFile"
-              className="upload-panel"
-              style={{
-                minHeight: 104,
-                display: "grid",
-                placeItems: "center",
-                gap: 8,
-                padding: 18,
-                marginTop: 8,
-                textAlign: "center",
-                cursor: "pointer",
-              }}
-            >
-              <Upload size={20} color="#B8914A" strokeWidth={1.75} />
-              <span className="body-standard">
-                Upload an optional supporting file
-              </span>
-              <span className="body-compact">{fileSummary}</span>
-            </label>
-            <input
-              id="supportingFile"
-              name="supportingFile"
-              type="file"
-              accept={allowedExtensions.join(",")}
-              onChange={updateFile}
-              style={{ display: "none" }}
-              aria-describedby="supportingFile-error"
-            />
-            <FieldError
-              id="supportingFile-error"
-              message={errors.supportingFile}
             />
           </div>
 

@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock,
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
-import type { Expert, ExpertSession, PaymentProvider } from "@/types";
+import type {
+  CryptoPaymentConfig,
+  Expert,
+  ExpertSession,
+  PaymentProvider,
+} from "@/types";
 import Button from "@/components/ui/Button";
 
 /* ───────────────────────── constants ───────────────────────── */
@@ -19,6 +23,68 @@ const paymentOptions: { value: PaymentProvider; label: string }[] = [
   { value: "stripe", label: "Pay with Stripe" },
   { value: "crypto", label: "Pay with Crypto" },
 ];
+
+type CheckoutPhase = "idle" | "creating" | "verifying";
+
+type CreateExpertOrderResponse = {
+  key?: string;
+  orderId?: string;
+  amount?: number;
+  currency?: string;
+  productName?: string;
+  purchaseName?: string;
+  discountUsd?: number;
+  finalPriceUsd?: number;
+  appliedCoupon?: string;
+  message?: string;
+};
+
+type VerifyExpertPaymentResponse = {
+  success?: boolean;
+  orderId?: string;
+  paymentId?: string;
+  message?: string;
+};
+
+type RazorpayCheckoutResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  theme: {
+    color: string;
+  };
+  handler: (response: RazorpayCheckoutResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: "payment.failed", handler: () => void) => void;
+};
+
+type RazorpayConstructor = new (options: RazorpayOptions) => RazorpayInstance;
+
+type RazorpayWindow = Window & {
+  Razorpay?: RazorpayConstructor;
+};
+
+const checkoutScriptUrl = "https://checkout.razorpay.com/v1/checkout.js";
 
 /** Availability windows and booking buffers are measured in minutes after midnight. */
 const SLOT_INTERVAL_MINUTES = 15;
@@ -72,6 +138,64 @@ function formatUsd(value: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidPhone(value: string) {
+  return /^[+]?[0-9]{7,15}$/.test(value);
+}
+
+function getRazorpayConstructor() {
+  return (window as RazorpayWindow).Razorpay;
+}
+
+function loadRazorpayScript() {
+  return new Promise<void>((resolve, reject) => {
+    if (getRazorpayConstructor()) {
+      resolve();
+      return;
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src="${checkoutScriptUrl}"]`,
+    );
+
+    if (existingScript?.dataset.loaded === "true") {
+      resolve();
+      return;
+    }
+
+    const script = existingScript ?? document.createElement("script");
+
+    script.src = checkoutScriptUrl;
+    script.async = true;
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve();
+    };
+    script.onerror = () => {
+      reject(new Error("Razorpay Checkout could not be loaded."));
+    };
+
+    if (!existingScript) {
+      document.body.appendChild(script);
+    }
+  });
+}
+
+async function readJsonResponse<T extends { message?: string }>(
+  response: Response,
+) {
+  const payload = (await response.json().catch(() => ({}))) as T;
+
+  if (!response.ok) {
+    throw new Error(payload.message || "Request failed.");
+  }
+
+  return payload;
 }
 
 function dateKey(d: Date): string {
@@ -360,9 +484,11 @@ function TimeSlotPicker({
 export default function ExpertCheckout({
   expert,
   paymentsConfigured,
+  cryptoPaymentConfig,
 }: {
   expert: Expert;
   paymentsConfigured: boolean;
+  cryptoPaymentConfig: CryptoPaymentConfig | null;
 }) {
   const sessions = expert.sessions.filter((s) => s.active);
 
@@ -372,12 +498,20 @@ export default function ExpertCheckout({
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
   const [discountAmountUsd, setDiscountAmountUsd] = useState(0);
   const [paymentProvider, setPaymentProvider] =
-    useState<PaymentProvider>("razorpay");
+    useState<PaymentProvider>(
+      !paymentsConfigured && cryptoPaymentConfig ? "crypto" : "razorpay",
+    );
   const [statusMessage, setStatusMessage] = useState("");
+  const [statusTone, setStatusTone] = useState<"info" | "success" | "error">("info");
+  const [checkoutPhase, setCheckoutPhase] = useState<CheckoutPhase>("idle");
+  const checkoutCompletedRef = useRef(false);
 
   /* calendar navigation */
   const today = useMemo(() => new Date(), []);
@@ -411,17 +545,36 @@ export default function ExpertCheckout({
   /* derived */
   const selectedSession = sessions.find((s) => s.id === selectedSessionId);
   const selectedDurationMinutes = selectedSession?.durationMinutes ?? 30;
-  const availMap = useMemo(
-    () => buildAvailabilityMap(expert.id, selectedDurationMinutes),
-    [expert.id, selectedDurationMinutes],
-  );
+  const availMap = buildAvailabilityMap(expert.id, selectedDurationMinutes);
   const slotsForDate = selectedDate
     ? (availMap.get(dateKey(selectedDate)) ?? [])
     : [];
   const originalFee = selectedSession?.feeUsd ?? 0;
   const finalAmount = Math.max(0, originalFee - discountAmountUsd);
+  const cryptoConfigured = Boolean(cryptoPaymentConfig);
+  const customerNameValue = customerName.trim();
+  const customerEmailValue = customerEmail.trim();
+  const customerPhoneValue = customerPhone.trim();
+  const customerDetailsReady =
+    paymentProvider === "crypto" ||
+    Boolean(
+      customerNameValue &&
+        isValidEmail(customerEmailValue) &&
+        isValidPhone(customerPhoneValue),
+    );
+  const selectedPaymentConfigured =
+    paymentProvider === "crypto"
+      ? cryptoConfigured
+      : paymentProvider === "razorpay"
+        ? paymentsConfigured
+        : false;
   const paymentReady = Boolean(
-    paymentsConfigured && selectedSession && selectedSlot,
+    selectedPaymentConfigured &&
+      selectedSession &&
+      selectedDate &&
+      selectedSlot &&
+      customerDetailsReady &&
+      checkoutPhase === "idle",
   );
   const currentStep = !selectedSessionId ? 1 : !selectedDate ? 2 : !selectedSlot ? 3 : 4;
 
@@ -465,13 +618,224 @@ export default function ExpertCheckout({
     setDiscountAmountUsd(result.discountAmountUsd ?? 0);
   }
 
-  function continueToPayment() {
-    if (!selectedSlot) {
-      setStatusMessage("Select an appointment slot before making payment.");
+  function setStatus(message: string, tone: "info" | "success" | "error" = "info") {
+    setStatusMessage(message);
+    setStatusTone(tone);
+  }
+
+  async function verifyRazorpayPayment(response: RazorpayCheckoutResponse) {
+    if (!selectedSession || !selectedDate || !selectedSlot) {
+      setStatus("Select an appointment slot before payment verification.", "error");
+      setCheckoutPhase("idle");
       return;
     }
 
-    setStatusMessage(
+    checkoutCompletedRef.current = true;
+    setCheckoutPhase("verifying");
+    setStatus("Verifying payment with Vyntegra backend...");
+
+    try {
+      const trimmedCouponCode = couponCode.trim();
+      const verificationResponse = await fetch("/api/payments/razorpay/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetType: "expert",
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          expertId: expert.id,
+          slug: expert.slug,
+          sessionId: selectedSession.id,
+          appointmentDate: dateKey(selectedDate),
+          appointmentSlot: selectedSlot,
+          customerName: customerNameValue,
+          customerEmail: customerEmailValue,
+          customerPhone: customerPhoneValue,
+          ...(trimmedCouponCode ? { couponCode: trimmedCouponCode } : {}),
+        }),
+      });
+      const verificationResult =
+        await readJsonResponse<VerifyExpertPaymentResponse>(
+          verificationResponse,
+        );
+
+      if (!verificationResult.success) {
+        throw new Error("Payment verification failed.");
+      }
+
+      setStatus(
+        "Payment verified successfully. Vyntegra will confirm your consultation booking by email after internal processing.",
+        "success",
+      );
+    } catch (error) {
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Payment verification failed.",
+        "error",
+      );
+    } finally {
+      setCheckoutPhase("idle");
+    }
+  }
+
+  async function startRazorpayCheckout() {
+    if (!selectedSession || !selectedDate || !selectedSlot) {
+      setStatus("Select an appointment slot before making payment.", "error");
+      return;
+    }
+
+    if (
+      !customerNameValue ||
+      !isValidEmail(customerEmailValue) ||
+      !isValidPhone(customerPhoneValue)
+    ) {
+      setStatus(
+        "Enter your full name, valid email, and valid phone number before payment.",
+        "error",
+      );
+      return;
+    }
+
+    setCheckoutPhase("creating");
+    checkoutCompletedRef.current = false;
+    setStatus("Loading Razorpay Checkout...");
+
+    try {
+      await loadRazorpayScript();
+      const Razorpay = getRazorpayConstructor();
+
+      if (!Razorpay) {
+        throw new Error("Razorpay Checkout is unavailable.");
+      }
+
+      const trimmedCouponCode = couponCode.trim();
+      setStatus("Creating secure Razorpay order...");
+      const orderResponse = await fetch("/api/payments/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetType: "expert",
+          expertId: expert.id,
+          slug: expert.slug,
+          sessionId: selectedSession.id,
+          appointmentDate: dateKey(selectedDate),
+          appointmentSlot: selectedSlot,
+          customerName: customerNameValue,
+          customerEmail: customerEmailValue,
+          customerPhone: customerPhoneValue,
+          ...(trimmedCouponCode ? { couponCode: trimmedCouponCode } : {}),
+        }),
+      });
+      const order =
+        await readJsonResponse<CreateExpertOrderResponse>(orderResponse);
+
+      if (
+        !order.key ||
+        !order.orderId ||
+        !order.amount ||
+        !order.currency ||
+        !order.productName
+      ) {
+        throw new Error("Payment order response is incomplete.");
+      }
+
+      if (typeof order.discountUsd === "number") {
+        setDiscountAmountUsd(order.discountUsd);
+      }
+
+      if (order.appliedCoupon) {
+        setCouponMessage("Coupon applied.");
+      }
+
+      const checkout = new Razorpay({
+        key: order.key,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Vyntegra",
+        description: order.productName,
+        order_id: order.orderId,
+        prefill: {
+          name: customerNameValue,
+          email: customerEmailValue,
+          contact: customerPhoneValue,
+        },
+        theme: {
+          color: "#B8914A",
+        },
+        handler: (checkoutResponse) => {
+          void verifyRazorpayPayment(checkoutResponse);
+        },
+        modal: {
+          ondismiss: () => {
+            if (!checkoutCompletedRef.current) {
+              setCheckoutPhase("idle");
+              setStatus("Payment window closed before completion.");
+            }
+          },
+        },
+      });
+
+      checkout.on("payment.failed", () => {
+        checkoutCompletedRef.current = true;
+        setCheckoutPhase("idle");
+        setStatus("Razorpay reported that the payment failed.", "error");
+      });
+      checkout.open();
+      setStatus("Complete the payment in the Razorpay window.");
+    } catch (error) {
+      setCheckoutPhase("idle");
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Unable to start Razorpay payment.",
+        "error",
+      );
+    }
+  }
+
+  function continueToPayment() {
+    if (!selectedSession || !selectedDate || !selectedSlot) {
+      setStatus("Select an appointment slot before making payment.", "error");
+      return;
+    }
+
+    if (paymentProvider === "crypto") {
+      if (!cryptoConfigured) {
+        setStatus("Crypto payment configuration is pending.", "error");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        session: selectedSession.id,
+        date: dateKey(selectedDate),
+        slot: selectedSlot,
+        amount: finalAmount.toFixed(2),
+      });
+      const trimmedCouponCode = couponCode.trim();
+
+      if (trimmedCouponCode) {
+        params.set("coupon", trimmedCouponCode);
+      }
+
+      window.location.assign(
+        `/experts/${expert.slug}/crypto-payment?${params.toString()}`,
+      );
+      return;
+    }
+
+    if (paymentProvider === "razorpay") {
+      void startRazorpayCheckout();
+      return;
+    }
+
+    if (!paymentsConfigured) {
+      setStatus("Online payment configuration is pending.", "error");
+      return;
+    }
+
+    setStatus(
       "Payment gateway initiation is pending in this build. Your appointment is not confirmed until payment verification succeeds.",
     );
   }
@@ -671,18 +1035,28 @@ export default function ExpertCheckout({
         <div className="payment-option-grid">
           {paymentOptions.map((option) => {
             const isSelected = paymentProvider === option.value;
+            const optionDisabled =
+              !selectedSlot ||
+              (option.value === "crypto"
+                ? !cryptoConfigured
+                : option.value === "razorpay"
+                  ? !paymentsConfigured
+                  : true);
             return (
               <label
                 key={option.value}
-                className={`payment-option-card${isSelected ? " payment-option-selected" : ""}${!paymentReady ? " payment-option-disabled" : ""}`}
+                className={`payment-option-card${isSelected ? " payment-option-selected" : ""}${optionDisabled ? " payment-option-disabled" : ""}`}
               >
                 <input
                   type="radio"
                   name="expertPaymentProvider"
                   value={option.value}
                   checked={isSelected}
-                  disabled={!paymentReady}
-                  onChange={() => setPaymentProvider(option.value)}
+                  disabled={optionDisabled}
+                  onChange={() => {
+                    setPaymentProvider(option.value);
+                    setStatusMessage("");
+                  }}
                   className="sr-only"
                 />
                 <span className="payment-option-radio">
@@ -695,15 +1069,88 @@ export default function ExpertCheckout({
         </div>
       </fieldset>
 
+      {paymentProvider !== "crypto" ? (
+        <div className="booking-section booking-section-divider">
+          <div style={{ display: "grid", gap: 14 }}>
+            <div>
+              <label className="form-label" htmlFor="expertCustomerName">
+                Full name
+              </label>
+              <input
+                id="expertCustomerName"
+                type="text"
+                placeholder="Enter your full name"
+                value={customerName}
+                onChange={(event) => {
+                  setCustomerName(event.target.value);
+                  setStatusMessage("");
+                }}
+                className="form-control"
+                style={{ marginTop: 8 }}
+                required
+              />
+            </div>
+            <div>
+              <label className="form-label" htmlFor="expertCustomerEmail">
+                Email
+              </label>
+              <input
+                id="expertCustomerEmail"
+                type="email"
+                placeholder="you@example.com"
+                value={customerEmail}
+                onChange={(event) => {
+                  setCustomerEmail(event.target.value);
+                  setStatusMessage("");
+                }}
+                className="form-control"
+                style={{ marginTop: 8 }}
+                required
+              />
+            </div>
+            <div>
+              <label className="form-label" htmlFor="expertCustomerPhone">
+                Phone number
+              </label>
+              <input
+                id="expertCustomerPhone"
+                type="tel"
+                placeholder="+91 9876543210"
+                value={customerPhone}
+                onChange={(event) => {
+                  setCustomerPhone(event.target.value);
+                  setStatusMessage("");
+                }}
+                className="form-control"
+                style={{ marginTop: 8 }}
+                required
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* ── status ── */}
       {!paymentsConfigured && (
         <p className="body-compact" style={{ color: "#F59E0B" }}>
-          Online payment configuration is pending.
+          {cryptoConfigured
+            ? "Stripe/Razorpay configuration is pending. Crypto payment is available."
+            : "Online payment configuration is pending."}
         </p>
       )}
 
       {statusMessage && (
-        <p className="body-compact" style={{ color: "#F59E0B" }}>
+        <p
+          className="body-compact"
+          style={{
+            color:
+              statusTone === "success"
+                ? "#86EFAC"
+                : statusTone === "error"
+                  ? "#FCA5A5"
+                  : "#F59E0B",
+          }}
+        >
           {statusMessage}
         </p>
       )}
@@ -715,7 +1162,15 @@ export default function ExpertCheckout({
         disabled={!paymentReady}
         onClick={continueToPayment}
       >
-        Continue to Payment
+        {checkoutPhase === "idle"
+          ? paymentProvider === "razorpay"
+            ? "Pay with Razorpay"
+            : paymentProvider === "crypto"
+              ? "Continue to Crypto Payment"
+              : "Continue to Payment"
+          : checkoutPhase === "creating"
+            ? "Creating order..."
+            : "Verifying payment..."}
       </Button>
     </div>
   );

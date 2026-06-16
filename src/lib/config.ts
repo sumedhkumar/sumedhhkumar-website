@@ -8,6 +8,54 @@ function readValue(name: string) {
   return process.env[name] ?? "";
 }
 
+function readFlagDefault(name: string, defaultValue: boolean) {
+  const value = readValue(name);
+
+  if (!value) {
+    return defaultValue;
+  }
+
+  return value === "true";
+}
+
+function readFlagWithDefault(
+  primaryName: string,
+  fallbackName: string,
+  defaultValue: boolean,
+) {
+  const primaryValue = readValue(primaryName);
+  const fallbackValue = readValue(fallbackName);
+
+  if (primaryValue) {
+    return primaryValue === "true";
+  }
+
+  if (fallbackValue) {
+    return fallbackValue === "true";
+  }
+
+  return defaultValue;
+}
+
+const officialContactEmail = "ai.vyntegra@gmail.com";
+const contactEmail =
+  readValue("CONTACT_EMAIL") ||
+  readValue("NEXT_PUBLIC_VYNTEGRA_CONTACT_EMAIL") ||
+  officialContactEmail;
+const adminEmail = readValue("ADMIN_EMAIL") || contactEmail;
+const adminPaymentEmail = readValue("ADMIN_PAYMENT_EMAIL") || adminEmail;
+const customSolutionsRecipientEmail =
+  readValue("CUSTOM_SOLUTION_EMAIL") ||
+  readValue("CUSTOM_SOLUTIONS_RECIPIENT_EMAIL") ||
+  adminEmail;
+const queryEmail = readValue("QUERY_EMAIL") || adminPaymentEmail;
+const smtpPort = readValue("SMTP_PORT") || "465";
+const smtpUser = readValue("SMTP_USER") || contactEmail;
+const smtpFromEmail =
+  readValue("EMAIL_FROM") ||
+  readValue("SMTP_FROM_EMAIL") ||
+  `Vyntegra <${smtpUser}>`;
+
 export const appConfig = {
   appBaseUrl: readValue("APP_BASE_URL"),
   persistenceProvider: readValue("PERSISTENCE_PROVIDER") || "disabled",
@@ -20,19 +68,34 @@ export const appConfig = {
   publicRazorpayKeyId: readValue("NEXT_PUBLIC_RAZORPAY_KEY_ID"),
   razorpayKeySecret: readValue("RAZORPAY_KEY_SECRET"),
   razorpayWebhookSecret: readValue("RAZORPAY_WEBHOOK_SECRET"),
-  cryptoPaymentsEnabled: readFlag("CRYPTO_PAYMENTS_ENABLED"),
-  cryptoWalletAddress: readValue("CRYPTO_WALLET_ADDRESS"),
-  cryptoWalletNetwork: readValue("CRYPTO_WALLET_NETWORK"),
+  cryptoPaymentsEnabled: readFlagWithDefault(
+    "CRYPTO_PAYMENT_ENABLED",
+    "CRYPTO_PAYMENTS_ENABLED",
+    true,
+  ),
+  cryptoPaymentToken: readValue("CRYPTO_PAYMENT_TOKEN") || "USDT",
+  cryptoWalletAddress:
+    readValue("CRYPTO_WALLET_ADDRESS") ||
+    "TGFNSMePvxZZuxXPLJuFC3b8rSuUoPnAxV",
+  cryptoWalletNetwork:
+    readValue("CRYPTO_PAYMENT_NETWORK") ||
+    readValue("CRYPTO_WALLET_NETWORK") ||
+    "Tron (TRC20)",
+  cryptoQrImagePath:
+    readValue("CRYPTO_QR_IMAGE_PATH") || "/payments/crypto-payment-qr.png",
+  contactEmail,
+  adminEmail,
+  adminPaymentEmail,
+  queryEmail,
   expertBookingEnabled: readFlag("EXPERT_BOOKING_ENABLED"),
   productAccessEnabled: readFlag("PRODUCT_ACCESS_ENABLED"),
-  customSolutionsRecipientEmail:
-    readValue("CUSTOM_SOLUTIONS_RECIPIENT_EMAIL") ||
-    "mahajanshardul1@gmail.com",
+  customSolutionsRecipientEmail,
   smtpHost: readValue("SMTP_HOST"),
-  smtpPort: readValue("SMTP_PORT"),
-  smtpUser: readValue("SMTP_USER"),
-  smtpPass: readValue("SMTP_PASS"),
-  smtpFromEmail: readValue("SMTP_FROM_EMAIL"),
+  smtpPort,
+  smtpSecure: readFlagDefault("SMTP_SECURE", Number(smtpPort) === 465),
+  smtpUser,
+  smtpPass: readValue("SMTP_APP_PASSWORD") || readValue("SMTP_PASS"),
+  smtpFromEmail,
 };
 
 export function isProductionPersistenceConfigured() {
@@ -48,8 +111,7 @@ export function hasSmtpConfiguration() {
       appConfig.smtpPort &&
       appConfig.smtpUser &&
       appConfig.smtpPass &&
-      appConfig.smtpFromEmail &&
-      appConfig.customSolutionsRecipientEmail,
+      appConfig.smtpFromEmail,
   );
 }
 
@@ -75,21 +137,37 @@ export function hasRazorpayConfiguration() {
   );
 }
 
+export function hasRazorpayCheckoutConfiguration() {
+  return Boolean(
+    appConfig.razorpayEnabled &&
+      appConfig.publicRazorpayKeyId &&
+      appConfig.razorpayKeySecret &&
+      (process.env.RAZORPAY_USD_TO_INR_RATE ||
+        process.env.NODE_ENV !== "production"),
+  );
+}
+
+export const hasProductRazorpayCheckoutConfiguration =
+  hasRazorpayCheckoutConfiguration;
+
 export function hasCryptoConfiguration() {
   return Boolean(
-    appConfig.paymentsEnabled &&
-      isProductionPersistenceConfigured() &&
-      appConfig.cryptoPaymentsEnabled &&
+    appConfig.cryptoPaymentsEnabled &&
+      appConfig.cryptoPaymentToken &&
       appConfig.cryptoWalletAddress &&
-      appConfig.cryptoWalletNetwork,
+      appConfig.cryptoWalletNetwork &&
+      appConfig.cryptoQrImagePath,
   );
 }
 
 export function hasAnyPaymentConfiguration() {
+  return hasGatewayPaymentConfiguration() || hasCryptoConfiguration();
+}
+
+export function hasGatewayPaymentConfiguration() {
   return (
     hasStripeConfiguration() ||
-    hasRazorpayConfiguration() ||
-    hasCryptoConfiguration()
+    hasRazorpayConfiguration()
   );
 }
 

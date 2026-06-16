@@ -1,0 +1,169 @@
+You are working inside the Vyntegra website codebase.
+
+Task: Replace the fixed USD-to-INR env rate with a live server-side USD→INR rate system updated daily at 5:30 AM IST.
+
+Current context:
+- AI product Razorpay flow is already implemented.
+- Product prices are displayed in USD.
+- Razorpay charges INR.
+- Current env fallback is RAZORPAY_USD_TO_INR_RATE=85.
+- The code may have changed since the last prompt, so inspect the current code before editing.
+- Do not redesign UI.
+- Do not touch expert checkout, Stripe, crypto, custom solutions, emails, or webhooks.
+- Do not remove /razorpay-test.
+
+Use this exchange-rate source:
+- Primary API: https://open.er-api.com/v6/latest/USD
+- Expected JSON contains:
+  result: "success"
+  rates: { INR: number }
+  time_last_update_utc or time_next_update_utc if available
+- Do not use a paid API.
+- Do not require an API key.
+
+Required behavior:
+1. Create a server-only exchange-rate utility.
+   Recommended location:
+   src/lib/exchange-rate.ts
+
+2. The utility must export a function similar to:
+   getUsdToInrRate()
+
+3. getUsdToInrRate() must:
+   - Run server-side only.
+   - Fetch USD→INR from https://open.er-api.com/v6/latest/USD.
+   - Validate that result is success.
+   - Validate INR is a finite positive number.
+   - Round/store the rate to 4 decimal places.
+   - Cache the fetched rate in server memory.
+   - Treat the cache as valid for the current India date after 5:30 AM IST.
+   - If called before 5:30 AM IST, use the latest already cached rate if available.
+   - If no cached rate exists, fetch immediately.
+   - If fetch fails and cached rate exists, return the cached rate.
+   - If fetch fails and no cached rate exists, use numeric env fallback RAZORPAY_USD_TO_INR_RATE.
+   - If env fallback is also missing/invalid, use 85 only as final development fallback.
+   - Return metadata:
+     rate
+     source: "live" | "cache" | "env-fallback" | "hardcoded-fallback"
+     fetchedAt
+     effectiveDateIst
+
+4. Add a refresh API route:
+   src/app/api/exchange-rates/usd-inr/refresh/route.ts
+
+   This route must:
+   - Accept POST only.
+   - Run on Node.js runtime.
+   - Force-refresh the USD→INR rate from the primary API.
+   - Return JSON:
+     success
+     rate
+     source
+     fetchedAt
+     effectiveDateIst
+   - Never expose secrets.
+   - Return safe errors only.
+
+5. Add a read API route:
+   src/app/api/exchange-rates/usd-inr/route.ts
+
+   This route must:
+   - Accept GET only.
+   - Return the currently active USD→INR rate using getUsdToInrRate().
+   - Return JSON:
+     success
+     rate
+     source
+     fetchedAt
+     effectiveDateIst
+
+6. Add Vercel Cron configuration for daily refresh:
+   - If vercel.json exists, update it safely.
+   - If vercel.json does not exist, create it.
+   - Add this cron:
+     path: /api/exchange-rates/usd-inr/refresh
+     schedule: 0 0 * * *
+   - 0 0 * * * UTC equals 5:30 AM IST.
+   - Do not overwrite unrelated existing vercel.json config.
+
+7. Protect the cron refresh route:
+   - Add optional env variable:
+     CRON_SECRET
+   - If CRON_SECRET is set, require request header:
+     Authorization: Bearer <CRON_SECRET>
+   - If CRON_SECRET is not set, allow the request for local/dev compatibility.
+   - Update .env.example with:
+     RAZORPAY_USD_TO_INR_RATE=85
+     CRON_SECRET=
+
+8. Update Razorpay product create-order route:
+   - Find the current AI product Razorpay create-order route.
+   - Replace fixed env-rate logic with getUsdToInrRate().
+   - Server must calculate INR amount using the live/cached/fallback rate returned by getUsdToInrRate().
+   - Do not trust frontend amount/rate.
+   - Razorpay notes must include:
+     usdToInrRate
+     usdToInrRateSource
+     usdToInrRateFetchedAt
+     usdToInrEffectiveDateIst
+     originalPriceUsd
+     discountUsd
+     finalPriceUsd
+     finalPriceInr
+     couponCode if applied
+   - API response to frontend must include:
+     finalPriceInr
+     usdToInrRate
+     usdToInrRateSource
+     usdToInrEffectiveDateIst
+
+9. UI display:
+   - In the AI product purchase flow, show a small line near Razorpay payment amount:
+     "Razorpay charges in INR. USD converted at ₹<rate>/USD."
+   - If source is fallback, show:
+     "Using fallback USD-INR rate. Final amount is shown before payment."
+   - Keep styling consistent with current UI.
+   - Do not change layout more than necessary.
+
+10. Testing:
+   Run:
+   npm run lint
+   npm run build
+   npm run dev
+
+   Test:
+   - GET /api/exchange-rates/usd-inr returns success JSON.
+   - POST /api/exchange-rates/usd-inr/refresh returns success JSON.
+   - AI product Razorpay create-order uses the returned live/cache/fallback rate.
+   - Razorpay order notes include rate metadata.
+   - Product purchase page still renders.
+   - Razorpay popup still opens.
+   - /razorpay-test still works.
+   - Existing coupon TEST50 still updates final price correctly.
+   - Crypto flow remains unchanged.
+   - Expert checkout remains unchanged.
+
+11. Output required:
+   - Changed file list.
+   - New env variables added.
+   - Whether vercel.json was created or updated.
+   - Exact exchange-rate source used.
+   - Sample response from GET /api/exchange-rates/usd-inr.
+   - Sample response from POST /api/exchange-rates/usd-inr/refresh.
+   - Sample Razorpay create-order response showing rate metadata.
+   - npm run lint result.
+   - npm run build result.
+   - Any remaining TODOs.
+
+Hard restrictions:
+- Do not use frontend exchange-rate conversion for payment amount.
+- Do not require paid APIs.
+- Do not require API keys for exchange-rate source.
+- Do not change product USD prices.
+- Do not change expert checkout.
+- Do not change Stripe.
+- Do not change crypto.
+- Do not add database/order persistence in this step.
+- Do not add delivery emails in this step.
+- Do not add Razorpay webhooks in this step.
+- Do not expose Razorpay secrets or cron secret.

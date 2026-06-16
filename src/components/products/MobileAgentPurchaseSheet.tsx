@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import type { TradingAgentProduct } from "@/types";
+import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 import { AgentPurchaseForm } from "@/components/products/AgentPurchaseCard";
 
 type PurchaseState = Parameters<typeof AgentPurchaseForm>[0]["state"];
@@ -10,12 +10,14 @@ type PurchaseState = Parameters<typeof AgentPurchaseForm>[0]["state"];
 export default function MobileAgentPurchaseSheet({
   product,
   paymentsConfigured,
+  cryptoPaymentConfig,
   state,
   setState,
   onClose,
 }: {
   product: TradingAgentProduct;
   paymentsConfigured: boolean;
+  cryptoPaymentConfig: CryptoPaymentConfig | null;
   state: PurchaseState;
   setState: Dispatch<SetStateAction<PurchaseState>>;
   onClose: () => void;
@@ -52,6 +54,7 @@ export default function MobileAgentPurchaseSheet({
           <AgentPurchaseForm
             product={product}
             paymentsConfigured={paymentsConfigured}
+            cryptoPaymentConfig={cryptoPaymentConfig}
             state={state}
             setState={setState}
           />

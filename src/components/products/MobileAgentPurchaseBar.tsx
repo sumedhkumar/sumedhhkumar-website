@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { TradingAgentProduct } from "@/types";
+import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 import Button from "@/components/ui/Button";
 import {
   useAgentPurchaseState,
@@ -20,9 +20,11 @@ function formatUsd(value: number) {
 export default function MobileAgentPurchaseBar({
   product,
   paymentsConfigured,
+  cryptoPaymentConfig,
 }: {
   product: TradingAgentProduct;
   paymentsConfigured: boolean;
+  cryptoPaymentConfig: CryptoPaymentConfig | null;
 }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useAgentPurchaseState(product);
@@ -45,6 +47,7 @@ export default function MobileAgentPurchaseBar({
         <MobileAgentPurchaseSheet
           product={product}
           paymentsConfigured={paymentsConfigured}
+          cryptoPaymentConfig={cryptoPaymentConfig}
           state={state}
           setState={setState}
           onClose={() => setOpen(false)}

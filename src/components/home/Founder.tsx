@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { site } from "@/data/site";
 import SectionIntro from "@/components/ui/SectionIntro";
 import SocialIcon from "@/components/ui/SocialIcon";
@@ -37,9 +37,9 @@ export default function Founder() {
             Vyntegra was created to bring more structure, clarity, and technical discipline into trading software and automation. The focus is not on hype or profit promises, but on building systems that users can understand, review, and operate responsibly.
           </p>
           <div style={{ marginTop: 24 }}>
-            <a href="/experts" className="button button-secondary">
+            <Link href="/experts" className="button button-secondary">
               Connect with Sumedh
-            </a>
+            </Link>
           </div>
           <div style={{ marginTop: 40 }}>
             <h4 className="body-standard" style={{ fontWeight: 700 }}>Follow and connect</h4>

@@ -220,7 +220,7 @@ export async function POST(request: Request) {
     return Response.json({
       ok: true,
       message:
-        "Thank you for sharing your requirements. Our team will review your enquiry and respond within 24 hours with the next steps and a quotation.",
+        "Your requirement has been submitted. Vyntegra will review it and respond within 24 hours.",
     });
   } catch {
     return Response.json(

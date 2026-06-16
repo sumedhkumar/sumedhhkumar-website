@@ -85,7 +85,7 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
             View Profile
           </Button>
           <Button
-            href={`/experts/${expert.slug}#booking`}
+            href={`/experts/${expert.slug}/checkout`}
             variant="primary"
           >
             Book Consultation <ArrowRight size={16} strokeWidth={1.75} />
