@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer";
-import { appConfig, hasSmtpConfiguration } from "@/lib/config";
+import {
+  appConfig,
+  getSmtpConfigurationErrorMessage,
+  hasSmtpConfiguration,
+} from "@/lib/config";
 
 export type ContactEmailInput = {
   timestamp: string;
@@ -61,6 +65,38 @@ export type PaymentQueryEmailInput = {
   bookingDetails?: string;
 };
 
+export type RazorpayPaymentSuccessEmailInput = {
+  timestamp: string;
+  purchaseType: "product" | "expert";
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  purchaseName: string;
+  purchaseDescription: string;
+  originalPriceUsd: string;
+  couponCode?: string;
+  discountUsd?: string;
+  finalPriceUsd: string;
+  usdToInrRate: string;
+  usdToInrRateSource?: string;
+  usdToInrRateFetchedAt: string;
+  usdToInrEffectiveDateIst?: string;
+  finalPriceInr: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  expertName?: string;
+  sessionLabel?: string;
+  sessionDurationMinutes?: string;
+  slotStartUtc?: string;
+  slotDisplayIst?: string;
+  calBookingUid?: string;
+  calBookingStatus?: string;
+  calMeetingUrl?: string;
+  fallbackBookingUrl?: string;
+  supportFollowupRequired?: boolean;
+  bookingErrorSummary?: string;
+};
+
 function fallback(value: string, fallbackValue: string) {
   return value || fallbackValue;
 }
@@ -103,6 +139,14 @@ function renderDetails(details: EmailDetail[]) {
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #E7E1D5;border-radius:8px;overflow:hidden;background:#FFFCF7;">
       ${rows}
     </table>`;
+}
+
+function renderPriceValue(input: RazorpayPaymentSuccessEmailInput) {
+  if (!input.couponCode || !input.discountUsd || input.discountUsd === "$0.00") {
+    return escapeHtml(input.finalPriceUsd);
+  }
+
+  return `<span style="text-decoration:line-through;color:#8D929B;">${escapeHtml(input.originalPriceUsd)}</span> ${escapeHtml(input.finalPriceUsd)}`;
 }
 
 function renderBlocks(blocks: EmailBlock[]) {
@@ -175,6 +219,8 @@ function buildContactAdminBody(input: ContactEmailInput) {
     "A new enquiry has been submitted.",
     `Full Name: ${input.fullName}`,
     `Email: ${input.emailAddress}`,
+    `Phone / WhatsApp: ${fallback(input.phoneOrWhatsapp, "Not provided")}`,
+    `Subject: ${fallback(input.subject, "Not provided")}`,
     "Message:",
     input.message,
     `Submitted At: ${input.timestamp}`,
@@ -188,6 +234,11 @@ function buildContactAdminHtml(input: ContactEmailInput) {
     details: [
       { label: "Full Name", value: input.fullName },
       { label: "Email", value: input.emailAddress },
+      {
+        label: "Phone / WhatsApp",
+        value: fallback(input.phoneOrWhatsapp, "Not provided"),
+      },
+      { label: "Subject", value: fallback(input.subject, "Not provided") },
       { label: "Submitted At", value: input.timestamp },
     ],
     blocks: [{ heading: "Message", body: input.message }],
@@ -198,7 +249,10 @@ function buildContactCustomerBody(input: ContactEmailInput) {
   return [
     `Hi ${input.fullName},`,
     "We have received your enquiry.",
-    "Our team will review your message and get back to you soon.",
+    `Subject: ${fallback(input.subject, "Not provided")}`,
+    "Your submitted message:",
+    input.message,
+    "Our team will review your message and get back to you within 24 hours.",
     "Regards,",
     "Vyntegra",
   ].join("\n\n");
@@ -208,9 +262,17 @@ function buildContactCustomerHtml(input: ContactEmailInput) {
   return buildEmailHtml({
     title: "Vyntegra enquiry received",
     intro: `Hi ${input.fullName}, we have received your enquiry.`,
+    details: [
+      { label: "Subject", value: fallback(input.subject, "Not provided") },
+      { label: "Submitted At", value: input.timestamp },
+    ],
     blocks: [
       {
-        body: "Our team will review your message and get back to you soon.",
+        heading: "Your submitted message",
+        body: input.message,
+      },
+      {
+        body: "Our team will review your message and get back to you within 24 hours.",
       },
     ],
   });
@@ -222,8 +284,11 @@ function buildCustomSolutionsAdminBody(input: CustomSolutionsEmailInput) {
     `Full Name: ${input.fullName}`,
     `Email: ${input.emailAddress}`,
     `Phone / WhatsApp: ${fallback(input.phoneOrWhatsapp, "Not provided")}`,
+    `Company / Organization: ${fallback(input.companyOrOrganization, "Not provided")}`,
     `Type of Solution: ${fallback(input.solutionType, "Not provided")}`,
     `Expected Timeline: ${fallback(input.preferredTimeline, "Not provided")}`,
+    `Approximate Budget: ${fallback(input.approximateBudget, "Not provided")}`,
+    `Supporting File: ${fallback(input.supportingFileInformation, "Not provided")}`,
     "Requirement:",
     input.requirementsDescription,
     `Source Page: ${input.sourcePage}`,
@@ -243,12 +308,24 @@ function buildCustomSolutionsAdminHtml(input: CustomSolutionsEmailInput) {
         value: fallback(input.phoneOrWhatsapp, "Not provided"),
       },
       {
+        label: "Company / Organization",
+        value: fallback(input.companyOrOrganization, "Not provided"),
+      },
+      {
         label: "Type of Solution",
         value: fallback(input.solutionType, "Not provided"),
       },
       {
         label: "Expected Timeline",
         value: fallback(input.preferredTimeline, "Not provided"),
+      },
+      {
+        label: "Approximate Budget",
+        value: fallback(input.approximateBudget, "Not provided"),
+      },
+      {
+        label: "Supporting File",
+        value: fallback(input.supportingFileInformation, "Not provided"),
       },
       { label: "Source Page", value: input.sourcePage },
       { label: "Submitted At", value: input.timestamp },
@@ -261,6 +338,13 @@ function buildCustomSolutionsCustomerBody(input: CustomSolutionsEmailInput) {
   return [
     `Hi ${input.fullName},`,
     "We have received your custom solution requirement.",
+    `Solution Type: ${fallback(input.solutionType, "Not provided")}`,
+    `Company / Organization: ${fallback(input.companyOrOrganization, "Not provided")}`,
+    `Preferred Timeline: ${fallback(input.preferredTimeline, "Not provided")}`,
+    `Approximate Budget: ${fallback(input.approximateBudget, "Not provided")}`,
+    `Supporting File: ${fallback(input.supportingFileInformation, "Not provided")}`,
+    "Your submitted requirement:",
+    input.requirementsDescription,
     "Our team will review the details and get back to you within 24 hours.",
     "Regards,",
     "Vyntegra",
@@ -271,7 +355,30 @@ function buildCustomSolutionsCustomerHtml(input: CustomSolutionsEmailInput) {
   return buildEmailHtml({
     title: "Vyntegra custom solution requirement received",
     intro: `Hi ${input.fullName}, we have received your custom solution requirement.`,
+    details: [
+      { label: "Solution Type", value: fallback(input.solutionType, "Not provided") },
+      {
+        label: "Company / Organization",
+        value: fallback(input.companyOrOrganization, "Not provided"),
+      },
+      {
+        label: "Preferred Timeline",
+        value: fallback(input.preferredTimeline, "Not provided"),
+      },
+      {
+        label: "Approximate Budget",
+        value: fallback(input.approximateBudget, "Not provided"),
+      },
+      {
+        label: "Supporting File",
+        value: fallback(input.supportingFileInformation, "Not provided"),
+      },
+    ],
     blocks: [
+      {
+        heading: "Your submitted requirement",
+        body: input.requirementsDescription,
+      },
       {
         body: "Our team will review the details and get back to you within 24 hours.",
       },
@@ -422,6 +529,11 @@ function buildPaymentQueryCustomerBody(input: PaymentQueryEmailInput) {
   return [
     `Hi ${input.fullName},`,
     "We have received your payment-related query.",
+    `Purchase: ${fallback(input.productName, "Not provided")}`,
+    `Payable Amount: ${fallback(input.productPrice, "Not provided")}`,
+    input.bookingDetails ? `Booking Details:\n${input.bookingDetails}` : "",
+    "Your submitted query:",
+    input.message,
     "Our team will respond within 24 hours.",
     "Regards,",
     "Vyntegra",
@@ -432,7 +544,172 @@ function buildPaymentQueryCustomerHtml(input: PaymentQueryEmailInput) {
   return buildEmailHtml({
     title: "Vyntegra payment query received",
     intro: `Hi ${input.fullName}, we have received your payment-related query.`,
-    blocks: [{ body: "Our team will respond within 24 hours." }],
+    details: [
+      { label: "Purchase", value: fallback(input.productName, "Not provided") },
+      {
+        label: "Payable Amount",
+        value: fallback(input.productPrice, "Not provided"),
+      },
+      ...(input.bookingDetails
+        ? [{ label: "Booking Details", value: input.bookingDetails }]
+        : []),
+    ],
+    blocks: [
+      { heading: "Your submitted query", body: input.message },
+      { body: "Our team will respond within 24 hours." },
+    ],
+  });
+}
+
+function buildRazorpayCustomerSubject(input: RazorpayPaymentSuccessEmailInput) {
+  if (input.purchaseType === "product") {
+    return `Vyntegra payment successful - ${input.purchaseName}`;
+  }
+
+  return input.calBookingUid
+    ? "Vyntegra payment successful - Expert session booked"
+    : "Vyntegra payment successful - Booking action required";
+}
+
+function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
+  return [
+    { label: "Purchase Type", value: input.purchaseType === "product" ? "AI product" : "Talk to Expert session" },
+    { label: "Product / Service", value: input.purchaseName },
+    { label: "Description", value: input.purchaseDescription },
+    { label: "Original USD Price", value: input.originalPriceUsd },
+    { label: "Coupon Code", value: fallback(input.couponCode ?? "", "None") },
+    { label: "Discount Amount", value: fallback(input.discountUsd ?? "", "Not applicable") },
+    { label: "Discounted USD Payable Amount", value: input.finalPriceUsd },
+    { label: "USD to INR Rate Used", value: `${input.usdToInrRate} / USD` },
+    { label: "Rate Source", value: fallback(input.usdToInrRateSource ?? "", "Not provided") },
+    { label: "Conversion Timestamp", value: input.usdToInrRateFetchedAt },
+    { label: "Effective Date IST", value: fallback(input.usdToInrEffectiveDateIst ?? "", "Not provided") },
+    { label: "Razorpay Payable Amount", value: input.finalPriceInr },
+    { label: "Razorpay Order ID", value: input.razorpayOrderId },
+    { label: "Razorpay Payment ID", value: input.razorpayPaymentId },
+    ...(input.purchaseType === "expert"
+      ? [
+          { label: "Expert", value: fallback(input.expertName ?? "", "Not provided") },
+          { label: "Session", value: fallback(input.sessionLabel ?? "", "Not provided") },
+          {
+            label: "Duration",
+            value: input.sessionDurationMinutes
+              ? `${input.sessionDurationMinutes} minutes`
+              : "30 minutes",
+          },
+          { label: "Selected Slot", value: fallback(input.slotDisplayIst ?? "", "Not provided") },
+          { label: "Cal.com Booking UID", value: fallback(input.calBookingUid ?? "", "Not confirmed") },
+          { label: "Cal.com Booking Status", value: fallback(input.calBookingStatus ?? "", "Not confirmed") },
+          { label: "Meeting URL", value: fallback(input.calMeetingUrl ?? "", "Provided by Cal.com if available") },
+          { label: "Private Booking Link", value: fallback(input.fallbackBookingUrl ?? "", "Not applicable") },
+        ]
+      : []),
+  ];
+}
+
+function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
+  const lines = [
+    `Hi ${input.customerName},`,
+    "Your Razorpay payment was successful.",
+    `Purchase Type: ${input.purchaseType === "product" ? "AI product" : "Talk to Expert session"}`,
+    `Product / Service: ${input.purchaseName}`,
+    `Description: ${input.purchaseDescription}`,
+    `Original USD Price: ${input.originalPriceUsd}`,
+    `Coupon Code: ${fallback(input.couponCode ?? "", "None")}`,
+    `Discount Amount: ${fallback(input.discountUsd ?? "", "Not applicable")}`,
+    `Discounted USD Payable Amount: ${input.finalPriceUsd}`,
+    `USD to INR Rate Used: ${input.usdToInrRate} / USD`,
+    `Conversion Timestamp: ${input.usdToInrRateFetchedAt}`,
+    `Razorpay Payable Amount: ${input.finalPriceInr}`,
+    `Razorpay Order ID: ${input.razorpayOrderId}`,
+    `Razorpay Payment ID: ${input.razorpayPaymentId}`,
+  ];
+
+  if (input.purchaseType === "expert") {
+    if (input.calBookingUid) {
+      lines.push(
+        "Booking Status: Confirmed in Cal.com.",
+        `Cal.com Booking UID: ${input.calBookingUid}`,
+        input.slotDisplayIst ? `Selected Slot: ${input.slotDisplayIst}` : "",
+        input.calMeetingUrl ? `Meeting URL: ${input.calMeetingUrl}` : "",
+      );
+    } else if (input.fallbackBookingUrl) {
+      lines.push(
+        "Booking Status: Payment successful; selected slot could not be auto-confirmed.",
+        `Private Booking Link: ${input.fallbackBookingUrl}`,
+        "Use the private link or contact support@vyntegra.in for a custom slot or refund.",
+      );
+    } else {
+      lines.push(
+        "Booking Status: Payment successful; Vyntegra support will contact you to arrange the expert session or process a 100% refund if needed.",
+      );
+    }
+  } else {
+    lines.push(
+      "Next Steps: Vyntegra will send product access or next steps by email.",
+    );
+  }
+
+  lines.push("Regards,", "Vyntegra");
+  return lines.filter(Boolean).join("\n\n");
+}
+
+function buildRazorpayCustomerHtml(input: RazorpayPaymentSuccessEmailInput) {
+  const bookingBody =
+    input.purchaseType !== "expert"
+      ? "Vyntegra will send product access or next steps by email."
+      : input.calBookingUid
+        ? "Your expert session has been booked in Cal.com. Cal.com may also send its own booking confirmation."
+        : input.fallbackBookingUrl
+          ? `Payment is successful. The selected slot could not be auto-confirmed, so use this private Cal.com booking link or contact support@vyntegra.in: ${input.fallbackBookingUrl}`
+          : "Payment is successful. Vyntegra support will contact you to arrange the expert session or process a 100% refund if needed.";
+
+  return buildEmailHtml({
+    title: buildRazorpayCustomerSubject(input),
+    intro: `Hi ${input.customerName}, your Razorpay payment was successful.`,
+    details: buildRazorpayDetails(input).filter(
+      (detail) => detail.label !== "Discounted USD Payable Amount",
+    ),
+    blocks: [
+      {
+        heading: "Payable amount",
+        body: input.finalPriceUsd,
+      },
+      {
+        heading: "Booking / next steps",
+        body: bookingBody,
+      },
+    ],
+    note:
+      input.couponCode && input.discountUsd
+        ? `HTML price summary: ${input.originalPriceUsd} discounted to ${input.finalPriceUsd}.`
+        : undefined,
+  }).replace(
+    escapeHtml(input.finalPriceUsd),
+    renderPriceValue(input),
+  );
+}
+
+function buildRazorpayAdminBody(input: RazorpayPaymentSuccessEmailInput) {
+  return [
+    "A Razorpay payment was verified.",
+    buildRazorpayDetails(input)
+      .map((detail) => `${detail.label}: ${detail.value}`)
+      .join("\n"),
+    input.bookingErrorSummary
+      ? `Booking Error Summary:\n${input.bookingErrorSummary}`
+      : "",
+  ].filter(Boolean).join("\n\n");
+}
+
+function buildRazorpayAdminHtml(input: RazorpayPaymentSuccessEmailInput) {
+  return buildEmailHtml({
+    title: `Razorpay payment verified - ${input.purchaseName}`,
+    intro: "A Razorpay payment was verified.",
+    details: buildRazorpayDetails(input),
+    blocks: input.bookingErrorSummary
+      ? [{ heading: "Booking error summary", body: input.bookingErrorSummary }]
+      : [],
   });
 }
 
@@ -448,16 +725,24 @@ function createEmailTransporter() {
   });
 }
 
-export async function sendContactEmails(input: ContactEmailInput) {
+function assertSmtpConfiguration() {
   if (!hasSmtpConfiguration()) {
-    throw new Error("SMTP configuration is missing.");
+    throw new Error(
+      getSmtpConfigurationErrorMessage() ||
+        "Email service is not configured.",
+    );
   }
+}
+
+export async function sendContactEmails(input: ContactEmailInput) {
+  assertSmtpConfiguration();
 
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
-    to: appConfig.adminEmail,
+    to: appConfig.supportEmail,
+    replyTo: appConfig.supportEmail,
     subject: "New Vyntegra enquiry submitted",
     text: buildContactAdminBody(input),
     html: buildContactAdminHtml(input),
@@ -466,6 +751,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: input.emailAddress,
+    replyTo: appConfig.supportEmail,
     subject: "Vyntegra enquiry received",
     text: buildContactCustomerBody(input),
     html: buildContactCustomerHtml(input),
@@ -475,9 +761,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
 export async function sendCustomSolutionsEmails(
   input: CustomSolutionsEmailInput,
 ) {
-  if (!hasSmtpConfiguration()) {
-    throw new Error("SMTP configuration is missing.");
-  }
+  assertSmtpConfiguration();
 
   const transporter = createEmailTransporter();
 
@@ -493,7 +777,8 @@ export async function sendCustomSolutionsEmails(
 
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
-    to: appConfig.customSolutionsRecipientEmail,
+    to: appConfig.supportEmail,
+    replyTo: appConfig.supportEmail,
     subject: "New custom solution requirement submitted",
     text: buildCustomSolutionsAdminBody(input),
     html: buildCustomSolutionsAdminHtml(input),
@@ -503,6 +788,7 @@ export async function sendCustomSolutionsEmails(
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: input.emailAddress,
+    replyTo: appConfig.supportEmail,
     subject: "Vyntegra custom solution requirement received",
     text: buildCustomSolutionsCustomerBody(input),
     html: buildCustomSolutionsCustomerHtml(input),
@@ -512,15 +798,14 @@ export async function sendCustomSolutionsEmails(
 export async function sendCryptoPaymentProofEmails(
   input: CryptoPaymentProofEmailInput,
 ) {
-  if (!hasSmtpConfiguration()) {
-    throw new Error("SMTP configuration is missing.");
-  }
+  assertSmtpConfiguration();
 
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
-    to: appConfig.adminPaymentEmail,
+    to: appConfig.cryptoPaymentProofEmail,
+    replyTo: appConfig.supportEmail,
     subject: `New crypto payment proof submitted - ${input.productName}`,
     text: buildCryptoPaymentProofBody(input),
     html: buildCryptoPaymentProofHtml(input),
@@ -536,6 +821,7 @@ export async function sendCryptoPaymentProofEmails(
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: input.emailAddress,
+    replyTo: appConfig.supportEmail,
     subject: `Vyntegra payment proof received - ${input.productName}`,
     text: buildCryptoPaymentCustomerBody(input),
     html: buildCryptoPaymentCustomerHtml(input),
@@ -550,15 +836,14 @@ export async function sendCryptoPaymentProofEmails(
 }
 
 export async function sendPaymentQueryEmail(input: PaymentQueryEmailInput) {
-  if (!hasSmtpConfiguration()) {
-    throw new Error("SMTP configuration is missing.");
-  }
+  assertSmtpConfiguration();
 
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
-    to: appConfig.queryEmail,
+    to: appConfig.supportEmail,
+    replyTo: appConfig.supportEmail,
     subject: "New payment query submitted",
     text: buildPaymentQueryAdminBody(input),
     html: buildPaymentQueryAdminHtml(input),
@@ -567,8 +852,35 @@ export async function sendPaymentQueryEmail(input: PaymentQueryEmailInput) {
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: input.emailAddress,
+    replyTo: appConfig.supportEmail,
     subject: "Vyntegra payment query received",
     text: buildPaymentQueryCustomerBody(input),
     html: buildPaymentQueryCustomerHtml(input),
+  });
+}
+
+export async function sendRazorpayPaymentSuccessEmails(
+  input: RazorpayPaymentSuccessEmailInput,
+) {
+  assertSmtpConfiguration();
+
+  const transporter = createEmailTransporter();
+
+  await transporter.sendMail({
+    from: appConfig.paymentMailFromEmail,
+    to: input.customerEmail,
+    replyTo: appConfig.paymentMailReplyTo,
+    subject: buildRazorpayCustomerSubject(input),
+    text: buildRazorpayCustomerBody(input),
+    html: buildRazorpayCustomerHtml(input),
+  });
+
+  await transporter.sendMail({
+    from: appConfig.paymentMailFromEmail,
+    to: appConfig.adminPaymentEmail,
+    replyTo: appConfig.paymentMailReplyTo,
+    subject: `Razorpay payment verified - ${input.purchaseName}`,
+    text: buildRazorpayAdminBody(input),
+    html: buildRazorpayAdminHtml(input),
   });
 }

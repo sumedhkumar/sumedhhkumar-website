@@ -1,48 +1,55 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock,
-  CheckCircle2,
   Sparkles,
 } from "lucide-react";
-import type {
-  CryptoPaymentConfig,
-  Expert,
-  ExpertSession,
-  PaymentProvider,
-} from "@/types";
+import type { CalComSlot, Expert, ExpertSession } from "@/types";
 import Button from "@/components/ui/Button";
 
-/* ───────────────────────── constants ───────────────────────── */
-
-const paymentOptions: { value: PaymentProvider; label: string }[] = [
-  { value: "razorpay", label: "Pay with Razorpay" },
-  { value: "stripe", label: "Pay with Stripe" },
-  { value: "crypto", label: "Pay with Crypto" },
-];
-
 type CheckoutPhase = "idle" | "creating" | "verifying";
+
+type ExchangeRateResponse = {
+  success?: boolean;
+  rate?: number;
+  source?: string;
+  fetchedAt?: string;
+  effectiveDateIst?: string;
+  message?: string;
+};
 
 type CreateExpertOrderResponse = {
   key?: string;
   orderId?: string;
   amount?: number;
   currency?: string;
-  productName?: string;
   purchaseName?: string;
   discountUsd?: number;
   finalPriceUsd?: number;
+  finalPriceInr?: number;
+  usdToInrRate?: number;
+  usdToInrRateSource?: string;
+  usdToInrRateFetchedAt?: string;
+  usdToInrEffectiveDateIst?: string;
   appliedCoupon?: string;
   message?: string;
 };
 
 type VerifyExpertPaymentResponse = {
   success?: boolean;
-  orderId?: string;
-  paymentId?: string;
+  bookingConfirmed?: boolean;
+  fallbackBookingLinkSent?: boolean;
+  supportFollowupRequired?: boolean;
+  message?: string;
+};
+
+type SlotsResponse = {
+  success?: boolean;
+  slots?: CalComSlot[];
   message?: string;
 };
 
@@ -62,8 +69,14 @@ type RazorpayOptions = {
   prefill: {
     name: string;
     email: string;
-    contact: string;
   };
+  readonly: {
+    contact: false;
+  };
+  hidden: {
+    contact: false;
+  };
+  remember_customer: false;
   theme: {
     color: string;
   };
@@ -85,35 +98,8 @@ type RazorpayWindow = Window & {
 };
 
 const checkoutScriptUrl = "https://checkout.razorpay.com/v1/checkout.js";
-
-/** Availability windows and booking buffers are measured in minutes after midnight. */
-const SLOT_INTERVAL_MINUTES = 15;
-const BOOKING_BUFFER_MINUTES = 15;
-const BOOKING_LOOKAHEAD_DAYS = 60;
-
-const availabilityWindows = {
-  weekday: {
-    startMinutes: 18 * 60,
-    endMinutes: 22 * 60,
-  },
-  weekend: {
-    startMinutes: 12 * 60,
-    endMinutes: 20 * 60,
-  },
-};
-
-type BookedSlot = {
-  expertId: string;
-  dateKey: string;
-  startMinutes: number;
-  endMinutes: number;
-};
-
-// Replace this with persisted confirmed bookings when booking storage is enabled.
-const confirmedBookings: BookedSlot[] = [];
-
+const LOOKAHEAD_DAYS = 60;
 const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 const MONTH_NAMES = [
   "January",
   "February",
@@ -129,7 +115,13 @@ const MONTH_NAMES = [
   "December",
 ];
 
-/* ───────────────────── helpers ───────────────────── */
+const refundPolicy = `Booking and refund policy
+
+30-minute expert sessions are confirmed only after successful Razorpay payment and successful booking creation. Live available slots are shown before payment wherever Cal.com availability is available.
+
+If Vyntegra cannot confirm or deliver your paid consultation, we will offer a replacement slot. If a mutually acceptable replacement slot cannot be arranged, the consultation payment will be refunded.
+
+Customer no-show, late arrival, or voluntary cancellation close to the session time may not be eligible for refund unless Vyntegra decides otherwise. Refunds, where approved, are processed to the original payment method as per payment gateway and banking timelines.`;
 
 function formatUsd(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -140,12 +132,41 @@ function formatUsd(value: number) {
   }).format(value);
 }
 
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+function formatInr(value: number, fractionDigits = 2) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value);
 }
 
-function isValidPhone(value: string) {
-  return /^[+]?[0-9]{7,15}$/.test(value);
+function formatIstTimestamp(value?: string) {
+  if (!value) {
+    return "Loading";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  })
+    .format(date)
+    .replace(",", "")
+    .replace(/\s/g, " ");
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function getRazorpayConstructor() {
@@ -169,16 +190,13 @@ function loadRazorpayScript() {
     }
 
     const script = existingScript ?? document.createElement("script");
-
     script.src = checkoutScriptUrl;
     script.async = true;
     script.onload = () => {
       script.dataset.loaded = "true";
       resolve();
     };
-    script.onerror = () => {
-      reject(new Error("Razorpay Checkout could not be loaded."));
-    };
+    script.onerror = () => reject(new Error("Razorpay Checkout could not be loaded."));
 
     if (!existingScript) {
       document.body.appendChild(script);
@@ -198,98 +216,23 @@ async function readJsonResponse<T extends { message?: string }>(
   return payload;
 }
 
-function dateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function dateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function isSameDay(a: Date, b: Date): boolean {
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
 }
-
-function minutesToTimeLabel(minutes: number) {
-  const hours24 = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  const period = hours24 >= 12 ? "PM" : "AM";
-  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
-
-  return `${hours12}:${String(mins).padStart(2, "0")} ${period}`;
-}
-
-function formatSlotRange(startMinutes: number, durationMinutes: number) {
-  return `${minutesToTimeLabel(startMinutes)} - ${minutesToTimeLabel(startMinutes + durationMinutes)}`;
-}
-
-function getAvailabilityWindow(day: number) {
-  return day === 0 || day === 6
-    ? availabilityWindows.weekend
-    : availabilityWindows.weekday;
-}
-
-function isBlockedByBookedSlot(
-  dateKeyValue: string,
-  expertId: string,
-  slotStartMinutes: number,
-  slotEndMinutes: number,
-) {
-  return confirmedBookings.some((booking) => {
-    if (booking.expertId !== expertId || booking.dateKey !== dateKeyValue) {
-      return false;
-    }
-
-    const blockedStart = booking.startMinutes - BOOKING_BUFFER_MINUTES;
-    const blockedEnd = booking.endMinutes + BOOKING_BUFFER_MINUTES;
-
-    return slotStartMinutes < blockedEnd && slotEndMinutes > blockedStart;
-  });
-}
-
-function buildSlotsForDate(
-  d: Date,
-  expertId: string,
-  durationMinutes: number,
-) {
-  const window = getAvailabilityWindow(d.getDay());
-  const key = dateKey(d);
-  const slots: string[] = [];
-
-  for (
-    let startMinutes = window.startMinutes;
-    startMinutes + durationMinutes <= window.endMinutes;
-    startMinutes += SLOT_INTERVAL_MINUTES
-  ) {
-    const endMinutes = startMinutes + durationMinutes;
-
-    if (!isBlockedByBookedSlot(key, expertId, startMinutes, endMinutes)) {
-      slots.push(formatSlotRange(startMinutes, durationMinutes));
-    }
-  }
-
-  return slots;
-}
-
-function buildAvailabilityMap(
-  expertId: string,
-  durationMinutes: number,
-): Map<string, string[]> {
-  const map = new Map<string, string[]>();
-  const today = new Date();
-  for (let offset = 1; offset <= BOOKING_LOOKAHEAD_DAYS; offset++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + offset);
-
-    const slots = buildSlotsForDate(d, expertId, durationMinutes);
-    if (slots.length > 0) {
-      map.set(dateKey(d), slots);
-    }
-  }
-  return map;
-}
-
-/* ───────────────────── sub‑components ───────────────────── */
 
 function StepIndicator({
   step,
@@ -302,6 +245,7 @@ function StepIndicator({
 }) {
   const done = currentStep > step;
   const active = currentStep === step;
+
   return (
     <div
       className={`booking-step-item${active ? " booking-step-active" : ""}${done ? " booking-step-done" : ""}`}
@@ -326,9 +270,9 @@ function CalendarMonth({
 }: {
   year: number;
   month: number;
-  availMap: Map<string, string[]>;
+  availMap: Map<string, CalComSlot[]>;
   selectedDate: Date | null;
-  onSelectDate: (d: Date) => void;
+  onSelectDate: (date: Date) => void;
   onPrev: () => void;
   onNext: () => void;
   canPrev: boolean;
@@ -337,48 +281,45 @@ function CalendarMonth({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const cells: React.ReactNode[] = [];
 
-  // leading blanks
-  for (let i = 0; i < firstDay; i++) {
-    cells.push(<div key={`blank-${i}`} className="cal-cell cal-cell-empty" />);
+  for (let index = 0; index < firstDay; index += 1) {
+    cells.push(<div key={`blank-${index}`} className="cal-cell cal-cell-empty" />);
   }
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const d = new Date(year, month, day);
-    const key = dateKey(d);
-    const slots = availMap.get(key);
-    const hasSlots = slots !== undefined && slots.length > 0;
-    const isPast = d <= today;
-    const isSelected = selectedDate !== null && isSameDay(d, selectedDate);
-    const isToday = isSameDay(d, today);
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(year, month, day);
+    const slots = availMap.get(dateKey(date)) ?? [];
+    const hasSlots = slots.length > 0;
+    const isPast = date <= today;
+    const isSelected = selectedDate !== null && isSameDay(date, selectedDate);
+    const isToday = isSameDay(date, today);
 
-    let cls = "cal-cell cal-cell-day";
-    if (isPast) cls += " cal-cell-past";
-    else if (hasSlots) cls += " cal-cell-available";
-    else cls += " cal-cell-unavailable";
-    if (isSelected) cls += " cal-cell-selected";
-    if (isToday) cls += " cal-cell-today";
+    let className = "cal-cell cal-cell-day";
+    if (isPast) className += " cal-cell-past";
+    else if (hasSlots) className += " cal-cell-available";
+    else className += " cal-cell-unavailable";
+    if (isSelected) className += " cal-cell-selected";
+    if (isToday) className += " cal-cell-today";
 
     cells.push(
       <button
         key={day}
         type="button"
-        className={cls}
+        className={className}
         disabled={isPast || !hasSlots}
-        onClick={() => onSelectDate(d)}
+        onClick={() => onSelectDate(date)}
         aria-label={`${day} ${MONTH_NAMES[month]}, ${hasSlots ? `${slots.length} slots available` : "no slots"}`}
         aria-pressed={isSelected}
       >
         <span className="cal-day-num">{day}</span>
-        {hasSlots && !isPast && (
+        {hasSlots && !isPast ? (
           <span className="cal-dot-row">
-            {slots.slice(0, 4).map((_, i) => (
-              <span key={i} className="cal-avail-dot" />
+            {slots.slice(0, 4).map((slot) => (
+              <span key={slot.startUtc} className="cal-avail-dot" />
             ))}
           </span>
-        )}
+        ) : null}
       </button>,
     );
   }
@@ -408,9 +349,9 @@ function CalendarMonth({
         </button>
       </div>
       <div className="cal-weekday-row">
-        {WEEKDAY_NAMES.map((w) => (
-          <span key={w} className="cal-weekday-label">
-            {w}
+        {WEEKDAY_NAMES.map((weekday) => (
+          <span key={weekday} className="cal-weekday-label">
+            {weekday}
           </span>
         ))}
       </div>
@@ -439,9 +380,9 @@ function TimeSlotPicker({
   onSelectSlot,
   dateLabel,
 }: {
-  slots: string[];
-  selectedSlot: string;
-  onSelectSlot: (slot: string) => void;
+  slots: CalComSlot[];
+  selectedSlot: CalComSlot | null;
+  onSelectSlot: (slot: CalComSlot) => void;
   dateLabel: string;
 }) {
   return (
@@ -454,129 +395,100 @@ function TimeSlotPicker({
         <span className="slot-picker-count">{slots.length} open</span>
       </div>
       <div className="slot-picker-grid">
-        {slots.map((slot) => (
-          <button
-            key={slot}
-            type="button"
-            className={`slot-chip${selectedSlot === slot ? " slot-chip-selected" : ""}`}
-            aria-pressed={selectedSlot === slot}
-            onClick={() => onSelectSlot(slot)}
-          >
-            <Clock size={14} strokeWidth={1.5} />
-            <span>{slot}</span>
-            <small>IST</small>
-            {selectedSlot === slot && (
-              <CheckCircle2
-                className="slot-chip-check"
-                size={16}
-                strokeWidth={2}
-              />
-            )}
-          </button>
-        ))}
+        {slots.map((slot) => {
+          const selected = selectedSlot?.startUtc === slot.startUtc;
+          return (
+            <button
+              key={slot.startUtc}
+              type="button"
+              className={`slot-chip${selected ? " slot-chip-selected" : ""}`}
+              aria-pressed={selected}
+              onClick={() => onSelectSlot(slot)}
+            >
+              <Clock size={14} strokeWidth={1.5} />
+              <span>{slot.timeLabel}</span>
+              <small>IST</small>
+              {selected ? (
+                <CheckCircle2
+                  className="slot-chip-check"
+                  size={16}
+                  strokeWidth={2}
+                />
+              ) : null}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/* ────────────────────── main component ─────────────────────── */
-
 export default function ExpertCheckout({
   expert,
   paymentsConfigured,
-  cryptoPaymentConfig,
 }: {
   expert: Expert;
   paymentsConfigured: boolean;
-  cryptoPaymentConfig: CryptoPaymentConfig | null;
 }) {
-  const sessions = expert.sessions.filter((s) => s.active);
-
-  /* state */
-  const [selectedSessionId, setSelectedSessionId] = useState(
-    sessions[0]?.id ?? "",
+  const sessions = expert.sessions.filter(
+    (session) => session.active && session.durationMinutes === 30,
   );
+  const [selectedSessionId, setSelectedSessionId] = useState(sessions[0]?.id ?? "");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState<CalComSlot | null>(null);
+  const [slots, setSlots] = useState<CalComSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const [slotsError, setSlotsError] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
   const [discountAmountUsd, setDiscountAmountUsd] = useState(0);
-  const [paymentProvider, setPaymentProvider] =
-    useState<PaymentProvider>(
-      !paymentsConfigured && cryptoPaymentConfig ? "crypto" : "razorpay",
-    );
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const [exchangeFetchedAt, setExchangeFetchedAt] = useState("");
+  const [exchangeEffectiveDateIst, setExchangeEffectiveDateIst] = useState("");
+  const [checkoutPhase, setCheckoutPhase] = useState<CheckoutPhase>("idle");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusTone, setStatusTone] = useState<"info" | "success" | "error">("info");
-  const [checkoutPhase, setCheckoutPhase] = useState<CheckoutPhase>("idle");
   const checkoutCompletedRef = useRef(false);
 
-  /* calendar navigation */
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
 
-  const goNextMonth = useCallback(() => {
-    setViewMonth((m) => {
-      if (m === 11) {
-        setViewYear((y) => y + 1);
-        return 0;
-      }
-      return m + 1;
-    });
-  }, []);
-
-  const goPrevMonth = useCallback(() => {
-    setViewMonth((m) => {
-      if (m === 0) {
-        setViewYear((y) => y - 1);
-        return 11;
-      }
-      return m - 1;
-    });
-  }, []);
-
-  const canGoPrev =
-    viewYear > today.getFullYear() ||
-    (viewYear === today.getFullYear() && viewMonth > today.getMonth());
-
-  /* derived */
-  const selectedSession = sessions.find((s) => s.id === selectedSessionId);
-  const selectedDurationMinutes = selectedSession?.durationMinutes ?? 30;
-  const availMap = buildAvailabilityMap(expert.id, selectedDurationMinutes);
-  const slotsForDate = selectedDate
-    ? (availMap.get(dateKey(selectedDate)) ?? [])
-    : [];
+  const selectedSession = sessions.find((session) => session.id === selectedSessionId);
   const originalFee = selectedSession?.feeUsd ?? 0;
-  const finalAmount = Math.max(0, originalFee - discountAmountUsd);
-  const cryptoConfigured = Boolean(cryptoPaymentConfig);
+  const finalAmountUsd = Math.max(0, originalFee - discountAmountUsd);
+  const finalAmountInr =
+    exchangeRate !== null ? Number((finalAmountUsd * exchangeRate).toFixed(2)) : null;
   const customerNameValue = customerName.trim();
   const customerEmailValue = customerEmail.trim();
-  const customerPhoneValue = customerPhone.trim();
-  const customerDetailsReady =
-    paymentProvider === "crypto" ||
-    Boolean(
-      customerNameValue &&
-        isValidEmail(customerEmailValue) &&
-        isValidPhone(customerPhoneValue),
-    );
-  const selectedPaymentConfigured =
-    paymentProvider === "crypto"
-      ? cryptoConfigured
-      : paymentProvider === "razorpay"
-        ? paymentsConfigured
-        : false;
+  const customerDetailsReady = Boolean(
+    customerNameValue &&
+      isValidEmail(customerEmailValue),
+  );
   const paymentReady = Boolean(
-    selectedPaymentConfigured &&
+    paymentsConfigured &&
       selectedSession &&
-      selectedDate &&
       selectedSlot &&
       customerDetailsReady &&
       checkoutPhase === "idle",
   );
   const currentStep = !selectedSessionId ? 1 : !selectedDate ? 2 : !selectedSlot ? 3 : 4;
+
+  const availMap = useMemo(() => {
+    const map = new Map<string, CalComSlot[]>();
+    for (const slot of slots) {
+      const existing = map.get(slot.dateKey) ?? [];
+      existing.push(slot);
+      map.set(slot.dateKey, existing);
+    }
+    return map;
+  }, [slots]);
+
+  const slotsForDate = selectedDate
+    ? availMap.get(dateKey(selectedDate)) ?? []
+    : [];
 
   const dateFormatter = useMemo(
     () =>
@@ -590,89 +502,181 @@ export default function ExpertCheckout({
     [],
   );
 
-  /* handlers */
-  function handleSelectDate(d: Date) {
-    setSelectedDate(d);
-    setSelectedSlot("");
-    setStatusMessage("");
-  }
-
-  async function applyCoupon() {
-    const response = await fetch("/api/coupons/validate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        code: couponCode,
-        amountUsd: originalFee,
-        targetType: "expert",
-        expertId: expert.id,
-        sessionId: selectedSessionId,
-      }),
+  const goNextMonth = useCallback(() => {
+    setViewMonth((month) => {
+      if (month === 11) {
+        setViewYear((year) => year + 1);
+        return 0;
+      }
+      return month + 1;
     });
-    const result = (await response.json()) as {
-      message?: string;
-      discountAmountUsd?: number;
-    };
+  }, []);
 
-    setCouponMessage(result.message ?? "Coupon code is invalid or inactive.");
-    setDiscountAmountUsd(result.discountAmountUsd ?? 0);
-  }
+  const goPrevMonth = useCallback(() => {
+    setViewMonth((month) => {
+      if (month === 0) {
+        setViewYear((year) => year - 1);
+        return 11;
+      }
+      return month - 1;
+    });
+  }, []);
+
+  const canGoPrev =
+    viewYear > today.getFullYear() ||
+    (viewYear === today.getFullYear() && viewMonth > today.getMonth());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadExchangeRate() {
+      try {
+        const response = await fetch("/api/exchange-rates/usd-inr");
+        const result = await readJsonResponse<ExchangeRateResponse>(response);
+
+        if (!cancelled && result.success && typeof result.rate === "number") {
+          setExchangeRate(result.rate);
+          setExchangeFetchedAt(result.fetchedAt ?? "");
+          setExchangeEffectiveDateIst(result.effectiveDateIst ?? "");
+        }
+      } catch {
+        if (!cancelled) {
+          setExchangeRate(null);
+        }
+      }
+    }
+
+    void loadExchangeRate();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSlots() {
+      setSlotsLoading(true);
+      setSlotsError("");
+
+      try {
+        const start = dateKey(addDays(today, 1));
+        const end = dateKey(addDays(today, LOOKAHEAD_DAYS));
+        const response = await fetch(
+          `/api/experts/${expert.id}/calcom-slots?${new URLSearchParams({
+            start,
+            end,
+          }).toString()}`,
+        );
+        const result = await readJsonResponse<SlotsResponse>(response);
+
+        if (!cancelled) {
+          setSlots(result.slots ?? []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSlots([]);
+          setSlotsError(
+            error instanceof Error
+              ? error.message
+              : "Live booking availability could not be loaded.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setSlotsLoading(false);
+        }
+      }
+    }
+
+    void loadSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [expert.id, today]);
 
   function setStatus(message: string, tone: "info" | "success" | "error" = "info") {
     setStatusMessage(message);
     setStatusTone(tone);
   }
 
-  async function verifyRazorpayPayment(response: RazorpayCheckoutResponse) {
-    if (!selectedSession || !selectedDate || !selectedSlot) {
-      setStatus("Select an appointment slot before payment verification.", "error");
-      setCheckoutPhase("idle");
+  function handleSelectDate(date: Date) {
+    setSelectedDate(date);
+    setSelectedSlot(null);
+    setStatusMessage("");
+  }
+
+  async function applyCoupon() {
+    if (!selectedSession) {
       return;
     }
 
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode,
+          amountUsd: originalFee,
+          targetType: "expert",
+          expertId: expert.id,
+          sessionId: selectedSession.id,
+        }),
+      });
+      const result = (await response.json()) as {
+        message?: string;
+        discountAmountUsd?: number;
+      };
+
+      setCouponMessage(result.message ?? "Coupon code is invalid or inactive.");
+      setDiscountAmountUsd(result.discountAmountUsd ?? 0);
+    } catch {
+      setCouponMessage("Coupon code could not be checked. Please try again.");
+      setDiscountAmountUsd(0);
+    }
+  }
+
+  async function verifyRazorpayPayment(response: RazorpayCheckoutResponse) {
     checkoutCompletedRef.current = true;
     setCheckoutPhase("verifying");
     setStatus("Verifying payment with Vyntegra backend...");
 
     try {
-      const trimmedCouponCode = couponCode.trim();
       const verificationResponse = await fetch("/api/payments/razorpay/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          targetType: "expert",
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,
-          expertId: expert.id,
-          slug: expert.slug,
-          sessionId: selectedSession.id,
-          appointmentDate: dateKey(selectedDate),
-          appointmentSlot: selectedSlot,
-          customerName: customerNameValue,
-          customerEmail: customerEmailValue,
-          customerPhone: customerPhoneValue,
-          ...(trimmedCouponCode ? { couponCode: trimmedCouponCode } : {}),
         }),
       });
       const verificationResult =
-        await readJsonResponse<VerifyExpertPaymentResponse>(
-          verificationResponse,
-        );
+        await readJsonResponse<VerifyExpertPaymentResponse>(verificationResponse);
 
       if (!verificationResult.success) {
         throw new Error("Payment verification failed.");
       }
 
-      setStatus(
-        "Payment verified successfully. Vyntegra will confirm your consultation booking by email after internal processing.",
-        "success",
-      );
+      if (verificationResult.bookingConfirmed) {
+        setStatus(
+          "Payment successful. Your expert session has been booked. Confirmation details have been sent by email.",
+          "success",
+        );
+      } else if (verificationResult.fallbackBookingLinkSent) {
+        setStatus(
+          "Payment successful. We could not auto-confirm the selected slot, so a private booking link has been emailed to you. You can also contact support@vyntegra.in.",
+          "success",
+        );
+      } else {
+        setStatus(
+          "Payment successful. Vyntegra support will contact you to arrange the expert session or process a refund if needed.",
+          "success",
+        );
+      }
     } catch (error) {
       setStatus(
-        error instanceof Error
-          ? error.message
-          : "Payment verification failed.",
+        error instanceof Error ? error.message : "Payment verification failed.",
         "error",
       );
     } finally {
@@ -681,18 +685,14 @@ export default function ExpertCheckout({
   }
 
   async function startRazorpayCheckout() {
-    if (!selectedSession || !selectedDate || !selectedSlot) {
-      setStatus("Select an appointment slot before making payment.", "error");
+    if (!selectedSession || !selectedSlot) {
+      setStatus("Select a live available slot before making payment.", "error");
       return;
     }
 
-    if (
-      !customerNameValue ||
-      !isValidEmail(customerEmailValue) ||
-      !isValidPhone(customerPhoneValue)
-    ) {
+    if (!customerDetailsReady) {
       setStatus(
-        "Enter your full name, valid email, and valid phone number before payment.",
+        "Enter your full name and valid email before payment.",
         "error",
       );
       return;
@@ -710,8 +710,8 @@ export default function ExpertCheckout({
         throw new Error("Razorpay Checkout is unavailable.");
       }
 
-      const trimmedCouponCode = couponCode.trim();
       setStatus("Creating secure Razorpay order...");
+      const trimmedCouponCode = couponCode.trim();
       const orderResponse = await fetch("/api/payments/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -720,23 +720,20 @@ export default function ExpertCheckout({
           expertId: expert.id,
           slug: expert.slug,
           sessionId: selectedSession.id,
-          appointmentDate: dateKey(selectedDate),
-          appointmentSlot: selectedSlot,
+          slotStartUtc: selectedSlot.startUtc,
           customerName: customerNameValue,
           customerEmail: customerEmailValue,
-          customerPhone: customerPhoneValue,
           ...(trimmedCouponCode ? { couponCode: trimmedCouponCode } : {}),
         }),
       });
-      const order =
-        await readJsonResponse<CreateExpertOrderResponse>(orderResponse);
+      const order = await readJsonResponse<CreateExpertOrderResponse>(orderResponse);
 
       if (
         !order.key ||
         !order.orderId ||
         !order.amount ||
         !order.currency ||
-        !order.productName
+        !order.purchaseName
       ) {
         throw new Error("Payment order response is incomplete.");
       }
@@ -749,18 +746,33 @@ export default function ExpertCheckout({
         setCouponMessage("Coupon applied.");
       }
 
+      if (typeof order.usdToInrRate === "number") {
+        setExchangeRate(order.usdToInrRate);
+      }
+
+      setExchangeFetchedAt(order.usdToInrRateFetchedAt ?? exchangeFetchedAt);
+      setExchangeEffectiveDateIst(
+        order.usdToInrEffectiveDateIst ?? exchangeEffectiveDateIst,
+      );
+
       const checkout = new Razorpay({
         key: order.key,
         amount: order.amount,
         currency: order.currency,
         name: "Vyntegra",
-        description: order.productName,
+        description: order.purchaseName,
         order_id: order.orderId,
         prefill: {
           name: customerNameValue,
           email: customerEmailValue,
-          contact: customerPhoneValue,
         },
+        readonly: {
+          contact: false,
+        },
+        hidden: {
+          contact: false,
+        },
+        remember_customer: false,
         theme: {
           color: "#B8914A",
         },
@@ -795,55 +807,8 @@ export default function ExpertCheckout({
     }
   }
 
-  function continueToPayment() {
-    if (!selectedSession || !selectedDate || !selectedSlot) {
-      setStatus("Select an appointment slot before making payment.", "error");
-      return;
-    }
-
-    if (paymentProvider === "crypto") {
-      if (!cryptoConfigured) {
-        setStatus("Crypto payment configuration is pending.", "error");
-        return;
-      }
-
-      const params = new URLSearchParams({
-        session: selectedSession.id,
-        date: dateKey(selectedDate),
-        slot: selectedSlot,
-        amount: finalAmount.toFixed(2),
-      });
-      const trimmedCouponCode = couponCode.trim();
-
-      if (trimmedCouponCode) {
-        params.set("coupon", trimmedCouponCode);
-      }
-
-      window.location.assign(
-        `/experts/${expert.slug}/crypto-payment?${params.toString()}`,
-      );
-      return;
-    }
-
-    if (paymentProvider === "razorpay") {
-      void startRazorpayCheckout();
-      return;
-    }
-
-    if (!paymentsConfigured) {
-      setStatus("Online payment configuration is pending.", "error");
-      return;
-    }
-
-    setStatus(
-      "Payment gateway initiation is pending in this build. Your appointment is not confirmed until payment verification succeeds.",
-    );
-  }
-
-  /* render */
   return (
     <div className="checkout-card checkout-card-v2">
-      {/* ── heading ── */}
       <div className="checkout-header-v2">
         <div className="checkout-header-icon">
           <Sparkles size={22} strokeWidth={1.8} />
@@ -858,7 +823,6 @@ export default function ExpertCheckout({
         </div>
       </div>
 
-      {/* ── step progress ── */}
       <div className="booking-steps-bar">
         <StepIndicator step={1} currentStep={currentStep} label="Session" />
         <span className="booking-step-line" />
@@ -869,7 +833,6 @@ export default function ExpertCheckout({
         <StepIndicator step={4} currentStep={currentStep} label="Payment" />
       </div>
 
-      {/* ── step 1: session ── */}
       <fieldset className="booking-section">
         <legend className="booking-section-legend">
           <span className="booking-section-num">1</span>
@@ -877,20 +840,20 @@ export default function ExpertCheckout({
         </legend>
         <div className="session-option-grid">
           {sessions.map((session: ExpertSession) => {
-            const isSelected = selectedSessionId === session.id;
+            const selected = selectedSessionId === session.id;
             return (
               <label
                 key={session.id}
-                className={`session-option-card${isSelected ? " session-option-selected" : ""}`}
+                className={`session-option-card${selected ? " session-option-selected" : ""}`}
               >
                 <input
                   type="radio"
                   name="session"
                   value={session.id}
-                  checked={isSelected}
+                  checked={selected}
                   onChange={() => {
                     setSelectedSessionId(session.id);
-                    setSelectedSlot("");
+                    setSelectedSlot(null);
                     setDiscountAmountUsd(0);
                     setCouponMessage("");
                     setStatusMessage("");
@@ -898,7 +861,7 @@ export default function ExpertCheckout({
                   className="sr-only"
                 />
                 <span className="session-option-radio">
-                  {isSelected && <span className="session-option-radio-dot" />}
+                  {selected ? <span className="session-option-radio-dot" /> : null}
                 </span>
                 <div className="session-option-body">
                   <strong>{session.label}</strong>
@@ -907,38 +870,43 @@ export default function ExpertCheckout({
                     {session.durationMinutes} minutes
                   </span>
                 </div>
-                <span className="session-option-price">
-                  {formatUsd(session.feeUsd)}
-                </span>
+                <span className="session-option-price">{formatUsd(session.feeUsd)}</span>
               </label>
             );
           })}
         </div>
       </fieldset>
 
-      {/* ── step 2: date ── */}
       <fieldset className="booking-section">
         <legend className="booking-section-legend">
           <span className="booking-section-num">2</span>
           Pick a Date
         </legend>
         <p className="body-compact" style={{ marginBottom: 14 }}>
-          Select from the calendar below. Dates with availability are
-          highlighted.
+          Live available slots are loaded from Cal.com and shown in IST.
         </p>
-        <CalendarMonth
-          year={viewYear}
-          month={viewMonth}
-          availMap={availMap}
-          selectedDate={selectedDate}
-          onSelectDate={handleSelectDate}
-          onPrev={goPrevMonth}
-          onNext={goNextMonth}
-          canPrev={canGoPrev}
-        />
+        {slotsLoading ? (
+          <p className="body-compact" style={{ color: "#F59E0B" }}>
+            Loading live availability...
+          </p>
+        ) : slotsError ? (
+          <p className="body-compact" style={{ color: "#FCA5A5" }}>
+            {slotsError}
+          </p>
+        ) : (
+          <CalendarMonth
+            year={viewYear}
+            month={viewMonth}
+            availMap={availMap}
+            selectedDate={selectedDate}
+            onSelectDate={handleSelectDate}
+            onPrev={goPrevMonth}
+            onNext={goNextMonth}
+            canPrev={canGoPrev}
+          />
+        )}
       </fieldset>
 
-      {/* ── step 3: time slot ── */}
       <fieldset className="booking-section">
         <legend className="booking-section-legend">
           <span className="booking-section-num">3</span>
@@ -949,8 +917,8 @@ export default function ExpertCheckout({
           <TimeSlotPicker
             slots={slotsForDate}
             selectedSlot={selectedSlot}
-            onSelectSlot={(s) => {
-              setSelectedSlot(s);
+            onSelectSlot={(slot) => {
+              setSelectedSlot(slot);
               setStatusMessage("");
             }}
             dateLabel={dateFormatter.format(selectedDate)}
@@ -958,25 +926,22 @@ export default function ExpertCheckout({
         ) : (
           <p className="body-compact" style={{ color: "#9CA0A7" }}>
             {selectedDate
-              ? "No slots available on this date."
-              : "Pick a date first to see available time slots."}
+              ? "No Cal.com slots are available on this date."
+              : "Pick an available date first to see Cal.com time slots."}
           </p>
         )}
 
-        {selectedSlot && selectedDate && (
+        {selectedSlot ? (
           <div className="booking-confirm-badge">
             <CheckCircle2 size={18} strokeWidth={2} />
             <span>
-              <strong>
-                {dateFormatter.format(selectedDate)}, {selectedSlot} IST
-              </strong>{" "}
-              — pending payment confirmation
+              <strong>{selectedSlot.displayLabel}</strong> - pending Razorpay
+              payment and booking confirmation
             </span>
           </div>
-        )}
+        ) : null}
       </fieldset>
 
-      {/* ── coupon ── */}
       <div className="booking-section booking-section-divider">
         <label className="form-label" htmlFor="expertCoupon">
           Coupon Code
@@ -987,159 +952,116 @@ export default function ExpertCheckout({
             type="text"
             placeholder="Enter coupon code"
             value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
+            onChange={(event) => setCouponCode(event.target.value)}
             className="form-control"
           />
           <Button type="button" variant="secondary" onClick={applyCoupon}>
             Apply
           </Button>
         </div>
-        {couponMessage && (
+        {couponMessage ? (
           <p className="body-compact" style={{ marginTop: 8 }}>
             {couponMessage}
           </p>
-        )}
+        ) : null}
       </div>
 
-      {/* ── pricing summary ── */}
       <div className="pricing-summary-card">
-        <div className="pricing-row">
-          <span>Original Fee</span>
-          <span>{formatUsd(originalFee)}</span>
-        </div>
-        <div className="pricing-row">
-          <span>Discount</span>
-          <span className="pricing-discount">
-            {discountAmountUsd > 0 ? `−${formatUsd(discountAmountUsd)}` : formatUsd(0)}
+        <div className="pricing-row pricing-row-total">
+          <span>Payable amount:</span>
+          <span>
+            {discountAmountUsd > 0 ? (
+              <>
+                <span style={{ textDecoration: "line-through", color: "#9CA0A7" }}>
+                  {formatUsd(originalFee)}
+                </span>{" "}
+                {formatUsd(finalAmountUsd)}
+              </>
+            ) : (
+              formatUsd(finalAmountUsd)
+            )}
           </span>
         </div>
+        <div className="pricing-row">
+          <span>USD to INR conversion:</span>
+          <span>
+            {exchangeRate !== null ? `${formatInr(exchangeRate, 4)} / USD` : "Loading"}
+          </span>
+        </div>
+        <div className="pricing-row">
+          <span>Conversion timestamp:</span>
+          <span>{formatIstTimestamp(exchangeFetchedAt || exchangeEffectiveDateIst)}</span>
+        </div>
         <div className="pricing-row pricing-row-total">
-          <span>Total</span>
-          <span>{formatUsd(finalAmount)}</span>
+          <span>Razorpay payable amount:</span>
+          <span>{finalAmountInr !== null ? formatInr(finalAmountInr) : "Loading"}</span>
         </div>
       </div>
 
-      {/* ── payment options ── */}
       <fieldset className="booking-section">
         <legend className="booking-section-legend">
           <span className="booking-section-num">4</span>
           Payment
         </legend>
-
-        {!selectedSlot && (
-          <p className="body-compact" style={{ color: "#9CA0A7", marginBottom: 10 }}>
-            Complete steps 1–3 to unlock payment options.
-          </p>
-        )}
-
-        <div className="payment-option-grid">
-          {paymentOptions.map((option) => {
-            const isSelected = paymentProvider === option.value;
-            const optionDisabled =
-              !selectedSlot ||
-              (option.value === "crypto"
-                ? !cryptoConfigured
-                : option.value === "razorpay"
-                  ? !paymentsConfigured
-                  : true);
-            return (
-              <label
-                key={option.value}
-                className={`payment-option-card${isSelected ? " payment-option-selected" : ""}${optionDisabled ? " payment-option-disabled" : ""}`}
-              >
-                <input
-                  type="radio"
-                  name="expertPaymentProvider"
-                  value={option.value}
-                  checked={isSelected}
-                  disabled={optionDisabled}
-                  onChange={() => {
-                    setPaymentProvider(option.value);
-                    setStatusMessage("");
-                  }}
-                  className="sr-only"
-                />
-                <span className="payment-option-radio">
-                  {isSelected && <span className="payment-option-radio-dot" />}
-                </span>
-                {option.label}
-              </label>
-            );
-          })}
+        <p className="body-compact" style={{ marginBottom: 12 }}>
+          Razorpay is the only payment method for Talk to Expert sessions.
+        </p>
+        <div style={{ display: "grid", gap: 14 }}>
+          <div>
+            <label className="form-label" htmlFor="expertCustomerName">
+              Full name
+            </label>
+            <input
+              id="expertCustomerName"
+              type="text"
+              placeholder="Enter your full name"
+              value={customerName}
+              onChange={(event) => {
+                setCustomerName(event.target.value);
+                setStatusMessage("");
+              }}
+              className="form-control"
+              style={{ marginTop: 8 }}
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label" htmlFor="expertCustomerEmail">
+              Email
+            </label>
+            <input
+              id="expertCustomerEmail"
+              type="email"
+              placeholder="you@example.com"
+              value={customerEmail}
+              onChange={(event) => {
+                setCustomerEmail(event.target.value);
+                setStatusMessage("");
+              }}
+              className="form-control"
+              style={{ marginTop: 8 }}
+              required
+            />
+          </div>
         </div>
       </fieldset>
 
-      {paymentProvider !== "crypto" ? (
-        <div className="booking-section booking-section-divider">
-          <div style={{ display: "grid", gap: 14 }}>
-            <div>
-              <label className="form-label" htmlFor="expertCustomerName">
-                Full name
-              </label>
-              <input
-                id="expertCustomerName"
-                type="text"
-                placeholder="Enter your full name"
-                value={customerName}
-                onChange={(event) => {
-                  setCustomerName(event.target.value);
-                  setStatusMessage("");
-                }}
-                className="form-control"
-                style={{ marginTop: 8 }}
-                required
-              />
-            </div>
-            <div>
-              <label className="form-label" htmlFor="expertCustomerEmail">
-                Email
-              </label>
-              <input
-                id="expertCustomerEmail"
-                type="email"
-                placeholder="you@example.com"
-                value={customerEmail}
-                onChange={(event) => {
-                  setCustomerEmail(event.target.value);
-                  setStatusMessage("");
-                }}
-                className="form-control"
-                style={{ marginTop: 8 }}
-                required
-              />
-            </div>
-            <div>
-              <label className="form-label" htmlFor="expertCustomerPhone">
-                Phone number
-              </label>
-              <input
-                id="expertCustomerPhone"
-                type="tel"
-                placeholder="+91 9876543210"
-                value={customerPhone}
-                onChange={(event) => {
-                  setCustomerPhone(event.target.value);
-                  setStatusMessage("");
-                }}
-                className="form-control"
-                style={{ marginTop: 8 }}
-                required
-              />
-            </div>
-          </div>
-        </div>
+      <div className="booking-section booking-section-divider">
+        <h2 className="card-title" style={{ fontSize: 18 }}>
+          Booking and refund policy
+        </h2>
+        <p className="body-compact" style={{ marginTop: 10, whiteSpace: "pre-line" }}>
+          {refundPolicy}
+        </p>
+      </div>
+
+      {!paymentsConfigured ? (
+        <p className="body-compact" style={{ color: "#F59E0B" }}>
+          Razorpay payment configuration is pending.
+        </p>
       ) : null}
 
-      {/* ── status ── */}
-      {!paymentsConfigured && (
-        <p className="body-compact" style={{ color: "#F59E0B" }}>
-          {cryptoConfigured
-            ? "Stripe/Razorpay configuration is pending. Crypto payment is available."
-            : "Online payment configuration is pending."}
-        </p>
-      )}
-
-      {statusMessage && (
+      {statusMessage ? (
         <p
           className="body-compact"
           style={{
@@ -1153,21 +1075,16 @@ export default function ExpertCheckout({
         >
           {statusMessage}
         </p>
-      )}
+      ) : null}
 
-      {/* ── CTA ── */}
       <Button
         type="button"
         variant="primary"
         disabled={!paymentReady}
-        onClick={continueToPayment}
+        onClick={startRazorpayCheckout}
       >
         {checkoutPhase === "idle"
-          ? paymentProvider === "razorpay"
-            ? "Pay with Razorpay"
-            : paymentProvider === "crypto"
-              ? "Continue to Crypto Payment"
-              : "Continue to Payment"
+          ? "Pay with Razorpay"
           : checkoutPhase === "creating"
             ? "Creating order..."
             : "Verifying payment..."}

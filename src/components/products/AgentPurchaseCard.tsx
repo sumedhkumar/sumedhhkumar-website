@@ -10,8 +10,6 @@ import {
 } from "react";
 import type {
   CryptoPaymentConfig,
-  Expert,
-  ExpertSession,
   PaymentProvider,
   TradingAgentProduct,
 } from "@/types";
@@ -20,7 +18,6 @@ import Button from "@/components/ui/Button";
 type PurchaseState = {
   customerName: string;
   customerEmail: string;
-  customerPhone: string;
   couponCode: string;
   couponMessage: string;
   discountAmountUsd: number;
@@ -31,6 +28,8 @@ type PurchaseState = {
   statusTone: "info" | "success" | "error";
   usdToInrRate: number | null;
   usdToInrRateSource: string | null;
+  usdToInrRateFetchedAt: string;
+  usdToInrEffectiveDateIst: string;
 };
 
 type CreateProductOrderResponse = {
@@ -44,7 +43,18 @@ type CreateProductOrderResponse = {
   finalPriceInr?: number;
   usdToInrRate?: number;
   usdToInrRateSource?: string;
+  usdToInrRateFetchedAt?: string;
+  usdToInrEffectiveDateIst?: string;
   appliedCoupon?: string;
+  message?: string;
+};
+
+type ExchangeRateResponse = {
+  success?: boolean;
+  rate?: number;
+  source?: string;
+  fetchedAt?: string;
+  effectiveDateIst?: string;
   message?: string;
 };
 
@@ -71,8 +81,14 @@ type RazorpayOptions = {
   prefill: {
     name: string;
     email: string;
-    contact: string;
   };
+  readonly: {
+    contact: false;
+  };
+  hidden: {
+    contact: false;
+  };
+  remember_customer: false;
   theme: {
     color: string;
   };
@@ -95,7 +111,6 @@ type RazorpayWindow = Window & {
 
 const paymentOptions: { value: PaymentProvider; label: string }[] = [
   { value: "razorpay", label: "Pay with Razorpay" },
-  { value: "stripe", label: "Pay with Stripe" },
   { value: "crypto", label: "Pay with Crypto" },
 ];
 
@@ -160,12 +175,41 @@ function formatUsd(value: number) {
   }).format(value);
 }
 
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+function formatInr(value: number, fractionDigits = 2) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value);
 }
 
-function isValidPhone(value: string) {
-  return /^[+]?[0-9]{7,15}$/.test(value);
+function formatIstTimestamp(value?: string) {
+  if (!value) {
+    return "Loading";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  })
+    .format(date)
+    .replace(",", "")
+    .replace(/\s/g, " ");
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function getStatusColor(tone: PurchaseState["statusTone"]) {
@@ -184,7 +228,6 @@ function createInitialState(product: TradingAgentProduct): PurchaseState {
   return {
     customerName: "",
     customerEmail: "",
-    customerPhone: "",
     couponCode: "",
     couponMessage: "",
     discountAmountUsd: 0,
@@ -195,6 +238,8 @@ function createInitialState(product: TradingAgentProduct): PurchaseState {
     statusTone: "info",
     usdToInrRate: null,
     usdToInrRateSource: null,
+    usdToInrRateFetchedAt: "",
+    usdToInrEffectiveDateIst: "",
   };
 }
 
@@ -207,23 +252,13 @@ type AgentPurchaseFormProps = {
 };
 
 type CryptoPaymentPanelProps =
-  | {
-      targetType: "product";
-      product: TradingAgentProduct;
-      finalAmountUsd: number;
-      couponCode?: string;
-      cryptoPaymentConfig: CryptoPaymentConfig | null;
-    }
-  | {
-      targetType: "expert";
-      expert: Expert;
-      session: ExpertSession;
-      appointmentDate: string;
-      appointmentSlot: string;
-      finalAmountUsd: number;
-      couponCode?: string;
-      cryptoPaymentConfig: CryptoPaymentConfig | null;
-    };
+  {
+    targetType: "product";
+    product: TradingAgentProduct;
+    finalAmountUsd: number;
+    couponCode?: string;
+    cryptoPaymentConfig: CryptoPaymentConfig | null;
+  };
 
 export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
   const [copyMessage, setCopyMessage] = useState("");
@@ -246,13 +281,8 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
   }
 
   const cryptoConfig = props.cryptoPaymentConfig;
-  const isExpertPayment = props.targetType === "expert";
-  const purchaseName = isExpertPayment
-    ? `${props.expert.fullName} - ${props.session.label}`
-    : props.product.name;
-  const originalAmountUsd = isExpertPayment
-    ? props.session.feeUsd
-    : props.product.priceUsd;
+  const purchaseName = props.product.name;
+  const originalAmountUsd = props.product.priceUsd;
   const formattedOriginalPrice = formatUsd(originalAmountUsd);
   const formattedFinalAmount = formatUsd(props.finalAmountUsd);
   const formattedDiscountAmount = formatUsd(
@@ -260,45 +290,22 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
   );
   const couponCode = props.couponCode ?? "";
   const couponLabel = couponCode.trim() ? couponCode.trim().toUpperCase() : "None";
-  const purchaseLabel = isExpertPayment ? "Consultation" : "Product";
-  const completionCopy = isExpertPayment
-    ? "Once the payment is confirmed, Vyntegra will confirm your consultation booking on your registered email."
-    : "Once the payment is confirmed, Vyntegra will provide the product/access details on your registered email.";
-  const manualVerificationCopy = isExpertPayment
-    ? "I confirm that I have completed the payment and understand that Vyntegra will verify it manually before my consultation booking is confirmed."
-    : "I confirm that I have completed the payment and understand that Vyntegra will verify it manually before product/access details are shared.";
+  const purchaseLabel = "Product";
+  const completionCopy =
+    "Once the payment is confirmed, Vyntegra will provide the product/access details on your registered email.";
+  const manualVerificationCopy =
+    "I confirm that I have completed the payment and understand that Vyntegra will verify it manually before product/access details are shared.";
 
   function setTargetFields(formData: FormData) {
-    formData.set("purchaseType", props.targetType);
-
-    if (props.targetType === "expert") {
-      formData.set("expertId", props.expert.id);
-      formData.set("sessionId", props.session.id);
-      formData.set("appointmentDate", props.appointmentDate);
-      formData.set("appointmentSlot", props.appointmentSlot);
-      return;
-    }
-
+    formData.set("purchaseType", "product");
     formData.set("productId", props.product.id);
   }
 
   function renderTargetHiddenFields() {
-    if (props.targetType === "expert") {
-      return (
-        <>
-          <input type="hidden" name="purchaseType" value="expert" />
-          <input type="hidden" name="expertId" value={props.expert.id} />
-          <input type="hidden" name="sessionId" value={props.session.id} />
-          <input type="hidden" name="appointmentDate" value={props.appointmentDate} />
-          <input type="hidden" name="appointmentSlot" value={props.appointmentSlot} />
-        </>
-      );
-    }
-
     return (
       <>
         <input type="hidden" name="purchaseType" value="product" />
-          <input type="hidden" name="productId" value={props.product.id} />
+        <input type="hidden" name="productId" value={props.product.id} />
       </>
     );
   }
@@ -557,18 +564,6 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
             <dt>{purchaseLabel}</dt>
             <dd>{purchaseName}</dd>
           </div>
-          {props.targetType === "expert" ? (
-            <>
-              <div>
-                <dt>Appointment Date</dt>
-                <dd>{props.appointmentDate}</dd>
-              </div>
-              <div>
-                <dt>Appointment Slot</dt>
-                <dd>{props.appointmentSlot} IST</dd>
-              </div>
-            </>
-          ) : null}
           <div>
             <dt>Original Price</dt>
             <dd>{formattedOriginalPrice}</dd>
@@ -733,15 +728,12 @@ export function AgentPurchaseForm({
   const cryptoConfigured = Boolean(cryptoPaymentConfig);
   const customerNameValue = state.customerName.trim();
   const customerEmailValue = state.customerEmail.trim();
-  const customerPhoneValue = state.customerPhone.trim();
-  const customerDetailsRequired =
-    state.paymentProvider === "razorpay" || state.paymentProvider === "stripe";
+  const customerDetailsRequired = state.paymentProvider === "razorpay";
   const customerDetailsReady =
     !customerDetailsRequired ||
     Boolean(
       customerNameValue &&
-        isValidEmail(customerEmailValue) &&
-        isValidPhone(customerPhoneValue),
+        isValidEmail(customerEmailValue),
     );
   const selectedPaymentConfigured =
     state.paymentProvider === "crypto"
@@ -764,9 +756,11 @@ export function AgentPurchaseForm({
     ? "Processing..."
     : state.paymentProvider === "razorpay"
       ? "Pay with Razorpay"
-      : state.paymentProvider === "crypto"
-        ? "Continue to Crypto Payment"
-        : "Buy Now";
+      : "Continue to Crypto Payment";
+  const razorpayAmountInr =
+    state.usdToInrRate !== null
+      ? Number((state.finalAmountUsd * state.usdToInrRate).toFixed(2))
+      : null;
 
   useEffect(() => {
     if (!paymentsConfigured && cryptoConfigured && state.paymentProvider !== "crypto") {
@@ -776,6 +770,36 @@ export function AgentPurchaseForm({
       }));
     }
   }, [cryptoConfigured, paymentsConfigured, setState, state.paymentProvider]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadExchangeRate() {
+      try {
+        const response = await fetch("/api/exchange-rates/usd-inr");
+        const result = await readJsonResponse<ExchangeRateResponse>(response);
+
+        if (!cancelled && result.success && typeof result.rate === "number") {
+          setState((current) => ({
+            ...current,
+            usdToInrRate: result.rate ?? current.usdToInrRate,
+            usdToInrRateSource: result.source ?? current.usdToInrRateSource,
+            usdToInrRateFetchedAt:
+              result.fetchedAt ?? current.usdToInrRateFetchedAt,
+            usdToInrEffectiveDateIst:
+              result.effectiveDateIst ?? current.usdToInrEffectiveDateIst,
+          }));
+        }
+      } catch {
+        // Backend order creation remains the source of truth for charge amount.
+      }
+    }
+
+    void loadExchangeRate();
+    return () => {
+      cancelled = true;
+    };
+  }, [setState]);
 
   async function applyCoupon() {
     const response = await fetch("/api/coupons/validate", {
@@ -827,7 +851,6 @@ export function AgentPurchaseForm({
           slug: product.slug,
           customerName: customerNameValue,
           customerEmail: customerEmailValue,
-          customerPhone: customerPhoneValue,
           ...(couponCode ? { couponCode } : {}),
         }),
       });
@@ -864,11 +887,10 @@ export function AgentPurchaseForm({
 
     if (
       !customerNameValue ||
-      !isValidEmail(customerEmailValue) ||
-      !isValidPhone(customerPhoneValue)
+      !isValidEmail(customerEmailValue)
     ) {
       setStatus(
-        "Enter your full name, valid email, and valid phone number before payment.",
+        "Enter your full name and valid email before payment.",
         "error",
       );
       return;
@@ -896,7 +918,6 @@ export function AgentPurchaseForm({
           slug: product.slug,
           customerName: customerNameValue,
           customerEmail: customerEmailValue,
-          customerPhone: customerPhoneValue,
           ...(couponCode ? { couponCode } : {}),
         }),
       });
@@ -928,6 +949,11 @@ export function AgentPurchaseForm({
           : current.couponMessage,
         usdToInrRate: order.usdToInrRate ?? current.usdToInrRate,
         usdToInrRateSource: order.usdToInrRateSource ?? current.usdToInrRateSource,
+        usdToInrRateFetchedAt:
+          order.usdToInrRateFetchedAt ?? current.usdToInrRateFetchedAt,
+        usdToInrEffectiveDateIst:
+          order.usdToInrEffectiveDateIst ??
+          current.usdToInrEffectiveDateIst,
       }));
 
       const checkout = new Razorpay({
@@ -940,8 +966,14 @@ export function AgentPurchaseForm({
         prefill: {
           name: customerNameValue,
           email: customerEmailValue,
-          contact: customerPhoneValue,
         },
+        readonly: {
+          contact: false,
+        },
+        hidden: {
+          contact: false,
+        },
+        remember_customer: false,
         theme: {
           color: "#B8914A",
         },
@@ -1009,18 +1041,14 @@ export function AgentPurchaseForm({
 
   return (
     <div className="purchase-stack">
-      <div>
+      <div className="purchase-panel-header">
         <h2 className="card-title">Purchase this agent</h2>
-        <p className="body-compact" style={{ marginTop: 8 }}>
-          Complete your purchase only after reviewing the agent details, risk note, and terms.
-        </p>
+        <p className="product-price">{formatUsd(product.priceUsd)}</p>
       </div>
 
-      <p className="product-price">{formatUsd(product.priceUsd)}</p>
-
       {state.paymentProvider !== "crypto" ? (
-        <div style={{ display: "grid", gap: 14 }}>
-          <div>
+        <div className="purchase-buyer-grid">
+          <div className="purchase-field">
             <label className="form-label" htmlFor={`${product.id}-customer-name`}>
               Full name
             </label>
@@ -1037,11 +1065,10 @@ export function AgentPurchaseForm({
                 }))
               }
               className="form-control"
-              style={{ marginTop: 8 }}
               required
             />
           </div>
-          <div>
+          <div className="purchase-field">
             <label className="form-label" htmlFor={`${product.id}-customer-email`}>
               Email
             </label>
@@ -1058,100 +1085,88 @@ export function AgentPurchaseForm({
                 }))
               }
               className="form-control"
-              style={{ marginTop: 8 }}
-              required
-            />
-          </div>
-          <div>
-            <label className="form-label" htmlFor={`${product.id}-customer-phone`}>
-              Phone number
-            </label>
-            <input
-              id={`${product.id}-customer-phone`}
-              type="tel"
-              placeholder="+91 9876543210"
-              value={state.customerPhone}
-              onChange={(event) =>
-                setState((current) => ({
-                  ...current,
-                  customerPhone: event.target.value,
-                  statusMessage: "",
-                }))
-              }
-              className="form-control"
-              style={{ marginTop: 8 }}
               required
             />
           </div>
         </div>
       ) : null}
 
-      <div>
-        <label className="form-label" htmlFor={`${product.id}-coupon`}>
-          Coupon code
-        </label>
-        <input
-          id={`${product.id}-coupon`}
-          type="text"
-          placeholder="Enter coupon code"
-          value={state.couponCode}
-          onChange={(event) =>
-            setState((current) => ({
-              ...current,
-              couponCode: event.target.value,
-            }))
-          }
-          className="form-control"
-          style={{ marginTop: 8 }}
-        />
+      <div className="purchase-coupon-row">
+        <div className="purchase-field">
+          <label className="form-label" htmlFor={`${product.id}-coupon`}>
+            Coupon code
+          </label>
+          <input
+            id={`${product.id}-coupon`}
+            type="text"
+            placeholder="Enter coupon code"
+            value={state.couponCode}
+            onChange={(event) =>
+              setState((current) => ({
+                ...current,
+                couponCode: event.target.value,
+              }))
+            }
+            className="form-control"
+          />
+        </div>
+        <Button type="button" variant="secondary" onClick={applyCoupon}>
+          Apply
+        </Button>
       </div>
 
-      <Button type="button" variant="secondary" onClick={applyCoupon}>
-        Apply Coupon
-      </Button>
-
-      {state.couponMessage ? (
-        <p className="body-compact">{state.couponMessage}</p>
-      ) : null}
-
-      <div style={{ display: "grid", gap: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-          <span className="body-compact">Original Price</span>
-          <span className="body-compact">{formatUsd(product.priceUsd)}</span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-          <span className="body-compact">Discount</span>
+      <div className="purchase-pricing-summary">
+        <div className="purchase-pricing-row">
+          <span className="body-compact">Payable amount:</span>
           <span className="body-compact">
-            {formatUsd(state.discountAmountUsd)}
+            {state.discountAmountUsd > 0 ? (
+              <>
+                <span style={{ color: "#9CA0A7", textDecoration: "line-through" }}>
+                  {formatUsd(product.priceUsd)}
+                </span>{" "}
+                {formatUsd(state.finalAmountUsd)}
+              </>
+            ) : (
+              formatUsd(state.finalAmountUsd)
+            )}
           </span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+        <div className="purchase-pricing-row">
+          <span className="body-compact">USD to INR conversion:</span>
+          <span className="body-compact">
+            {state.usdToInrRate !== null
+              ? `${formatInr(state.usdToInrRate, 4)} / USD`
+              : "Loading"}
+          </span>
+        </div>
+        {state.paymentProvider === "razorpay" ? (
+          <div className="purchase-pricing-row">
+            <span className="body-compact">Conversion timestamp:</span>
+            <span className="body-compact">
+              {formatIstTimestamp(
+                state.usdToInrRateFetchedAt || state.usdToInrEffectiveDateIst,
+              )}
+            </span>
+          </div>
+        ) : null}
+        <div className="purchase-pricing-row purchase-pricing-row-total">
           <span className="body-standard" style={{ fontWeight: 700 }}>
-            Final Payable Amount
+            Razorpay payable amount:
           </span>
           <span className="body-standard" style={{ color: "#D8CBA6", fontWeight: 800 }}>
-            {formatUsd(state.finalAmountUsd)}
+            {razorpayAmountInr !== null ? formatInr(razorpayAmountInr) : "Loading"}
           </span>
         </div>
-        {state.usdToInrRate && state.usdToInrRateSource && state.paymentProvider === "razorpay" ? (
-          <p className="body-compact" style={{ color: "#A0A0A0", fontSize: "0.85em", marginTop: -6 }}>
-            {state.usdToInrRateSource.includes("fallback") 
-              ? "Using fallback USD-INR rate. Final amount is shown before payment."
-              : `Razorpay charges in INR. USD converted at ₹${state.usdToInrRate}/USD.`}
-          </p>
-        ) : null}
       </div>
 
       <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
         <legend className="form-label">Payment Options</legend>
-        <div className="payment-option-grid" style={{ marginTop: 10 }}>
+        <div className="payment-option-grid">
           {paymentOptions.map((option) => {
             const optionDisabled =
               option.value === "crypto"
                 ? !cryptoConfigured
-                : option.value === "razorpay"
-                  ? !paymentsConfigured
-                  : true;
+                : !paymentsConfigured;
             const isSelected = state.paymentProvider === option.value;
 
             return (
@@ -1184,10 +1199,7 @@ export function AgentPurchaseForm({
         </div>
       </fieldset>
 
-      <label
-        className="body-compact"
-        style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
-      >
+      <label className="body-compact purchase-terms-row">
         <input
           type="checkbox"
           checked={state.acceptedTerms}
@@ -1215,23 +1227,40 @@ export function AgentPurchaseForm({
           >
             Terms & Conditions
           </a>
+          {" "}and{" "}
+          <a
+            href="/refund-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#D8CBA6", textDecoration: "underline" }}
+          >
+            Cancellation and Refund Policy
+          </a>
           .
         </span>
       </label>
 
-      {blockingMessage ? (
-        <p className="body-compact" style={{ color: "#F59E0B" }}>
-          {blockingMessage}
-        </p>
-      ) : null}
+      {state.couponMessage || blockingMessage || state.statusMessage ? (
+        <div className="purchase-message-stack" aria-live="polite">
+          {state.couponMessage ? (
+            <p className="body-compact">{state.couponMessage}</p>
+          ) : null}
 
-      {state.statusMessage ? (
-        <p
-          className="body-compact"
-          style={{ color: getStatusColor(state.statusTone) }}
-        >
-          {state.statusMessage}
-        </p>
+          {blockingMessage ? (
+            <p className="body-compact" style={{ color: "#F59E0B" }}>
+              {blockingMessage}
+            </p>
+          ) : null}
+
+          {state.statusMessage ? (
+            <p
+              className="body-compact"
+              style={{ color: getStatusColor(state.statusTone) }}
+            >
+              {state.statusMessage}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <Button type="button" variant="primary" disabled={buyDisabled} onClick={buyNow}>

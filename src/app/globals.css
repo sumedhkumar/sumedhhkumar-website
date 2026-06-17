@@ -1290,20 +1290,70 @@ textarea.form-control {
   background: rgba(17, 19, 25, 0.92);
 }
 
-.expert-showcase-image {
+.expert-card-profile-treatment {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 28px 22px 0;
+  overflow: hidden;
+}
+
+.expert-card-profile-treatment::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.expert-card-avatar-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 10px 0 0;
+}
+
+.expert-card-profile-treatment .expert-card-avatar-ring {
+  width: min(206px, 62vw);
+  padding: 2px;
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(91, 88, 82, 0.94) 52%, rgba(213, 177, 92, 0.12) 74%, rgba(27, 29, 35, 0.96));
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.42),
+    0 0 0 3px rgba(213, 177, 92, 0.010),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 420ms cubic-bezier(0.22, 0.68, 0, 1.16), box-shadow 300ms ease, background 300ms ease;
+}
+
+.expert-card-profile-treatment .expert-card-avatar-image {
   filter: saturate(0.9) contrast(1.08);
   transition: filter 220ms ease, transform 700ms ease;
 }
 
-.expert-showcase-card:hover .expert-showcase-image {
+.expert-card-profile-treatment:hover .expert-card-avatar-ring {
+  transform: translateY(-4px) scale(1.025);
+  box-shadow:
+    0 30px 64px rgba(0, 0, 0, 0.48),
+    0 0 0 3px rgba(213, 177, 92, 0.018),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.expert-card-profile-treatment:hover .expert-card-avatar-image {
   filter: saturate(1.04) contrast(1.12);
   transform: scale(1.04);
+}
+
+.founder-portrait .expert-card-avatar-ring {
+  width: min(340px, 100%);
 }
 
 .expert-showcase-content {
   position: relative;
   z-index: 1;
-  margin: -42px 14px 14px;
+  margin: 22px 14px 14px;
   padding: 22px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
@@ -1651,22 +1701,19 @@ textarea.form-control {
 }
 
 .founder-portrait {
-  box-shadow:
-    0 48px 108px rgba(0, 0, 0, 0.56),
-    0 22px 76px rgba(184, 145, 74, 0.055),
-    inset 0 1px 0 rgba(255, 255, 255, 0.075),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.30);
-  transform: perspective(900px) rotateY(3.5deg) rotateX(1deg) translateY(-8px) translateZ(6px);
+  min-height: auto;
+  padding: 8px 0 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  transform: perspective(900px) rotateY(2deg) rotateX(0.5deg) translateY(-6px) translateZ(4px);
   transform-origin: center left;
   transition: transform 400ms cubic-bezier(0.22, 0.68, 0, 1.2), box-shadow 300ms ease;
 }
 
 .founder-portrait:hover {
-  transform: perspective(900px) rotateY(1.5deg) rotateX(0.5deg) translateY(-12px) translateZ(12px);
-  box-shadow:
-    0 56px 120px rgba(0, 0, 0, 0.60),
-    0 28px 84px rgba(184, 145, 74, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transform: perspective(900px) rotateY(1deg) rotateX(0.25deg) translateY(-10px) translateZ(10px);
+  box-shadow: none;
 }
 
 .founder-copy-panel {
@@ -2246,7 +2293,7 @@ textarea.form-control {
     rgba(27, 30, 35, 0.88);
   border: 1px solid rgba(184, 145, 74, 0.32);
   border-radius: 8px;
-  padding: 24px;
+  padding: 18px;
   box-shadow:
     0 28px 64px rgba(0, 0, 0, 0.40),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -2256,7 +2303,126 @@ textarea.form-control {
 
 .purchase-stack {
   display: grid;
-  gap: 18px;
+  gap: 11px;
+}
+
+.purchase-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.purchase-card .card-title,
+.mobile-purchase-sheet .card-title {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.purchase-card .product-price,
+.mobile-purchase-sheet .product-price {
+  font-size: 24px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.purchase-buyer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.purchase-field {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.purchase-field-wide {
+  grid-column: 1 / -1;
+}
+
+.purchase-card .form-label,
+.mobile-purchase-sheet .form-label {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.purchase-card .form-control,
+.mobile-purchase-sheet .form-control {
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.purchase-coupon-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.purchase-coupon-row .btn {
+  min-height: 42px;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.purchase-pricing-summary {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.020);
+}
+
+.purchase-pricing-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.purchase-pricing-row span:last-child {
+  text-align: right;
+}
+
+.purchase-pricing-row-total {
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.purchase-card .payment-option-grid,
+.mobile-purchase-sheet .payment-option-grid {
+  margin-top: 8px;
+}
+
+.purchase-card .payment-option-card,
+.mobile-purchase-sheet .payment-option-card {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.purchase-terms-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.45;
+}
+
+.purchase-message-stack {
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.020);
+}
+
+.purchase-message-stack p {
+  margin: 0;
 }
 
 .product-price {
@@ -3804,6 +3970,15 @@ textarea.form-control {
     padding: 20px 18px 24px;
   }
 
+  .purchase-buyer-grid,
+  .purchase-coupon-row {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-coupon-row .btn {
+    width: 100%;
+  }
+
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 28px;
@@ -4089,7 +4264,7 @@ textarea.form-control {
   }
 
   .expert-showcase-content {
-    margin: -28px 10px 10px;
+    margin: 18px 10px 10px;
     padding: 18px;
   }
 

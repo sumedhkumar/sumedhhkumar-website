@@ -22,16 +22,16 @@ function findExpert(slug: string) {
 
 const credibility = [
   {
-    label: "Primary Role",
-    value: "Data Scientist",
+    label: "AI AUTOMATION EXPERIENCE",
+    value: "8 Years",
   },
   {
-    label: "Recent Experience",
-    value: "Builder.ai",
+    label: "TRADING EXPERIENCE",
+    value: "9 Years",
   },
   {
-    label: "Core Focus",
-    value: "AI, NLP, SQL",
+    label: "SKILLS FOCUS",
+    value: "AI, Algo Trading, Automation",
   },
 ];
 
@@ -191,7 +191,7 @@ export default async function ExpertProfilePage({ params }: PageProps) {
             </div>
 
             <p className="expert-summary-lede">
-              Book a focused consultation to discuss your requirement and understand the right technical direction before implementation.
+              Get practical guidance on using AI, automation, and rule-based systems for trading workflows — from strategy logic and backtesting to TradingView, MT5, and broker API execution planning.
             </p>
 
             <div className="expert-credibility-grid" aria-label="Expert highlights">
@@ -201,6 +201,24 @@ export default async function ExpertProfilePage({ params }: PageProps) {
                   <strong>{item.value}</strong>
                 </div>
               ))}
+            </div>
+
+            <div
+              className="expert-credibility-grid"
+              aria-label="Consultation availability"
+            >
+              <div className="expert-credibility-item">
+                <span>Consultation availability</span>
+                <strong>Live slots during booking</strong>
+              </div>
+              <div className="expert-credibility-item">
+                <span>Weekdays</span>
+                <strong>6 PM - 10 PM IST</strong>
+              </div>
+              <div className="expert-credibility-item">
+                <span>Weekends</span>
+                <strong>12 PM - 8 PM IST</strong>
+              </div>
             </div>
 
             {expert.socialLinks?.length ? (
@@ -232,15 +250,15 @@ export default async function ExpertProfilePage({ params }: PageProps) {
               icon={<Sparkles size={18} strokeWidth={1.8} />}
             >
               <p className="expert-panel-intro">
-                Best suited for founders, operators, and teams who need AI work
-                scoped into practical software, workflows, and implementation
-                roadmaps.
+                Best suited for traders, founders, and teams who want practical
+                guidance on AI trading workflows, algo strategy planning,
+                automation paths, and risk-aware implementation choices.
               </p>
               <ExpertiseGrid items={expert.expertiseAreas} />
             </ExpertPanel>
 
             <ExpertPanel
-              title="Professional Track"
+              title="What the consultation can help with"
               icon={<BriefcaseBusiness size={18} strokeWidth={1.8} />}
             >
               <Timeline items={expert.relevantExperience} />
@@ -260,12 +278,11 @@ export default async function ExpertProfilePage({ params }: PageProps) {
               icon={<Award size={18} strokeWidth={1.8} />}
             >
               <ExpertBulletList items={[
-                "Trading software workflow planning",
-                "Strategy-to-automation feasibility",
-                "Platform connection requirements",
-                "AI tool usage for trading workflows",
-                "Custom agent or software implementation",
-                "Technical doubts before purchasing an agent"
+                "Traders who want to convert a manual strategy into clear rule-based logic",
+                "Beginners who want to understand how algo trading and AI tools fit together",
+                "Users exploring TradingView, Pine Script, MT5, Dhan, Kite, or broker API workflows",
+                "Teams evaluating whether to use a ready-made agent or build a custom trading system",
+                "People who want a practical review of trading automation ideas before development"
               ]} compact />
             </ExpertPanel>
           </aside>

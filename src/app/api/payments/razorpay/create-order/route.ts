@@ -3,6 +3,7 @@ import { experts } from "@/data/experts";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getUsdToInrRate } from "@/lib/exchange-rate";
+import { CalComAppError, reserveExpertSlot } from "@/lib/server/calcom";
 
 export const runtime = "nodejs";
 
@@ -12,10 +13,6 @@ function readString(value: unknown) {
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function isValidPhone(value: string) {
-  return /^[+]?[0-9]{7,15}$/.test(value);
 }
 
 function buildReceipt(productId: string) {
@@ -32,9 +29,9 @@ export async function POST(request: Request) {
     sessionId?: unknown;
     appointmentDate?: unknown;
     appointmentSlot?: unknown;
+    slotStartUtc?: unknown;
     customerName?: unknown;
     customerEmail?: unknown;
-    customerPhone?: unknown;
     couponCode?: unknown;
   };
   const targetType = readString(body.targetType) === "expert" ? "expert" : "product";
@@ -43,20 +40,18 @@ export async function POST(request: Request) {
   const sessionId = readString(body.sessionId);
   const appointmentDate = readString(body.appointmentDate);
   const appointmentSlot = readString(body.appointmentSlot);
+  const slotStartUtc = readString(body.slotStartUtc);
   const customerName = readString(body.customerName);
   const customerEmail = readString(body.customerEmail);
-  const customerPhone = readString(body.customerPhone);
   const couponCode = readString(body.couponCode);
 
   if (
     !customerName ||
     !customerEmail ||
-    !isValidEmail(customerEmail) ||
-    !customerPhone ||
-    !isValidPhone(customerPhone)
+    !isValidEmail(customerEmail)
   ) {
     return Response.json(
-      { message: "Customer name, valid email, and valid phone number are required." },
+      { message: "Customer name and valid email are required." },
       { status: 400 },
     );
   }
@@ -93,12 +88,27 @@ export async function POST(request: Request) {
 
   if (
     targetType === "expert" &&
-    (!expert || !expert.active || !session || !appointmentDate || !appointmentSlot)
+    (!expert || !expert.active || !session || session.durationMinutes !== 30)
   ) {
     return Response.json(
       { message: "Invalid consultation selected." },
       { status: 400 },
     );
+  }
+
+  if (targetType === "expert") {
+    const slotStart = new Date(slotStartUtc);
+
+    if (
+      !slotStartUtc ||
+      Number.isNaN(slotStart.getTime()) ||
+      slotStart.getTime() <= Date.now()
+    ) {
+      return Response.json(
+        { message: "Select a valid future consultation slot." },
+        { status: 400 },
+      );
+    }
   }
 
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
@@ -164,6 +174,34 @@ export async function POST(request: Request) {
   }
 
   try {
+    let calReservationUid = "";
+
+    if (targetType === "expert" && expert) {
+      try {
+        calReservationUid = await reserveExpertSlot({
+          expertId: expert.id,
+          slotStartUtc,
+        });
+      } catch (error) {
+        if (error instanceof CalComAppError) {
+          return Response.json(
+            {
+              message:
+                error.status === 409
+                  ? "This slot is no longer available. Please select another slot."
+                  : "Live booking availability could not be reserved. Please try another slot.",
+            },
+            { status: error.status === 409 ? 409 : 502 },
+          );
+        }
+
+        return Response.json(
+          { message: "This slot is no longer available. Please select another slot." },
+          { status: 409 },
+        );
+      }
+    }
+
     const razorpay = new Razorpay({
       key_id: keyId,
       key_secret: keySecret,
@@ -181,6 +219,9 @@ export async function POST(request: Request) {
               expertName: expert?.fullName ?? "",
               sessionId: session?.id ?? "",
               sessionLabel: session?.label ?? "",
+              sessionDurationMinutes: "30",
+              slotStartUtc,
+              calReservationUid,
               appointmentDate,
               appointmentSlot,
             }
@@ -192,7 +233,6 @@ export async function POST(request: Request) {
         purchaseName,
         customerName,
         customerEmail,
-        customerPhone,
         originalPriceUsd: originalPriceUsd.toFixed(2),
         discountUsd: discountUsd.toFixed(2),
         finalPriceUsd: finalPriceUsd.toFixed(2),
@@ -218,7 +258,10 @@ export async function POST(request: Request) {
       finalPriceInr,
       usdToInrRate: usdToInrRate,
       usdToInrRateSource: usdToInrRateMetadata.source,
+      usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAt,
       usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
+      slotStartUtc,
+      calReservationUid,
       ...(appliedCoupon ? { couponCode: appliedCoupon, appliedCoupon } : {}),
     });
   } catch {

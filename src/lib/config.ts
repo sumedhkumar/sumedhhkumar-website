@@ -37,24 +37,24 @@ function readFlagWithDefault(
   return defaultValue;
 }
 
-const officialContactEmail = "ai.vyntegra@gmail.com";
-const contactEmail =
-  readValue("CONTACT_EMAIL") ||
-  readValue("NEXT_PUBLIC_VYNTEGRA_CONTACT_EMAIL") ||
-  officialContactEmail;
-const adminEmail = readValue("ADMIN_EMAIL") || contactEmail;
-const adminPaymentEmail = readValue("ADMIN_PAYMENT_EMAIL") || adminEmail;
-const customSolutionsRecipientEmail =
-  readValue("CUSTOM_SOLUTION_EMAIL") ||
-  readValue("CUSTOM_SOLUTIONS_RECIPIENT_EMAIL") ||
-  adminEmail;
-const queryEmail = readValue("QUERY_EMAIL") || adminPaymentEmail;
+const officialContactEmail = "support@vyntegra.in";
+const contactEmail = readValue("CONTACT_MAIL") || officialContactEmail;
+const supportEmail = contactEmail;
+const adminEmail = readValue("ADMIN_MAIL_TO") || contactEmail;
+const adminPaymentEmail = adminEmail;
+const cryptoPaymentProofEmail = adminEmail;
+const customSolutionsRecipientEmail = adminEmail;
+const queryEmail = adminPaymentEmail;
 const smtpPort = readValue("SMTP_PORT") || "465";
-const smtpUser = readValue("SMTP_USER") || contactEmail;
+const smtpUser = readValue("SMTP_USER");
 const smtpFromEmail =
-  readValue("EMAIL_FROM") ||
-  readValue("SMTP_FROM_EMAIL") ||
-  `Vyntegra <${smtpUser}>`;
+  smtpUser ? `Vyntegra <${smtpUser}>` : "";
+const paymentMailFrom = readValue("PAYMENT_MAIL_FROM") || "sales@vyntegra.in";
+const paymentMailFromName =
+  readValue("PAYMENT_MAIL_FROM_NAME") || "Vyntegra Sales";
+const paymentMailReplyTo =
+  readValue("PAYMENT_MAIL_REPLY_TO") || paymentMailFrom;
+const paymentMailFromEmail = `${paymentMailFromName} <${paymentMailFrom}>`;
 
 export const appConfig = {
   appBaseUrl: readValue("APP_BASE_URL"),
@@ -84,8 +84,10 @@ export const appConfig = {
   cryptoQrImagePath:
     readValue("CRYPTO_QR_IMAGE_PATH") || "/payments/crypto-payment-qr.png",
   contactEmail,
+  supportEmail,
   adminEmail,
   adminPaymentEmail,
+  cryptoPaymentProofEmail,
   queryEmail,
   expertBookingEnabled: readFlag("EXPERT_BOOKING_ENABLED"),
   productAccessEnabled: readFlag("PRODUCT_ACCESS_ENABLED"),
@@ -94,8 +96,12 @@ export const appConfig = {
   smtpPort,
   smtpSecure: readFlagDefault("SMTP_SECURE", Number(smtpPort) === 465),
   smtpUser,
-  smtpPass: readValue("SMTP_APP_PASSWORD") || readValue("SMTP_PASS"),
+  smtpPass: readValue("SMTP_PASS"),
   smtpFromEmail,
+  paymentMailFrom,
+  paymentMailFromName,
+  paymentMailReplyTo,
+  paymentMailFromEmail,
 };
 
 export function isProductionPersistenceConfigured() {
@@ -106,13 +112,28 @@ export function isProductionPersistenceConfigured() {
 }
 
 export function hasSmtpConfiguration() {
-  return Boolean(
-    appConfig.smtpHost &&
-      appConfig.smtpPort &&
-      appConfig.smtpUser &&
-      appConfig.smtpPass &&
-      appConfig.smtpFromEmail,
-  );
+  return getMissingSmtpConfigurationVariables().length === 0;
+}
+
+export function getMissingSmtpConfigurationVariables() {
+  return [
+    ["SMTP_HOST", appConfig.smtpHost],
+    ["SMTP_PORT", appConfig.smtpPort],
+    ["SMTP_USER", appConfig.smtpUser],
+    ["SMTP_PASS", appConfig.smtpPass],
+  ]
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+}
+
+export function getSmtpConfigurationErrorMessage() {
+  const missingVariables = getMissingSmtpConfigurationVariables();
+
+  if (missingVariables.length === 0) {
+    return "";
+  }
+
+  return `Email service is not configured. Missing environment variables: ${missingVariables.join(", ")}.`;
 }
 
 export function hasStripeConfiguration() {
@@ -165,10 +186,7 @@ export function hasAnyPaymentConfiguration() {
 }
 
 export function hasGatewayPaymentConfiguration() {
-  return (
-    hasStripeConfiguration() ||
-    hasRazorpayConfiguration()
-  );
+  return hasRazorpayConfiguration();
 }
 
 export function serviceUnavailableResponse() {

@@ -7,24 +7,15 @@ export default function Founder() {
   return (
     <section id="founder" className="section section-bg-primary">
       <div className="container founder-grid">
-        <div
-          className="founder-portrait depth-panel"
-          style={{
-            aspectRatio: "4 / 5",
-            overflow: "hidden",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={site.founderPhoto}
-            alt={`${site.founderName} professional portrait`}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
+        <div className="founder-portrait expert-card-profile-treatment">
+          <div className="expert-avatar-ring expert-card-avatar-ring">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={site.founderPhoto}
+              alt={`${site.founderName} professional portrait`}
+              className="expert-avatar-image expert-card-avatar-image"
+            />
+          </div>
         </div>
 
         <div className="founder-copy-panel depth-panel">

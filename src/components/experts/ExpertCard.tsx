@@ -12,43 +12,31 @@ function formatUsd(value: number) {
 }
 
 export default function ExpertCard({ expert }: { expert: Expert }) {
-  const session = expert.sessions.find((item) => item.active);
+  const session = expert.sessions.find(
+    (item) => item.active && item.durationMinutes === 30,
+  );
 
   return (
     <article
-      className="standard-card clickable-card expert-showcase-card"
-      style={{ padding: 0, overflow: "hidden" }}
+      className="standard-card clickable-card expert-showcase-card expert-card-profile-treatment"
+      style={{ overflow: "hidden" }}
     >
-      {expert.professionalPhoto ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          className="expert-showcase-image"
-          src={expert.professionalPhoto}
-          alt={`${expert.fullName} professional photograph`}
-          style={{
-            aspectRatio: "4 / 5",
-            width: "100%",
-            objectFit: "cover",
-            background: "#1B1E23",
-          }}
-        />
-      ) : (
-        <div
-          className="expert-showcase-image"
-          style={{
-            aspectRatio: "4 / 5",
-            background: "#1B1E23",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#9CA0A7",
-            padding: 20,
-            textAlign: "center",
-          }}
-        >
-          <span className="body-compact">Professional photo pending</span>
+      <div className="expert-card-avatar-stage">
+        <div className="expert-avatar-ring expert-card-avatar-ring">
+          {expert.professionalPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="expert-avatar-image expert-card-avatar-image"
+              src={expert.professionalPhoto}
+              alt={`${expert.fullName} professional photograph`}
+            />
+          ) : (
+            <div className="expert-avatar-placeholder expert-card-avatar-image">
+              Professional photo pending
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="expert-showcase-content">
         <p className="eyebrow" style={{ marginBottom: 8 }}>Consultation</p>
@@ -58,6 +46,10 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
         </p>
         <p className="body-compact" style={{ marginTop: 12 }}>
           {expert.specialization}
+        </p>
+        <p className="body-compact" style={{ marginTop: 12 }}>
+          Live availability is shown during booking. Sessions are confirmed
+          after successful Razorpay payment and booking creation.
         </p>
         <p className="body-compact" style={{ marginTop: 8 }}>
           {expert.qualifications[0] ?? ""}

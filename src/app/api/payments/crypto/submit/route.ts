@@ -3,7 +3,6 @@ import {
   sendCryptoPaymentProofEmails,
   sendPaymentQueryEmail,
 } from "@/lib/email";
-import { experts } from "@/data/experts";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -125,113 +124,12 @@ function buildProductPaymentSummary(
   };
 }
 
-function buildExpertBookingDetails({
-  expertName,
-  sessionLabel,
-  durationMinutes,
-  appointmentDate,
-  appointmentSlot,
-}: {
-  expertName: string;
-  sessionLabel: string;
-  durationMinutes: number;
-  appointmentDate: string;
-  appointmentSlot: string;
-}) {
-  return [
-    `Expert: ${expertName}`,
-    `Session: ${sessionLabel}`,
-    `Duration: ${durationMinutes} minutes`,
-    `Date: ${appointmentDate}`,
-    `Time Slot: ${appointmentSlot} IST`,
-  ].join("\n");
-}
-
-function buildExpertPaymentSummary({
-  expert,
-  session,
-  couponCode,
-  appointmentDate,
-  appointmentSlot,
-}: {
-  expert: (typeof experts)[number];
-  session: (typeof experts)[number]["sessions"][number];
-  couponCode: string;
-  appointmentDate: string;
-  appointmentSlot: string;
-}) {
-  const originalProductPrice = formatUsd(session.feeUsd);
-  const bookingDetails = buildExpertBookingDetails({
-    expertName: expert.fullName,
-    sessionLabel: session.label,
-    durationMinutes: session.durationMinutes,
-    appointmentDate,
-    appointmentSlot,
-  });
-  const noCouponSummary = {
-    purchaseType: "expert" as const,
-    purchaseName: `${expert.fullName} - ${session.label}`,
-    originalProductPrice,
-    couponCode: "",
-    discountAmount: "",
-    finalPayablePrice: originalProductPrice,
-    bookingDetails,
-  };
-
-  if (!couponCode) {
-    return noCouponSummary;
-  }
-
-  const couponResult = validateCoupon({
-    code: couponCode,
-    amountUsd: session.feeUsd,
-    target: {
-      type: "expert",
-      expertId: expert.id,
-      sessionId: session.id,
-    },
-  });
-
-  if (!couponResult.ok || couponResult.discountAmountUsd <= 0) {
-    return noCouponSummary;
-  }
-
-  return {
-    purchaseType: "expert" as const,
-    purchaseName: `${expert.fullName} - ${session.label}`,
-    originalProductPrice,
-    couponCode: normalizeCouponCode(couponCode),
-    discountAmount: formatUsd(couponResult.discountAmountUsd),
-    finalPayablePrice: formatUsd(couponResult.finalAmountUsd),
-    bookingDetails,
-  };
-}
-
 function buildPaymentSummaryFromForm(formData: FormData) {
   const purchaseType = sanitizeText(formData.get("purchaseType"));
   const couponCode = sanitizeText(formData.get("couponCode"));
 
   if (purchaseType === "expert") {
-    const expertId = sanitizeText(formData.get("expertId"));
-    const sessionId = sanitizeText(formData.get("sessionId"));
-    const appointmentDate = sanitizeText(formData.get("appointmentDate"));
-    const appointmentSlot = sanitizeText(formData.get("appointmentSlot"));
-    const expert = experts.find((item) => item.id === expertId);
-    const session = expert?.sessions.find(
-      (item) => item.id === sessionId && item.active,
-    );
-
-    if (!expert || !session || !appointmentDate || !appointmentSlot) {
-      return null;
-    }
-
-    return buildExpertPaymentSummary({
-      expert,
-      session,
-      couponCode,
-      appointmentDate,
-      appointmentSlot,
-    });
+    return null;
   }
 
   const productId = sanitizeText(formData.get("productId"));
