@@ -1290,20 +1290,70 @@ textarea.form-control {
   background: rgba(17, 19, 25, 0.92);
 }
 
-.expert-showcase-image {
+.expert-card-profile-treatment {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 28px 22px 0;
+  overflow: hidden;
+}
+
+.expert-card-profile-treatment::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.expert-card-avatar-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 10px 0 0;
+}
+
+.expert-card-profile-treatment .expert-card-avatar-ring {
+  width: min(206px, 62vw);
+  padding: 2px;
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(91, 88, 82, 0.94) 52%, rgba(213, 177, 92, 0.12) 74%, rgba(27, 29, 35, 0.96));
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.42),
+    0 0 0 3px rgba(213, 177, 92, 0.010),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 420ms cubic-bezier(0.22, 0.68, 0, 1.16), box-shadow 300ms ease, background 300ms ease;
+}
+
+.expert-card-profile-treatment .expert-card-avatar-image {
   filter: saturate(0.9) contrast(1.08);
   transition: filter 220ms ease, transform 700ms ease;
 }
 
-.expert-showcase-card:hover .expert-showcase-image {
+.expert-card-profile-treatment:hover .expert-card-avatar-ring {
+  transform: translateY(-4px) scale(1.025);
+  box-shadow:
+    0 30px 64px rgba(0, 0, 0, 0.48),
+    0 0 0 3px rgba(213, 177, 92, 0.018),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.expert-card-profile-treatment:hover .expert-card-avatar-image {
   filter: saturate(1.04) contrast(1.12);
   transform: scale(1.04);
+}
+
+.founder-portrait .expert-card-avatar-ring {
+  width: min(340px, 100%);
 }
 
 .expert-showcase-content {
   position: relative;
   z-index: 1;
-  margin: -42px 14px 14px;
+  margin: 22px 14px 14px;
   padding: 22px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
@@ -1651,22 +1701,19 @@ textarea.form-control {
 }
 
 .founder-portrait {
-  box-shadow:
-    0 48px 108px rgba(0, 0, 0, 0.56),
-    0 22px 76px rgba(184, 145, 74, 0.055),
-    inset 0 1px 0 rgba(255, 255, 255, 0.075),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.30);
-  transform: perspective(900px) rotateY(3.5deg) rotateX(1deg) translateY(-8px) translateZ(6px);
+  min-height: auto;
+  padding: 8px 0 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  transform: perspective(900px) rotateY(2deg) rotateX(0.5deg) translateY(-6px) translateZ(4px);
   transform-origin: center left;
   transition: transform 400ms cubic-bezier(0.22, 0.68, 0, 1.2), box-shadow 300ms ease;
 }
 
 .founder-portrait:hover {
-  transform: perspective(900px) rotateY(1.5deg) rotateX(0.5deg) translateY(-12px) translateZ(12px);
-  box-shadow:
-    0 56px 120px rgba(0, 0, 0, 0.60),
-    0 28px 84px rgba(184, 145, 74, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transform: perspective(900px) rotateY(1deg) rotateX(0.25deg) translateY(-10px) translateZ(10px);
+  box-shadow: none;
 }
 
 .founder-copy-panel {
@@ -2246,7 +2293,7 @@ textarea.form-control {
     rgba(27, 30, 35, 0.88);
   border: 1px solid rgba(184, 145, 74, 0.32);
   border-radius: 8px;
-  padding: 24px;
+  padding: 18px;
   box-shadow:
     0 28px 64px rgba(0, 0, 0, 0.40),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -2256,7 +2303,126 @@ textarea.form-control {
 
 .purchase-stack {
   display: grid;
-  gap: 18px;
+  gap: 11px;
+}
+
+.purchase-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.purchase-card .card-title,
+.mobile-purchase-sheet .card-title {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.purchase-card .product-price,
+.mobile-purchase-sheet .product-price {
+  font-size: 24px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.purchase-buyer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.purchase-field {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.purchase-field-wide {
+  grid-column: 1 / -1;
+}
+
+.purchase-card .form-label,
+.mobile-purchase-sheet .form-label {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.purchase-card .form-control,
+.mobile-purchase-sheet .form-control {
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.purchase-coupon-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.purchase-coupon-row .btn {
+  min-height: 42px;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.purchase-pricing-summary {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.020);
+}
+
+.purchase-pricing-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.purchase-pricing-row span:last-child {
+  text-align: right;
+}
+
+.purchase-pricing-row-total {
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.purchase-card .payment-option-grid,
+.mobile-purchase-sheet .payment-option-grid {
+  margin-top: 8px;
+}
+
+.purchase-card .payment-option-card,
+.mobile-purchase-sheet .payment-option-card {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.purchase-terms-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.45;
+}
+
+.purchase-message-stack {
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.020);
+}
+
+.purchase-message-stack p {
+  margin: 0;
 }
 
 .product-price {
@@ -2265,6 +2431,206 @@ textarea.form-control {
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
+}
+
+.crypto-payment-screen {
+  max-width: 980px;
+}
+
+.crypto-payment-panel {
+  display: grid;
+  gap: 22px;
+  padding: 26px;
+  border: 1px solid rgba(184, 145, 74, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.012)),
+    rgba(17, 19, 25, 0.92);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.crypto-payment-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.crypto-payment-badge {
+  min-height: 32px;
+  padding: 8px 11px;
+  border: 1px solid rgba(225, 201, 133, 0.28);
+  border-radius: 8px;
+  color: #E1C985;
+  background: rgba(184, 145, 74, 0.06);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.crypto-payment-copy,
+.crypto-form {
+  display: grid;
+  gap: 12px;
+}
+
+.crypto-payment-copy p,
+.crypto-query-callout p,
+.crypto-payment-warning,
+.crypto-verification-note {
+  color: #C8C1B3;
+  font-size: 14px;
+  line-height: 1.66;
+}
+
+.crypto-query-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid rgba(225, 201, 133, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(225, 201, 133, 0.050), transparent),
+    rgba(12, 13, 17, 0.80);
+}
+
+.crypto-query-callout strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #F7F3EA;
+  font-size: 15px;
+}
+
+.crypto-payment-details {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.crypto-qr-frame {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #F7F7F7;
+}
+
+.crypto-qr-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.crypto-detail-list {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.crypto-detail-list div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  background: rgba(14, 16, 20, 0.92);
+}
+
+.crypto-detail-list dt {
+  color: #8F949C;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.crypto-detail-list dd {
+  margin: 0;
+  color: #F7F3EA;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.crypto-wallet-address {
+  color: #E1C985 !important;
+}
+
+.crypto-payment-warning {
+  padding: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.06);
+  color: #F5C16C;
+  font-weight: 700;
+}
+
+.crypto-form {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), transparent),
+    rgba(12, 13, 17, 0.82);
+}
+
+.crypto-form .form-label {
+  display: grid;
+  gap: 8px;
+}
+
+.crypto-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.crypto-checkbox-row input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: #B8914A;
+}
+
+.crypto-verification-note {
+  color: #9CA0A7;
+}
+
+.crypto-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(9, 10, 12, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.crypto-dialog {
+  width: min(100%, 460px);
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(216, 203, 166, 0.3);
+  border-radius: 8px;
+  background: #171A1F;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.crypto-dialog .body-standard {
+  color: var(--foreground-muted);
 }
 
 .mobile-purchase-bar,
@@ -3604,6 +3970,15 @@ textarea.form-control {
     padding: 20px 18px 24px;
   }
 
+  .purchase-buyer-grid,
+  .purchase-coupon-row {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-coupon-row .btn {
+    width: 100%;
+  }
+
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 28px;
@@ -3749,6 +4124,21 @@ textarea.form-control {
     max-width: calc(100vw - 36px);
   }
 
+  .crypto-payment-panel {
+    padding: 18px;
+  }
+
+  .crypto-payment-heading,
+  .crypto-query-callout,
+  .crypto-payment-details,
+  .crypto-detail-list div {
+    grid-template-columns: 1fr;
+  }
+
+  .crypto-payment-heading {
+    display: grid;
+  }
+
   .expert-page .listing-container,
   .expert-shell,
   .expert-hero-main,
@@ -3874,7 +4264,7 @@ textarea.form-control {
   }
 
   .expert-showcase-content {
-    margin: -28px 10px 10px;
+    margin: 18px 10px 10px;
     padding: 18px;
   }
 

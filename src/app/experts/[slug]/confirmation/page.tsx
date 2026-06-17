@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description: "Review consultation confirmation details.",
 };
 
+export function generateStaticParams() {
+  return experts.map((expert) => ({ slug: expert.slug }));
+}
+
 export default async function ExpertConfirmationPage({
   params,
   searchParams,

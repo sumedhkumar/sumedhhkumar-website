@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { products } from "@/data/products";
-import { hasAnyPaymentConfiguration } from "@/lib/config";
+import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
+import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
 import AgentPurchaseCard from "@/components/products/AgentPurchaseCard";
 import MobileAgentPurchaseBar from "@/components/products/MobileAgentPurchaseBar";
 import ProductFAQ from "@/components/products/ProductFAQ";
@@ -66,7 +67,8 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
-  const paymentsConfigured = hasAnyPaymentConfiguration();
+  const paymentsConfigured = hasProductRazorpayCheckoutConfiguration();
+  const cryptoPaymentConfig = getCryptoPaymentConfig();
 
   return (
     <main className="section-bg-primary product-page">
@@ -184,11 +186,13 @@ export default async function ProductPage({ params }: PageProps) {
         <AgentPurchaseCard
           product={product}
           paymentsConfigured={paymentsConfigured}
+          cryptoPaymentConfig={cryptoPaymentConfig}
         />
       </div>
       <MobileAgentPurchaseBar
         product={product}
         paymentsConfigured={paymentsConfigured}
+        cryptoPaymentConfig={cryptoPaymentConfig}
       />
     </main>
   );

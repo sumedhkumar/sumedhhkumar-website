@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { site } from "@/data/site";
 import SectionIntro from "@/components/ui/SectionIntro";
 import SocialIcon from "@/components/ui/SocialIcon";
@@ -7,24 +7,15 @@ export default function Founder() {
   return (
     <section id="founder" className="section section-bg-primary">
       <div className="container founder-grid">
-        <div
-          className="founder-portrait depth-panel"
-          style={{
-            aspectRatio: "4 / 5",
-            overflow: "hidden",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={site.founderPhoto}
-            alt={`${site.founderName} professional portrait`}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
+        <div className="founder-portrait expert-card-profile-treatment">
+          <div className="expert-avatar-ring expert-card-avatar-ring">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={site.founderPhoto}
+              alt={`${site.founderName} professional portrait`}
+              className="expert-avatar-image expert-card-avatar-image"
+            />
+          </div>
         </div>
 
         <div className="founder-copy-panel depth-panel">
@@ -37,9 +28,9 @@ export default function Founder() {
             Vyntegra was created to bring more structure, clarity, and technical discipline into trading software and automation. The focus is not on hype or profit promises, but on building systems that users can understand, review, and operate responsibly.
           </p>
           <div style={{ marginTop: 24 }}>
-            <a href="/experts" className="button button-secondary">
+            <Link href="/experts" className="button button-secondary">
               Connect with Sumedh
-            </a>
+            </Link>
           </div>
           <div style={{ marginTop: 40 }}>
             <h4 className="body-standard" style={{ fontWeight: 700 }}>Follow and connect</h4>

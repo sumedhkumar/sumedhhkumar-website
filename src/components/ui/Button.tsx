@@ -1,8 +1,11 @@
+"use client";
+
 import type {
   CSSProperties,
   MouseEventHandler,
   ReactNode,
 } from "react";
+import { useEffect, useRef } from "react";
 
 type ButtonVariant = "primary" | "secondary";
 
@@ -43,10 +46,18 @@ export default function Button(props: ButtonProps) {
     variant = "primary",
     className = "",
   } = props;
+  const nativeButtonRef = useRef<HTMLButtonElement | null>(null);
   const classes = `btn btn-${variant} ${className}`.trim();
+  const disabled = props.disabled === true;
+
+  useEffect(() => {
+    if (nativeButtonRef.current) {
+      nativeButtonRef.current.disabled = disabled;
+    }
+  }, [disabled]);
 
   if (isLinkButton(props)) {
-    const { href, disabled, onClick, rel, style, target } = props;
+    const { href, onClick, rel, style, target } = props;
 
     return (
       <a
@@ -63,14 +74,16 @@ export default function Button(props: ButtonProps) {
     );
   }
 
-  const { disabled, id, onClick, style, type = "button" } = props;
+  const { id, onClick, style, type = "button" } = props;
 
   return (
     <button
-      disabled={disabled}
+      ref={nativeButtonRef}
+      disabled={disabled || undefined}
       id={id}
       onClick={onClick}
       style={style}
+      suppressHydrationWarning
       type={type}
       className={classes}
     >

@@ -12,7 +12,9 @@ function formatUsd(value: number) {
 }
 
 export default function ExpertProfileSummary({ expert }: { expert: Expert }) {
-  const activeSessions = expert.sessions.filter((session) => session.active);
+  const activeSessions = expert.sessions.filter(
+    (session) => session.active && session.durationMinutes === 30,
+  );
   const firstSession = activeSessions[0];
 
   return (
@@ -50,11 +52,13 @@ export default function ExpertProfileSummary({ expert }: { expert: Expert }) {
         ) : null}
 
         <div className="expert-availability-block">
-          <h2 className="card-title">General Availability</h2>
+          <h2 className="card-title">Booking and refund policy</h2>
           <p>
-            Weekdays run from 6 PM to 10 PM IST, and weekends run from 12 PM
-            to 8 PM IST. Start times are available every 15 minutes, with each
-            session ending inside the booking window.
+            Your 30-minute consultation is confirmed after successful Razorpay
+            payment and booking confirmation. If Vyntegra cannot confirm or
+            deliver the paid consultation, we will offer a replacement slot or
+            provide a 100% refund. Refunds are processed to the original payment
+            method as per payment gateway and banking timelines.
           </p>
         </div>
 

@@ -85,7 +85,23 @@ export type Testimonial = {
   attribution: string;
 };
 
-export type PaymentProvider = "razorpay" | "stripe" | "crypto";
+export type PaymentProvider = "razorpay" | "crypto";
+
+export type CalComSlot = {
+  startUtc: string;
+  startIst: string;
+  endUtc: string;
+  dateKey: string;
+  timeLabel: string;
+  displayLabel: string;
+};
+
+export type CryptoPaymentConfig = {
+  token: string;
+  network: string;
+  walletAddress: string;
+  qrImagePath: string;
+};
 
 export type CouponPurchaseTarget =
   | {

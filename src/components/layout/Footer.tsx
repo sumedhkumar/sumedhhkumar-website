@@ -6,13 +6,14 @@ const navigationLinks = [
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "Founder", href: "/#founder" },
-  { label: "Terms & Conditions", href: "/terms" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Contact", href: "/contact" },
 ];
 
 const legalLinks = [
+  { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy" },
-  { label: "Refund Policy", href: "/refund-policy" },
+  { label: "Cancellation and Refund Policy", href: "/refund-policy" },
+  { label: "Shipping / Delivery Policy", href: "/shipping-delivery" },
 ];
 
 export default function Footer() {

@@ -1,3 +1,46 @@
 import type { Coupon } from "@/types";
 
-export const coupons: Coupon[] = [];
+export const coupons: Coupon[] = [
+  {
+    code: "TEST10",
+    active: true,
+    discountType: "percentage",
+    discountValue: 10,
+    validFrom: "",
+    expiresAt: "",
+    totalUsageLimit: null,
+    perCustomerUsageLimit: null,
+    applicableProductIds: [],
+    applicableExpertIds: [],
+    applicableSessionIds: [],
+    usageCount: 0,
+  },
+  {
+    code: "TEST25",
+    active: true,
+    discountType: "fixed",
+    discountValue: 25,
+    validFrom: "",
+    expiresAt: "",
+    totalUsageLimit: null,
+    perCustomerUsageLimit: null,
+    applicableProductIds: [],
+    applicableExpertIds: [],
+    applicableSessionIds: [],
+    usageCount: 0,
+  },
+  {
+    code: "TEST50",
+    active: true,
+    discountType: "percentage",
+    discountValue: 50,
+    validFrom: "",
+    expiresAt: "",
+    totalUsageLimit: null,
+    perCustomerUsageLimit: null,
+    applicableProductIds: ["agent-pulse", "agent-sentinel", "agent-drift"],
+    applicableExpertIds: ["products-only"],
+    applicableSessionIds: [],
+    usageCount: 0,
+  },
+];
