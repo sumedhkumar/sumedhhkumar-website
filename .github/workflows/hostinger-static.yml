@@ -59,7 +59,7 @@ jobs:
               Remove-Item -LiteralPath $item -Recurse -Force
             }
           }
-          Copy-Item -LiteralPath "out\*" -Destination "." -Recurse -Force
+          Copy-Item -Path "out\*" -Destination "." -Recurse -Force
           Copy-Item -LiteralPath "out\.htaccess" -Destination ".htaccess" -Force
 
       - name: Commit static output
