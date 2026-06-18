@@ -28,6 +28,7 @@ export default function MobileAgentPurchaseBar({
 }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useAgentPurchaseState(product);
+  const isAstroVynGoldProduct = product.slug === "astro-vyn-gold";
 
   return (
     <>
@@ -35,15 +36,21 @@ export default function MobileAgentPurchaseBar({
         <div>
           <p className="body-compact">{product.name}</p>
           <p className="product-price" style={{ fontSize: 24 }}>
-            {formatUsd(product.priceUsd)}
+            {isAstroVynGoldProduct ? "From $199" : formatUsd(product.priceUsd)}
           </p>
         </div>
-        <Button type="button" variant="primary" onClick={() => setOpen(true)}>
-          Buy Now
-        </Button>
+        {isAstroVynGoldProduct ? (
+          <Button href="/ai-trading-agents/astro-vyn-gold/plans" variant="primary">
+            View Plans
+          </Button>
+        ) : (
+          <Button type="button" variant="primary" onClick={() => setOpen(true)}>
+            Buy Now
+          </Button>
+        )}
       </div>
 
-      {open ? (
+      {open && !isAstroVynGoldProduct ? (
         <MobileAgentPurchaseSheet
           product={product}
           paymentsConfigured={paymentsConfigured}

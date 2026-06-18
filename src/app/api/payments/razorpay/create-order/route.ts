@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import { experts } from "@/data/experts";
 import { products } from "@/data/products";
+import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getUsdToInrRate } from "@/lib/exchange-rate";
 import { CalComAppError, reserveExpertSlot } from "@/lib/server/calcom";
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
     customerName?: unknown;
     customerEmail?: unknown;
     couponCode?: unknown;
+    selectedPlanId?: unknown;
   };
   const targetType = readString(body.targetType) === "expert" ? "expert" : "product";
   const productIdentifier = readString(body.productId || body.slug);
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
   const customerName = readString(body.customerName);
   const customerEmail = readString(body.customerEmail);
   const couponCode = readString(body.couponCode);
+  const selectedPlanId = readString(body.selectedPlanId);
 
   if (
     !customerName ||
@@ -84,6 +87,32 @@ export async function POST(request: Request) {
       { message: "Invalid product selected." },
       { status: 400 },
     );
+  }
+
+  const selectedPlan =
+    targetType === "product" && selectedPlanId
+      ? getAstroVynGoldPlan(selectedPlanId)
+      : null;
+
+  if (selectedPlanId) {
+    if (
+      targetType !== "product" ||
+      !product ||
+      product.slug !== "astro-vyn-gold" ||
+      !selectedPlan
+    ) {
+      return Response.json(
+        { message: "Invalid Astro-Vyn Gold subscription plan selected." },
+        { status: 400 },
+      );
+    }
+
+    if (couponCode) {
+      return Response.json(
+        { message: "Coupons are not available for this subscription checkout." },
+        { status: 400 },
+      );
+    }
   }
 
   if (
@@ -127,14 +156,26 @@ export async function POST(request: Request) {
   const purchaseName =
     targetType === "expert"
       ? `${expert?.fullName ?? "Expert"} - ${session?.label ?? "Consultation"}`
-      : product?.name ?? "Product";
+      : selectedPlan
+        ? `${product?.name ?? "Product"} - ${selectedPlan.name}`
+        : product?.name ?? "Product";
   const originalPriceUsd =
-    targetType === "expert" ? session?.feeUsd ?? 0 : product?.priceUsd ?? 0;
-  let discountUsd = 0;
-  let finalPriceUsd = originalPriceUsd;
+    targetType === "expert"
+      ? session?.feeUsd ?? 0
+      : selectedPlan
+        ? selectedPlan.originalPriceUsd
+        : product?.priceUsd ?? 0;
+  let discountUsd =
+    selectedPlan && targetType === "product"
+      ? selectedPlan.originalPriceUsd - selectedPlan.priceUsd
+      : 0;
+  let finalPriceUsd =
+    selectedPlan && targetType === "product"
+      ? selectedPlan.priceUsd
+      : originalPriceUsd;
   let appliedCoupon = "";
 
-  if (couponCode) {
+  if (couponCode && !selectedPlan) {
     const couponResult = validateCoupon({
       code: couponCode,
       amountUsd: originalPriceUsd,
@@ -228,7 +269,17 @@ export async function POST(request: Request) {
           : {
               productId: product?.id ?? "",
               slug: product?.slug ?? "",
+              productSlug: product?.slug ?? "",
               productName: product?.name ?? "",
+              ...(selectedPlan
+                ? {
+                    planId: selectedPlan.id,
+                    planName: selectedPlan.name,
+                    subscriptionDuration: selectedPlan.durationLabel,
+                    originalPriceUsd: selectedPlan.originalPriceUsd.toFixed(2),
+                    payablePriceUsd: selectedPlan.priceUsd.toFixed(2),
+                  }
+                : {}),
             }),
         purchaseName,
         customerName,
@@ -256,6 +307,14 @@ export async function POST(request: Request) {
       discountUsd,
       finalPriceUsd,
       finalPriceInr,
+      ...(selectedPlan
+        ? {
+            selectedPlanId: selectedPlan.id,
+            selectedPlanName: selectedPlan.name,
+            subscriptionDuration: selectedPlan.durationLabel,
+            payablePriceUsd: selectedPlan.priceUsd,
+          }
+        : {}),
       usdToInrRate: usdToInrRate,
       usdToInrRateSource: usdToInrRateMetadata.source,
       usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAt,

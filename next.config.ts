@@ -25,18 +25,23 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/ai-trading-agents/agent-pulse",
-        destination: "/ai-trading-agents/vyntegra-pulse",
+        destination: "/ai-trading-agents/astro-vyn-gold",
         permanent: true,
       },
       {
         source: "/ai-trading-agents/pulse",
-        destination: "/ai-trading-agents/vyntegra-pulse",
+        destination: "/ai-trading-agents/astro-vyn-gold",
         permanent: true,
       },
       {
-        source: "/ai-trading-agents/:slug/checkout",
-        destination: "/ai-trading-agents/:slug#purchase",
-        permanent: false,
+        source: "/ai-trading-agents/vyntegra-pulse/:path*",
+        destination: "/ai-trading-agents/astro-vyn-gold/:path*",
+        permanent: true,
+      },
+      {
+        source: "/ai-trading-agents/vyntegra-pulse",
+        destination: "/ai-trading-agents/astro-vyn-gold",
+        permanent: true,
       },
       {
         source: "/ai-trading-agents/:slug/purchase",

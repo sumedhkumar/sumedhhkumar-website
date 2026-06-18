@@ -4534,5 +4534,335 @@ textarea.form-control {
     transform: none;
   }
 }
+/* Astro-Vyn Gold product, plans, and checkout surfaces */
+.astro-gold-hero-panel {
+  display: grid;
+  gap: 14px;
+  padding: 28px;
+  border: 1px solid rgba(184, 145, 74, 0.26);
+  background: linear-gradient(145deg, rgba(184, 145, 74, 0.13), rgba(20, 22, 26, 0.92));
+  border-radius: 8px;
+}
 
+.astro-gold-subtitle {
+  max-width: 760px;
+}
 
+.astro-gold-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.astro-gold-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid rgba(216, 203, 166, 0.22);
+  border-radius: 999px;
+  color: #d8cba6;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.astro-gold-placeholder-grid,
+.astro-gold-metric-grid,
+.astro-gold-plan-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.astro-gold-placeholder-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.astro-gold-data-placeholder {
+  min-height: 156px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(216, 203, 166, 0.28);
+  border-radius: 8px;
+  color: var(--foreground-muted);
+  background: rgba(255, 255, 255, 0.035);
+  text-align: center;
+}
+
+.astro-gold-metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.astro-gold-metric-card,
+.astro-gold-plan-card {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.astro-gold-metric-card {
+  display: grid;
+  gap: 8px;
+}
+
+.astro-gold-metric-card strong {
+  color: #f7f3ea;
+  font-size: 1.25rem;
+}
+
+.astro-gold-risk-disclaimer {
+  margin-top: 14px;
+  color: var(--foreground-muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.astro-gold-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.astro-gold-plan-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.astro-gold-plan-card {
+  display: grid;
+  gap: 8px;
+}
+
+.astro-gold-plan-card p {
+  margin: 0;
+  color: var(--foreground-muted);
+  font-size: 0.86rem;
+}
+
+.astro-gold-plan-card h3 {
+  margin: 0;
+  color: #f7f3ea;
+  font-size: 1rem;
+}
+
+.astro-gold-plan-card span {
+  color: #8f949e;
+  text-decoration: line-through;
+}
+
+.astro-gold-plan-card strong {
+  color: #d8cba6;
+  font-size: 1.35rem;
+}
+
+.astro-gold-step-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: astro-gold-step;
+}
+
+.astro-gold-step-list li {
+  position: relative;
+  padding: 14px 14px 14px 48px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 8px;
+  counter-increment: astro-gold-step;
+}
+
+.astro-gold-step-list li::before {
+  content: counter(astro-gold-step);
+  position: absolute;
+  left: 14px;
+  top: 13px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #b8914a;
+  color: #101114;
+  font-weight: 800;
+  font-size: 0.78rem;
+}
+
+.astro-gold-cta-stack .product-price {
+  margin-top: 2px;
+}
+
+.astro-gold-plans-page,
+.astro-gold-checkout-page {
+  min-height: 100vh;
+}
+
+.astro-gold-plans-shell,
+.astro-gold-checkout-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.astro-gold-plans-hero,
+.astro-gold-checkout-hero,
+.astro-gold-invalid-plan-card,
+.astro-gold-selected-plan-card,
+.astro-gold-pricing-card,
+.astro-gold-plans-risk-note {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.astro-gold-plans-hero,
+.astro-gold-checkout-hero {
+  padding: 28px;
+  margin-bottom: 22px;
+}
+
+.astro-gold-plans-hero .page-title,
+.astro-gold-checkout-hero .page-title {
+  margin-top: 8px;
+}
+
+.astro-gold-plans-hero .body-large,
+.astro-gold-checkout-hero .body-large {
+  margin-top: 12px;
+  max-width: 760px;
+}
+
+.astro-gold-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.astro-gold-pricing-card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.astro-gold-pricing-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.astro-gold-pricing-note {
+  margin: 0;
+  color: var(--foreground-muted);
+  line-height: 1.6;
+}
+
+.astro-gold-pricing-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.astro-gold-pricing-price-row span {
+  color: #8f949e;
+  text-decoration: line-through;
+}
+
+.astro-gold-pricing-price-row strong {
+  color: #d8cba6;
+  font-size: 1.9rem;
+}
+
+.astro-gold-plans-risk-note {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.astro-gold-plans-risk-note p {
+  margin: 0;
+  color: var(--foreground-muted);
+  line-height: 1.65;
+}
+
+.astro-gold-back-link {
+  display: inline-flex;
+  margin-top: 18px;
+  color: #d8cba6;
+  font-weight: 700;
+}
+
+.astro-gold-checkout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(340px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.astro-gold-selected-plan-card,
+.astro-gold-invalid-plan-card {
+  padding: 22px;
+}
+
+.astro-gold-selected-plan-details {
+  display: grid;
+  gap: 0;
+  margin: 18px 0;
+}
+
+.astro-gold-selected-plan-details div {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.45fr) 1fr;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.astro-gold-selected-plan-details dt {
+  color: var(--foreground-muted);
+  font-weight: 700;
+}
+
+.astro-gold-selected-plan-details dd {
+  margin: 0;
+  color: #f7f3ea;
+}
+
+.astro-gold-selected-original {
+  text-decoration: line-through;
+  color: #9ca0a7 !important;
+}
+
+.astro-gold-selected-payable {
+  color: #d8cba6 !important;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.astro-gold-checkout-risk-copy {
+  color: var(--foreground-muted);
+  line-height: 1.65;
+}
+
+@media (max-width: 860px) {
+  .astro-gold-placeholder-grid,
+  .astro-gold-plan-grid,
+  .astro-gold-plans-grid,
+  .astro-gold-checkout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astro-gold-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astro-gold-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .astro-gold-selected-plan-details div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

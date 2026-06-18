@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -38,10 +39,17 @@ export default async function CryptoPaymentPage({
 
   const couponCode =
     typeof query.coupon === "string" ? query.coupon.trim() : "";
-  const couponResult = couponCode
+  const selectedPlanId =
+    typeof query.plan === "string" ? query.plan.trim() : "";
+  const selectedPlan =
+    product.slug === "astro-vyn-gold" && selectedPlanId
+      ? getAstroVynGoldPlan(selectedPlanId)
+      : null;
+  const productPriceUsd = selectedPlan ? selectedPlan.priceUsd : product.priceUsd;
+  const couponResult = couponCode && !selectedPlan
     ? validateCoupon({
         code: couponCode,
-        amountUsd: product.priceUsd,
+        amountUsd: productPriceUsd,
         target: {
           type: "product",
           productId: product.id,
@@ -51,7 +59,7 @@ export default async function CryptoPaymentPage({
   const finalAmountUsd =
     couponResult?.ok && couponResult.discountAmountUsd > 0
       ? couponResult.finalAmountUsd
-      : product.priceUsd;
+      : productPriceUsd;
   const cryptoPaymentConfig = getCryptoPaymentConfig();
 
   return (
@@ -63,6 +71,11 @@ export default async function CryptoPaymentPage({
           <p className="body-standard">
             Product: <strong>{product.name}</strong>
           </p>
+          {selectedPlan ? (
+            <p className="body-standard">
+              Plan: <strong>{selectedPlan.name}</strong>
+            </p>
+          ) : null}
         </header>
 
         {cryptoPaymentConfig ? (
@@ -72,6 +85,7 @@ export default async function CryptoPaymentPage({
             finalAmountUsd={finalAmountUsd}
             couponCode={couponResult?.ok ? couponCode : ""}
             cryptoPaymentConfig={cryptoPaymentConfig}
+            selectedPlan={selectedPlan ?? undefined}
           />
         ) : (
           <EmptyState

@@ -3,6 +3,7 @@ import {
   sendCryptoPaymentProofEmails,
   sendPaymentQueryEmail,
 } from "@/lib/email";
+import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -84,19 +85,33 @@ function normalizeCouponCode(code: string) {
 function buildProductPaymentSummary(
   product: (typeof products)[number],
   couponCode: string,
+  selectedPlanId: string,
 ) {
-  const originalProductPrice = formatUsd(product.priceUsd);
+  const selectedPlan =
+    product.slug === "astro-vyn-gold" && selectedPlanId
+      ? getAstroVynGoldPlan(selectedPlanId)
+      : null;
+  const originalPriceUsd = selectedPlan
+    ? selectedPlan.originalPriceUsd
+    : product.priceUsd;
+  const finalPriceUsd = selectedPlan ? selectedPlan.priceUsd : product.priceUsd;
+  const purchaseName = selectedPlan
+    ? `${product.name} - ${selectedPlan.name}`
+    : product.name;
+  const originalProductPrice = formatUsd(originalPriceUsd);
   const noCouponSummary = {
     purchaseType: "product" as const,
-    purchaseName: product.name,
+    purchaseName,
     originalProductPrice,
     couponCode: "",
     discountAmount: "",
-    finalPayablePrice: originalProductPrice,
-    bookingDetails: "",
+    finalPayablePrice: formatUsd(finalPriceUsd),
+    bookingDetails: selectedPlan
+      ? `Subscription duration: ${selectedPlan.durationLabel}`
+      : "",
   };
 
-  if (!couponCode) {
+  if (!couponCode || selectedPlan) {
     return noCouponSummary;
   }
 
@@ -127,6 +142,7 @@ function buildProductPaymentSummary(
 function buildPaymentSummaryFromForm(formData: FormData) {
   const purchaseType = sanitizeText(formData.get("purchaseType"));
   const couponCode = sanitizeText(formData.get("couponCode"));
+  const selectedPlanId = sanitizeText(formData.get("selectedPlanId"));
 
   if (purchaseType === "expert") {
     return null;
@@ -139,7 +155,7 @@ function buildPaymentSummaryFromForm(formData: FormData) {
     return null;
   }
 
-  return buildProductPaymentSummary(product, couponCode);
+  return buildProductPaymentSummary(product, couponCode, selectedPlanId);
 }
 
 function validateProofSubmission({

@@ -1,4 +1,4 @@
-﻿import type { TradingAgentProduct } from "@/types";
+import type { TradingAgentProduct } from "@/types";
 
 function svgDataUri(svg: string) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
@@ -40,8 +40,8 @@ function agentVisual(title: string, accent: string, path: string) {
   `);
 }
 
-const pulseVisual = agentVisual(
-  "Vyntegra Pulse",
+const astroVynGoldVisual = agentVisual(
+  "Astro-Vyn Gold",
   "#B8914A",
   "M148 532 C222 476 290 494 356 452 S492 410 584 458 S724 548 818 470 S954 404 1054 430",
 );
@@ -61,14 +61,14 @@ const driftVisual = agentVisual(
 export const products: TradingAgentProduct[] = [
   {
     id: "agent-pulse",
-    slug: "vyntegra-pulse",
-    name: "Vyntegra Pulse",
+    slug: "astro-vyn-gold",
+    name: "Astro-Vyn Gold",
     shortDescription:
       "A signal-monitoring agent for swing-trading workflows, alert review, and structured trade-preparation checklists.",
     fullDescription:
-      "Vyntegra Pulse is a dummy AI trading software agent designed to demonstrate how a production product page will present capabilities, requirements, visuals, setup, updates, pricing, and FAQs.",
-    image: pulseVisual,
-    screenshots: [pulseVisual],
+      "Astro-Vyn Gold is a rule-based Gold trading software agent for MetaTrader 5, designed for selective XAUUSD setups during the London session. It focuses on fixed-risk execution, controlled trade frequency, and risk-management logic such as spread checks, breakeven, trailing stop, and lot caps.",
+    image: astroVynGoldVisual,
+    screenshots: [astroVynGoldVisual],
     platform: "Web Dashboard",
     market: "Equities and Crypto",
     keyCapabilities: [
@@ -82,7 +82,7 @@ export const products: TradingAgentProduct[] = [
       "Manual trade execution. This demo agent does not place live trades.",
     ],
     setupSteps: [
-      "Create an account and open the Pulse onboarding checklist.",
+      "Create an account and open the Astro-Vyn Gold onboarding checklist.",
       "Add watchlist symbols and preferred market sessions.",
       "Review generated signal summaries before making any trading decision.",
     ],
@@ -93,9 +93,9 @@ export const products: TradingAgentProduct[] = [
     ],
     faqs: [
       {
-        question: "Does Vyntegra Pulse place trades automatically?",
+        question: "Does Astro-Vyn Gold place trades automatically?",
         answer:
-          "No. This dummy product is positioned as decision-support software. Users remain responsible for all trading decisions.",
+          "No. Astro-Vyn Gold is offered through subscription plans. You can choose Demo - 2 Months, 6 Months, or 1 Year. Users remain responsible for all trading decisions.",
       },
       {
         question: "Is this financial advice?",
@@ -225,4 +225,3 @@ export const products: TradingAgentProduct[] = [
     active: true,
   },
 ];
-
