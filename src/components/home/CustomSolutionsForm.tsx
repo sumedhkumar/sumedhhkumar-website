@@ -47,6 +47,7 @@ const timelineOptions = [
 
 type FormValues = {
   fullName: string;
+  companyOrOrganization: string;
   emailAddress: string;
   phoneOrWhatsapp: string;
   solutionType: string;
@@ -59,6 +60,7 @@ type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 const initialValues: FormValues = {
   fullName: "",
+  companyOrOrganization: "",
   emailAddress: "",
   phoneOrWhatsapp: "",
   solutionType: "",
@@ -278,6 +280,24 @@ export default function CustomSolutionsForm() {
               aria-describedby="emailAddress-error"
             />
             <FieldError id="emailAddress-error" message={errors.emailAddress} />
+          </div>
+
+          <div>
+            <label className="form-label" htmlFor="companyOrOrganization">
+              Company Name
+            </label>
+            <input
+              id="companyOrOrganization"
+              name="companyOrOrganization"
+              type="text"
+              placeholder="Enter your company name"
+              value={values.companyOrOrganization}
+              onChange={(event) =>
+                updateField("companyOrOrganization", event.target.value)
+              }
+              className="form-control"
+              style={{ marginTop: 8 }}
+            />
           </div>
 
           <div>

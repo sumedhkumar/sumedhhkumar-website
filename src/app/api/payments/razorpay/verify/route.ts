@@ -183,6 +183,9 @@ function buildEmailInput({
     finalPriceInr: formatInrFromNote(readNote(notes, "finalPriceInr")),
     razorpayOrderId: orderId,
     razorpayPaymentId: paymentId,
+    selectedPlanName: readNote(notes, "planName"),
+    subscriptionDuration: readNote(notes, "subscriptionDuration"),
+    payablePriceUsd: formatUsdFromNote(readNote(notes, "payablePriceUsd")),
     expertName: readNote(notes, "expertName"),
     sessionLabel: readNote(notes, "sessionLabel"),
     sessionDurationMinutes: readNote(notes, "sessionDurationMinutes"),
@@ -295,7 +298,9 @@ export async function POST(request: Request) {
           paymentId,
           purchaseType: "product",
           purchaseName: product.name,
-          purchaseDescription: product.fullDescription || product.shortDescription,
+          purchaseDescription: readNote(notes, "planId")
+            ? "Astro-Vyn Gold subscription access. After payment verification, Vyntegra will send access/setup next steps by email."
+            : product.fullDescription || product.shortDescription,
           customerPhone: razorpayCustomerPhone,
         }),
       );

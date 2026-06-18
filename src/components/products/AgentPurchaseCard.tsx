@@ -13,6 +13,7 @@ import type {
   PaymentProvider,
   TradingAgentProduct,
 } from "@/types";
+import type { AstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
 import Button from "@/components/ui/Button";
 
 type PurchaseState = {
@@ -46,6 +47,11 @@ type CreateProductOrderResponse = {
   usdToInrRateFetchedAt?: string;
   usdToInrEffectiveDateIst?: string;
   appliedCoupon?: string;
+  selectedPlanId?: string;
+  selectedPlanName?: string;
+  subscriptionDuration?: string;
+  originalPriceUsd?: number;
+  payablePriceUsd?: number;
   message?: string;
 };
 
@@ -247,6 +253,7 @@ type AgentPurchaseFormProps = {
   product: TradingAgentProduct;
   paymentsConfigured: boolean;
   cryptoPaymentConfig: CryptoPaymentConfig | null;
+  selectedPlan?: AstroVynGoldPlan;
   state: PurchaseState;
   setState: Dispatch<SetStateAction<PurchaseState>>;
 };
@@ -258,6 +265,7 @@ type CryptoPaymentPanelProps =
     finalAmountUsd: number;
     couponCode?: string;
     cryptoPaymentConfig: CryptoPaymentConfig | null;
+    selectedPlan?: AstroVynGoldPlan;
   };
 
 export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
@@ -281,8 +289,11 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
   }
 
   const cryptoConfig = props.cryptoPaymentConfig;
-  const purchaseName = props.product.name;
-  const originalAmountUsd = props.product.priceUsd;
+  const purchaseName = props.selectedPlan
+    ? `${props.product.name} - ${props.selectedPlan.name}`
+    : props.product.name;
+  const originalAmountUsd =
+    props.selectedPlan?.originalPriceUsd ?? props.product.priceUsd;
   const formattedOriginalPrice = formatUsd(originalAmountUsd);
   const formattedFinalAmount = formatUsd(props.finalAmountUsd);
   const formattedDiscountAmount = formatUsd(
@@ -299,6 +310,9 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
   function setTargetFields(formData: FormData) {
     formData.set("purchaseType", "product");
     formData.set("productId", props.product.id);
+    if (props.selectedPlan) {
+      formData.set("selectedPlanId", props.selectedPlan.id);
+    }
   }
 
   function renderTargetHiddenFields() {
@@ -306,6 +320,17 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
       <>
         <input type="hidden" name="purchaseType" value="product" />
         <input type="hidden" name="productId" value={props.product.id} />
+        {props.selectedPlan ? (
+          <>
+            <input type="hidden" name="selectedPlanId" value={props.selectedPlan.id} />
+            <input type="hidden" name="selectedPlanName" value={props.selectedPlan.name} />
+            <input
+              type="hidden"
+              name="subscriptionDuration"
+              value={props.selectedPlan.durationLabel}
+            />
+          </>
+        ) : null}
       </>
     );
   }
@@ -564,6 +589,12 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
             <dt>{purchaseLabel}</dt>
             <dd>{purchaseName}</dd>
           </div>
+          {props.selectedPlan ? (
+            <div>
+              <dt>Subscription Duration</dt>
+              <dd>{props.selectedPlan.durationLabel}</dd>
+            </div>
+          ) : null}
           <div>
             <dt>Original Price</dt>
             <dd>{formattedOriginalPrice}</dd>
@@ -718,6 +749,7 @@ export function AgentPurchaseForm({
   product,
   paymentsConfigured,
   cryptoPaymentConfig,
+  selectedPlan,
   state,
   setState,
 }: AgentPurchaseFormProps) {
@@ -761,6 +793,7 @@ export function AgentPurchaseForm({
     state.usdToInrRate !== null
       ? Number((state.finalAmountUsd * state.usdToInrRate).toFixed(2))
       : null;
+  const couponDisabled = Boolean(selectedPlan);
 
   useEffect(() => {
     if (!paymentsConfigured && cryptoConfigured && state.paymentProvider !== "crypto") {
@@ -802,6 +835,17 @@ export function AgentPurchaseForm({
   }, [setState]);
 
   async function applyCoupon() {
+    if (couponDisabled) {
+      setState((current) => ({
+        ...current,
+        couponCode: "",
+        couponMessage: "Coupons are not available for this subscription checkout.",
+        discountAmountUsd: 0,
+        finalAmountUsd: product.priceUsd,
+      }));
+      return;
+    }
+
     const response = await fetch("/api/coupons/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -851,6 +895,7 @@ export function AgentPurchaseForm({
           slug: product.slug,
           customerName: customerNameValue,
           customerEmail: customerEmailValue,
+          ...(selectedPlan ? { selectedPlanId: selectedPlan.id } : {}),
           ...(couponCode ? { couponCode } : {}),
         }),
       });
@@ -918,6 +963,7 @@ export function AgentPurchaseForm({
           slug: product.slug,
           customerName: customerNameValue,
           customerEmail: customerEmailValue,
+          ...(selectedPlan ? { selectedPlanId: selectedPlan.id } : {}),
           ...(couponCode ? { couponCode } : {}),
         }),
       });
@@ -1028,6 +1074,10 @@ export function AgentPurchaseForm({
         params.set("coupon", couponCode);
       }
 
+      if (selectedPlan) {
+        params.set("plan", selectedPlan.id);
+      }
+
       window.location.href = `/ai-trading-agents/${product.slug}/crypto-payment?${params.toString()}`;
       return;
     }
@@ -1044,6 +1094,11 @@ export function AgentPurchaseForm({
       <div className="purchase-panel-header">
         <h2 className="card-title">Purchase this agent</h2>
         <p className="product-price">{formatUsd(product.priceUsd)}</p>
+        {selectedPlan ? (
+          <p className="body-compact">
+            {selectedPlan.name} - {selectedPlan.durationLabel}
+          </p>
+        ) : null}
       </div>
 
       {state.paymentProvider !== "crypto" ? (
@@ -1101,6 +1156,7 @@ export function AgentPurchaseForm({
             type="text"
             placeholder="Enter coupon code"
             value={state.couponCode}
+            disabled={couponDisabled}
             onChange={(event) =>
               setState((current) => ({
                 ...current,
@@ -1110,10 +1166,13 @@ export function AgentPurchaseForm({
             className="form-control"
           />
         </div>
-        <Button type="button" variant="secondary" onClick={applyCoupon}>
+        <Button type="button" variant="secondary" onClick={applyCoupon} disabled={couponDisabled}>
           Apply
         </Button>
       </div>
+      {couponDisabled ? (
+        <p className="body-compact">Coupons are not available for this subscription checkout.</p>
+      ) : null}
 
       <div className="purchase-pricing-summary">
         <div className="purchase-pricing-row">
@@ -1274,6 +1333,23 @@ export function useAgentPurchaseState(product: TradingAgentProduct) {
   return useState<PurchaseState>(() => createInitialState(product));
 }
 
+function AstroVynGoldSubscriptionCtaCard() {
+  return (
+    <div className="purchase-stack astro-gold-cta-stack">
+      <div className="purchase-panel-header">
+        <h2 className="card-title">Subscription access for Astro-Vyn Gold</h2>
+        <p className="product-price">From $199</p>
+      </div>
+      <p className="body-compact">
+        Choose a demo or live-evaluation subscription term before checkout.
+      </p>
+      <Button href="/ai-trading-agents/astro-vyn-gold/plans" variant="primary">
+        View Plans
+      </Button>
+    </div>
+  );
+}
+
 export default function AgentPurchaseCard({
   product,
   paymentsConfigured,
@@ -1284,6 +1360,14 @@ export default function AgentPurchaseCard({
   cryptoPaymentConfig: CryptoPaymentConfig | null;
 }) {
   const [state, setState] = useAgentPurchaseState(product);
+
+  if (product.slug === "astro-vyn-gold") {
+    return (
+      <aside id="purchase" className="purchase-card desktop-purchase-card">
+        <AstroVynGoldSubscriptionCtaCard />
+      </aside>
+    );
+  }
 
   return (
     <aside id="purchase" className="purchase-card desktop-purchase-card">
@@ -1298,3 +1382,29 @@ export default function AgentPurchaseCard({
   );
 }
 
+export function AgentCheckoutPaymentPanel({
+  product,
+  paymentsConfigured,
+  cryptoPaymentConfig,
+  selectedPlan,
+}: {
+  product: TradingAgentProduct;
+  paymentsConfigured: boolean;
+  cryptoPaymentConfig: CryptoPaymentConfig | null;
+  selectedPlan: AstroVynGoldPlan;
+}) {
+  const [state, setState] = useAgentPurchaseState(product);
+
+  return (
+    <aside id="purchase" className="purchase-card">
+      <AgentPurchaseForm
+        product={product}
+        paymentsConfigured={paymentsConfigured}
+        cryptoPaymentConfig={cryptoPaymentConfig}
+        selectedPlan={selectedPlan}
+        state={state}
+        setState={setState}
+      />
+    </aside>
+  );
+}

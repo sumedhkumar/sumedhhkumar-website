@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Bot, UserRoundCheck, Workflow } from "lucide-react";
+import { ArrowRight, Cpu, UserRoundCheck, Workflow } from "lucide-react";
 
 const pathways = [
   {
@@ -6,7 +6,7 @@ const pathways = [
     copy: "Ready-to-use software agents for structured trading workflows.",
     href: "/ai-trading-agents",
     cta: "View agents",
-    icon: Bot,
+    icon: Cpu,
   },
   {
     title: "Talk to Experts",

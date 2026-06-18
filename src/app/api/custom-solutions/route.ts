@@ -160,7 +160,6 @@ export async function POST(request: Request) {
     formData.get("requirementsDescription"),
   );
   const preferredTimeline = sanitizeText(formData.get("preferredTimeline"));
-  const approximateBudget = sanitizeText(formData.get("approximateBudget"));
   const sourcePage = sanitizeText(formData.get("sourcePage"));
   const fileValue = formData.get("supportingFile");
   const supportingFile =
@@ -209,7 +208,6 @@ export async function POST(request: Request) {
       solutionType,
       requirementsDescription,
       preferredTimeline,
-      approximateBudget,
       supportingFileInformation: supportingFile
         ? `${supportingFile.name} (${supportingFile.size} bytes)`
         : "No supporting file uploaded",

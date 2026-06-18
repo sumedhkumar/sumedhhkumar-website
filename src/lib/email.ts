@@ -23,7 +23,6 @@ export type CustomSolutionsEmailInput = {
   solutionType: string;
   requirementsDescription: string;
   preferredTimeline: string;
-  approximateBudget: string;
   supportingFileInformation: string;
   sourcePage: string;
   attachment?: {
@@ -84,6 +83,9 @@ export type RazorpayPaymentSuccessEmailInput = {
   finalPriceInr: string;
   razorpayOrderId: string;
   razorpayPaymentId: string;
+  selectedPlanName?: string;
+  subscriptionDuration?: string;
+  payablePriceUsd?: string;
   expertName?: string;
   sessionLabel?: string;
   sessionDurationMinutes?: string;
@@ -97,9 +99,7 @@ export type RazorpayPaymentSuccessEmailInput = {
   bookingErrorSummary?: string;
 };
 
-function fallback(value: string, fallbackValue: string) {
-  return value || fallbackValue;
-}
+
 
 type EmailDetail = {
   label: string;
@@ -215,57 +215,59 @@ function buildEmailHtml({
 }
 
 function buildContactAdminBody(input: ContactEmailInput) {
-  return [
+  const lines = [
     "A new enquiry has been submitted.",
     `Full Name: ${input.fullName}`,
     `Email: ${input.emailAddress}`,
-    `Phone / WhatsApp: ${fallback(input.phoneOrWhatsapp, "Not provided")}`,
-    `Subject: ${fallback(input.subject, "Not provided")}`,
-    "Message:",
-    input.message,
-    `Submitted At: ${input.timestamp}`,
-  ].join("\n\n");
+  ];
+  if (input.phoneOrWhatsapp) lines.push(`Phone / WhatsApp: ${input.phoneOrWhatsapp}`);
+  if (input.subject) lines.push(`Subject: ${input.subject}`);
+  lines.push("Message:", input.message, `Submitted At: ${input.timestamp}`);
+  return lines.join("\n\n");
 }
 
 function buildContactAdminHtml(input: ContactEmailInput) {
+  const details = [
+    { label: "Full Name", value: input.fullName },
+    { label: "Email", value: input.emailAddress },
+  ];
+  if (input.phoneOrWhatsapp) details.push({ label: "Phone / WhatsApp", value: input.phoneOrWhatsapp });
+  if (input.subject) details.push({ label: "Subject", value: input.subject });
+  details.push({ label: "Submitted At", value: input.timestamp });
+
   return buildEmailHtml({
     title: "New Vyntegra enquiry submitted",
     intro: "A new enquiry has been submitted.",
-    details: [
-      { label: "Full Name", value: input.fullName },
-      { label: "Email", value: input.emailAddress },
-      {
-        label: "Phone / WhatsApp",
-        value: fallback(input.phoneOrWhatsapp, "Not provided"),
-      },
-      { label: "Subject", value: fallback(input.subject, "Not provided") },
-      { label: "Submitted At", value: input.timestamp },
-    ],
+    details,
     blocks: [{ heading: "Message", body: input.message }],
   });
 }
 
 function buildContactCustomerBody(input: ContactEmailInput) {
-  return [
+  const lines = [
     `Hi ${input.fullName},`,
     "We have received your enquiry.",
-    `Subject: ${fallback(input.subject, "Not provided")}`,
+  ];
+  if (input.subject) lines.push(`Subject: ${input.subject}`);
+  lines.push(
     "Your submitted message:",
     input.message,
     "Our team will review your message and get back to you within 24 hours.",
     "Regards,",
-    "Vyntegra",
-  ].join("\n\n");
+    "Vyntegra"
+  );
+  return lines.join("\n\n");
 }
 
 function buildContactCustomerHtml(input: ContactEmailInput) {
+  const details = [];
+  if (input.subject) details.push({ label: "Subject", value: input.subject });
+  details.push({ label: "Submitted At", value: input.timestamp });
+
   return buildEmailHtml({
     title: "Vyntegra enquiry received",
     intro: `Hi ${input.fullName}, we have received your enquiry.`,
-    details: [
-      { label: "Subject", value: fallback(input.subject, "Not provided") },
-      { label: "Submitted At", value: input.timestamp },
-    ],
+    details,
     blocks: [
       {
         heading: "Your submitted message",
@@ -279,101 +281,78 @@ function buildContactCustomerHtml(input: ContactEmailInput) {
 }
 
 function buildCustomSolutionsAdminBody(input: CustomSolutionsEmailInput) {
-  return [
+  const lines = [
     "A new custom solution requirement has been submitted.",
     `Full Name: ${input.fullName}`,
     `Email: ${input.emailAddress}`,
-    `Phone / WhatsApp: ${fallback(input.phoneOrWhatsapp, "Not provided")}`,
-    `Company / Organization: ${fallback(input.companyOrOrganization, "Not provided")}`,
-    `Type of Solution: ${fallback(input.solutionType, "Not provided")}`,
-    `Expected Timeline: ${fallback(input.preferredTimeline, "Not provided")}`,
-    `Approximate Budget: ${fallback(input.approximateBudget, "Not provided")}`,
-    `Supporting File: ${fallback(input.supportingFileInformation, "Not provided")}`,
+  ];
+  if (input.phoneOrWhatsapp) lines.push(`Phone / WhatsApp: ${input.phoneOrWhatsapp}`);
+  if (input.companyOrOrganization) lines.push(`Company / Organization: ${input.companyOrOrganization}`);
+  if (input.solutionType) lines.push(`Type of Solution: ${input.solutionType}`);
+  if (input.preferredTimeline) lines.push(`Expected Timeline: ${input.preferredTimeline}`);
+  if (input.supportingFileInformation) lines.push(`Supporting File: ${input.supportingFileInformation}`);
+  lines.push(
     "Requirement:",
     input.requirementsDescription,
     `Source Page: ${input.sourcePage}`,
-    `Submitted At: ${input.timestamp}`,
-  ].join("\n\n");
+    `Submitted At: ${input.timestamp}`
+  );
+  return lines.join("\n\n");
 }
 
 function buildCustomSolutionsAdminHtml(input: CustomSolutionsEmailInput) {
+  const details = [
+    { label: "Full Name", value: input.fullName },
+    { label: "Email", value: input.emailAddress },
+  ];
+  if (input.phoneOrWhatsapp) details.push({ label: "Phone / WhatsApp", value: input.phoneOrWhatsapp });
+  if (input.companyOrOrganization) details.push({ label: "Company / Organization", value: input.companyOrOrganization });
+  if (input.solutionType) details.push({ label: "Type of Solution", value: input.solutionType });
+  if (input.preferredTimeline) details.push({ label: "Expected Timeline", value: input.preferredTimeline });
+  if (input.supportingFileInformation) details.push({ label: "Supporting File", value: input.supportingFileInformation });
+  details.push(
+    { label: "Source Page", value: input.sourcePage },
+    { label: "Submitted At", value: input.timestamp }
+  );
+
   return buildEmailHtml({
     title: "New custom solution requirement submitted",
     intro: "A new custom solution requirement has been submitted.",
-    details: [
-      { label: "Full Name", value: input.fullName },
-      { label: "Email", value: input.emailAddress },
-      {
-        label: "Phone / WhatsApp",
-        value: fallback(input.phoneOrWhatsapp, "Not provided"),
-      },
-      {
-        label: "Company / Organization",
-        value: fallback(input.companyOrOrganization, "Not provided"),
-      },
-      {
-        label: "Type of Solution",
-        value: fallback(input.solutionType, "Not provided"),
-      },
-      {
-        label: "Expected Timeline",
-        value: fallback(input.preferredTimeline, "Not provided"),
-      },
-      {
-        label: "Approximate Budget",
-        value: fallback(input.approximateBudget, "Not provided"),
-      },
-      {
-        label: "Supporting File",
-        value: fallback(input.supportingFileInformation, "Not provided"),
-      },
-      { label: "Source Page", value: input.sourcePage },
-      { label: "Submitted At", value: input.timestamp },
-    ],
+    details,
     blocks: [{ heading: "Requirement", body: input.requirementsDescription }],
   });
 }
 
 function buildCustomSolutionsCustomerBody(input: CustomSolutionsEmailInput) {
-  return [
+  const lines = [
     `Hi ${input.fullName},`,
     "We have received your custom solution requirement.",
-    `Solution Type: ${fallback(input.solutionType, "Not provided")}`,
-    `Company / Organization: ${fallback(input.companyOrOrganization, "Not provided")}`,
-    `Preferred Timeline: ${fallback(input.preferredTimeline, "Not provided")}`,
-    `Approximate Budget: ${fallback(input.approximateBudget, "Not provided")}`,
-    `Supporting File: ${fallback(input.supportingFileInformation, "Not provided")}`,
+  ];
+  if (input.solutionType) lines.push(`Solution Type: ${input.solutionType}`);
+  if (input.companyOrOrganization) lines.push(`Company / Organization: ${input.companyOrOrganization}`);
+  if (input.preferredTimeline) lines.push(`Preferred Timeline: ${input.preferredTimeline}`);
+  if (input.supportingFileInformation) lines.push(`Supporting File: ${input.supportingFileInformation}`);
+  lines.push(
     "Your submitted requirement:",
     input.requirementsDescription,
     "Our team will review the details and get back to you within 24 hours.",
     "Regards,",
-    "Vyntegra",
-  ].join("\n\n");
+    "Vyntegra"
+  );
+  return lines.join("\n\n");
 }
 
 function buildCustomSolutionsCustomerHtml(input: CustomSolutionsEmailInput) {
+  const details = [];
+  if (input.solutionType) details.push({ label: "Solution Type", value: input.solutionType });
+  if (input.companyOrOrganization) details.push({ label: "Company / Organization", value: input.companyOrOrganization });
+  if (input.preferredTimeline) details.push({ label: "Preferred Timeline", value: input.preferredTimeline });
+  if (input.supportingFileInformation) details.push({ label: "Supporting File", value: input.supportingFileInformation });
+
   return buildEmailHtml({
     title: "Vyntegra custom solution requirement received",
     intro: `Hi ${input.fullName}, we have received your custom solution requirement.`,
-    details: [
-      { label: "Solution Type", value: fallback(input.solutionType, "Not provided") },
-      {
-        label: "Company / Organization",
-        value: fallback(input.companyOrOrganization, "Not provided"),
-      },
-      {
-        label: "Preferred Timeline",
-        value: fallback(input.preferredTimeline, "Not provided"),
-      },
-      {
-        label: "Approximate Budget",
-        value: fallback(input.approximateBudget, "Not provided"),
-      },
-      {
-        label: "Supporting File",
-        value: fallback(input.supportingFileInformation, "Not provided"),
-      },
-    ],
+    details,
     blocks: [
       {
         heading: "Your submitted requirement",
@@ -392,92 +371,95 @@ function buildCryptoPaymentProofBody(input: CryptoPaymentProofEmailInput) {
     `Full Name: ${input.fullName}`,
     `Customer Email: ${input.emailAddress}`,
     `Purchase: ${input.productName}`,
-    `Original Price: ${input.originalProductPrice}`,
-    `Coupon Applied: ${fallback(input.couponCode, "None")}`,
-    `Discount: ${fallback(input.discountAmount, "Not applicable")}`,
+  ];
+  if (input.bookingDetails) lines.push(`Booking Details:\n${input.bookingDetails}`);
+  lines.push(`Original Price: ${input.originalProductPrice}`);
+  if (input.couponCode) lines.push(`Coupon Applied: ${input.couponCode}`);
+  if (input.discountAmount) lines.push(`Discount: ${input.discountAmount}`);
+  lines.push(
     `Final Payable Price: ${input.finalPayablePrice}`,
     `Amount Paid / Claimed Paid: ${input.amountPaid}`,
+  );
+  if (input.transactionHash) lines.push(`Transaction Hash / ID: ${input.transactionHash}`);
+  lines.push(
     `Token: ${input.token}`,
     `Network: ${input.network}`,
     `Wallet Address Shown: ${input.walletAddress}`,
     `Submitted At: ${input.timestamp}`,
     "Payment screenshot is attached.",
-    "Please verify the payment manually before providing access details or confirming the booking.",
-  ];
-
-  if (input.transactionHash) {
-    lines.splice(9, 0, `Transaction Hash / ID: ${input.transactionHash}`);
-  }
-
-  if (input.bookingDetails) {
-    lines.splice(4, 0, `Booking Details:\n${input.bookingDetails}`);
-  }
+    "Please verify the payment manually before providing access details or confirming the booking."
+  );
 
   return lines.join("\n\n");
 }
 
 function buildCryptoPaymentProofHtml(input: CryptoPaymentProofEmailInput) {
+  const details = [
+    { label: "Full Name", value: input.fullName },
+    { label: "Customer Email", value: input.emailAddress },
+    { label: "Purchase", value: input.productName },
+  ];
+  if (input.bookingDetails) details.push({ label: "Booking Details", value: input.bookingDetails });
+  details.push({ label: "Original Price", value: input.originalProductPrice });
+  if (input.couponCode) details.push({ label: "Coupon Applied", value: input.couponCode });
+  if (input.discountAmount) details.push({ label: "Discount", value: input.discountAmount });
+  details.push(
+    { label: "Final Payable Price", value: input.finalPayablePrice },
+    { label: "Amount Paid / Claimed Paid", value: input.amountPaid },
+  );
+  if (input.transactionHash) details.push({ label: "Transaction Hash / ID", value: input.transactionHash });
+  details.push(
+    { label: "Token", value: input.token },
+    { label: "Network", value: input.network },
+    { label: "Wallet Address Shown", value: input.walletAddress },
+    { label: "Submitted At", value: input.timestamp }
+  );
+
   return buildEmailHtml({
     title: `New crypto payment proof submitted - ${input.productName}`,
     intro: "A new crypto payment proof has been submitted.",
-    details: [
-      { label: "Full Name", value: input.fullName },
-      { label: "Customer Email", value: input.emailAddress },
-      { label: "Purchase", value: input.productName },
-      ...(input.bookingDetails
-        ? [{ label: "Booking Details", value: input.bookingDetails }]
-        : []),
-      { label: "Original Price", value: input.originalProductPrice },
-      { label: "Coupon Applied", value: fallback(input.couponCode, "None") },
-      {
-        label: "Discount",
-        value: fallback(input.discountAmount, "Not applicable"),
-      },
-      { label: "Final Payable Price", value: input.finalPayablePrice },
-      { label: "Amount Paid / Claimed Paid", value: input.amountPaid },
-      { label: "Transaction Hash / ID", value: input.transactionHash },
-      { label: "Token", value: input.token },
-      { label: "Network", value: input.network },
-      { label: "Wallet Address Shown", value: input.walletAddress },
-      { label: "Submitted At", value: input.timestamp },
-    ],
+    details,
     note:
       "Payment screenshot is attached. Please verify the payment manually before providing access details or confirming the booking.",
   });
 }
 
 function buildCryptoPaymentCustomerBody(input: CryptoPaymentProofEmailInput) {
-  return [
+  const lines = [
     `Hi ${input.fullName},`,
     `We have received your payment proof for ${input.productName}.`,
     "Payment summary:",
     `Original Price: ${input.originalProductPrice}`,
-    `Coupon Applied: ${fallback(input.couponCode, "None")}`,
-    `Final Payable Price: ${input.finalPayablePrice}`,
-    `Amount Submitted: ${input.amountPaid}`,
-    input.bookingDetails ? `Booking Details:\n${input.bookingDetails}` : "",
+  ];
+  if (input.couponCode) lines.push(`Coupon Applied: ${input.couponCode}`);
+  lines.push(`Final Payable Price: ${input.finalPayablePrice}`, `Amount Submitted: ${input.amountPaid}`);
+  if (input.bookingDetails) lines.push(`Booking Details:\n${input.bookingDetails}`);
+  lines.push(
     "Your payment is currently pending manual verification. Once confirmed, Vyntegra will get back to you by email with the next steps, access details, or booking confirmation.",
     "Please note that uploading a screenshot does not automatically confirm payment.",
     "Regards,",
-    "Vyntegra",
-  ].filter(Boolean).join("\n\n");
+    "Vyntegra"
+  );
+  return lines.join("\n\n");
 }
 
 function buildCryptoPaymentCustomerHtml(input: CryptoPaymentProofEmailInput) {
+  const details = [
+    { label: "Purchase", value: input.productName },
+  ];
+  if (input.bookingDetails) details.push({ label: "Booking Details", value: input.bookingDetails });
+  details.push({ label: "Original Price", value: input.originalProductPrice });
+  if (input.couponCode) details.push({ label: "Coupon Applied", value: input.couponCode });
+  details.push(
+    { label: "Final Payable Price", value: input.finalPayablePrice },
+    { label: "Amount Submitted", value: input.amountPaid }
+  );
+  if (input.transactionHash) details.push({ label: "Transaction Hash / ID", value: input.transactionHash });
+
   return buildEmailHtml({
     title: `Vyntegra payment proof received - ${input.productName}`,
     intro: `Hi ${input.fullName}, we have received your payment proof for ${input.productName}.`,
-    details: [
-      { label: "Purchase", value: input.productName },
-      ...(input.bookingDetails
-        ? [{ label: "Booking Details", value: input.bookingDetails }]
-        : []),
-      { label: "Original Price", value: input.originalProductPrice },
-      { label: "Coupon Applied", value: fallback(input.couponCode, "None") },
-      { label: "Final Payable Price", value: input.finalPayablePrice },
-      { label: "Amount Submitted", value: input.amountPaid },
-      { label: "Transaction Hash / ID", value: input.transactionHash },
-    ],
+    details,
     blocks: [
       {
         body: "Your payment is currently pending manual verification. Once confirmed, Vyntegra will get back to you by email with the next steps, access details, or booking confirmation.",
@@ -489,71 +471,70 @@ function buildCryptoPaymentCustomerHtml(input: CryptoPaymentProofEmailInput) {
 }
 
 function buildPaymentQueryAdminBody(input: PaymentQueryEmailInput) {
-  return [
+  const lines = [
     "A new payment query has been submitted.",
     `Full Name: ${input.fullName}`,
     `Email: ${input.emailAddress}`,
-    `Purchase: ${fallback(input.productName, "Not provided")}`,
-    `Payable Amount: ${fallback(input.productPrice, "Not provided")}`,
-    input.bookingDetails ? `Booking Details:\n${input.bookingDetails}` : "",
+  ];
+  if (input.productName) lines.push(`Purchase: ${input.productName}`);
+  if (input.productPrice) lines.push(`Payable Amount: ${input.productPrice}`);
+  if (input.bookingDetails) lines.push(`Booking Details:\n${input.bookingDetails}`);
+  lines.push(
     "Message:",
     input.message,
     `Submitted At: ${input.timestamp}`,
-    "Please respond within 24 hours.",
-  ].filter(Boolean).join("\n\n");
+    "Please respond within 24 hours."
+  );
+  return lines.join("\n\n");
 }
 
 function buildPaymentQueryAdminHtml(input: PaymentQueryEmailInput) {
+  const details = [
+    { label: "Full Name", value: input.fullName },
+    { label: "Email", value: input.emailAddress },
+  ];
+  if (input.productName) details.push({ label: "Purchase", value: input.productName });
+  if (input.productPrice) details.push({ label: "Payable Amount", value: input.productPrice });
+  if (input.bookingDetails) details.push({ label: "Booking Details", value: input.bookingDetails });
+  details.push({ label: "Submitted At", value: input.timestamp });
+
   return buildEmailHtml({
     title: "New payment query submitted",
     intro: "A new payment query has been submitted.",
-    details: [
-      { label: "Full Name", value: input.fullName },
-      { label: "Email", value: input.emailAddress },
-      { label: "Purchase", value: fallback(input.productName, "Not provided") },
-      {
-        label: "Payable Amount",
-        value: fallback(input.productPrice, "Not provided"),
-      },
-      ...(input.bookingDetails
-        ? [{ label: "Booking Details", value: input.bookingDetails }]
-        : []),
-      { label: "Submitted At", value: input.timestamp },
-    ],
+    details,
     blocks: [{ heading: "Message", body: input.message }],
     note: "Please respond within 24 hours.",
   });
 }
 
 function buildPaymentQueryCustomerBody(input: PaymentQueryEmailInput) {
-  return [
+  const lines = [
     `Hi ${input.fullName},`,
     "We have received your payment-related query.",
-    `Purchase: ${fallback(input.productName, "Not provided")}`,
-    `Payable Amount: ${fallback(input.productPrice, "Not provided")}`,
-    input.bookingDetails ? `Booking Details:\n${input.bookingDetails}` : "",
+  ];
+  if (input.productName) lines.push(`Purchase: ${input.productName}`);
+  if (input.productPrice) lines.push(`Payable Amount: ${input.productPrice}`);
+  if (input.bookingDetails) lines.push(`Booking Details:\n${input.bookingDetails}`);
+  lines.push(
     "Your submitted query:",
     input.message,
     "Our team will respond within 24 hours.",
     "Regards,",
-    "Vyntegra",
-  ].join("\n\n");
+    "Vyntegra"
+  );
+  return lines.join("\n\n");
 }
 
 function buildPaymentQueryCustomerHtml(input: PaymentQueryEmailInput) {
+  const details = [];
+  if (input.productName) details.push({ label: "Purchase", value: input.productName });
+  if (input.productPrice) details.push({ label: "Payable Amount", value: input.productPrice });
+  if (input.bookingDetails) details.push({ label: "Booking Details", value: input.bookingDetails });
+
   return buildEmailHtml({
     title: "Vyntegra payment query received",
     intro: `Hi ${input.fullName}, we have received your payment-related query.`,
-    details: [
-      { label: "Purchase", value: fallback(input.productName, "Not provided") },
-      {
-        label: "Payable Amount",
-        value: fallback(input.productPrice, "Not provided"),
-      },
-      ...(input.bookingDetails
-        ? [{ label: "Booking Details", value: input.bookingDetails }]
-        : []),
-    ],
+    details,
     blocks: [
       { heading: "Your submitted query", body: input.message },
       { body: "Our team will respond within 24 hours." },
@@ -572,39 +553,47 @@ function buildRazorpayCustomerSubject(input: RazorpayPaymentSuccessEmailInput) {
 }
 
 function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
-  return [
+  const details = [
     { label: "Purchase Type", value: input.purchaseType === "product" ? "AI product" : "Talk to Expert session" },
     { label: "Product / Service", value: input.purchaseName },
     { label: "Description", value: input.purchaseDescription },
-    { label: "Original USD Price", value: input.originalPriceUsd },
-    { label: "Coupon Code", value: fallback(input.couponCode ?? "", "None") },
-    { label: "Discount Amount", value: fallback(input.discountUsd ?? "", "Not applicable") },
-    { label: "Discounted USD Payable Amount", value: input.finalPriceUsd },
-    { label: "USD to INR Rate Used", value: `${input.usdToInrRate} / USD` },
-    { label: "Rate Source", value: fallback(input.usdToInrRateSource ?? "", "Not provided") },
-    { label: "Conversion Timestamp", value: input.usdToInrRateFetchedAt },
-    { label: "Effective Date IST", value: fallback(input.usdToInrEffectiveDateIst ?? "", "Not provided") },
+  ];
+
+  if (input.selectedPlanName) {
+    details.push({ label: "Selected Plan", value: input.selectedPlanName });
+    if (input.subscriptionDuration) details.push({ label: "Subscription Term", value: input.subscriptionDuration });
+    if (input.payablePriceUsd) details.push({ label: "Payable USD Amount", value: input.payablePriceUsd });
+  }
+
+  details.push({ label: "Original USD Price", value: input.originalPriceUsd });
+  if (input.couponCode) details.push({ label: "Coupon Code", value: input.couponCode });
+  if (input.discountUsd) details.push({ label: "Discount Amount", value: input.discountUsd });
+  details.push({ label: "Discounted USD Payable Amount", value: input.finalPriceUsd });
+  details.push({ label: "USD to INR Rate Used", value: `${input.usdToInrRate} / USD` });
+  if (input.usdToInrRateSource) details.push({ label: "Rate Source", value: input.usdToInrRateSource });
+  details.push({ label: "Conversion Timestamp", value: input.usdToInrRateFetchedAt });
+  if (input.usdToInrEffectiveDateIst) details.push({ label: "Effective Date IST", value: input.usdToInrEffectiveDateIst });
+  details.push(
     { label: "Razorpay Payable Amount", value: input.finalPriceInr },
     { label: "Razorpay Order ID", value: input.razorpayOrderId },
-    { label: "Razorpay Payment ID", value: input.razorpayPaymentId },
-    ...(input.purchaseType === "expert"
-      ? [
-          { label: "Expert", value: fallback(input.expertName ?? "", "Not provided") },
-          { label: "Session", value: fallback(input.sessionLabel ?? "", "Not provided") },
-          {
-            label: "Duration",
-            value: input.sessionDurationMinutes
-              ? `${input.sessionDurationMinutes} minutes`
-              : "30 minutes",
-          },
-          { label: "Selected Slot", value: fallback(input.slotDisplayIst ?? "", "Not provided") },
-          { label: "Cal.com Booking UID", value: fallback(input.calBookingUid ?? "", "Not confirmed") },
-          { label: "Cal.com Booking Status", value: fallback(input.calBookingStatus ?? "", "Not confirmed") },
-          { label: "Meeting URL", value: fallback(input.calMeetingUrl ?? "", "Provided by Cal.com if available") },
-          { label: "Private Booking Link", value: fallback(input.fallbackBookingUrl ?? "", "Not applicable") },
-        ]
-      : []),
-  ];
+    { label: "Razorpay Payment ID", value: input.razorpayPaymentId }
+  );
+
+  if (input.purchaseType === "expert") {
+    if (input.expertName) details.push({ label: "Expert", value: input.expertName });
+    if (input.sessionLabel) details.push({ label: "Session", value: input.sessionLabel });
+    details.push({
+      label: "Duration",
+      value: input.sessionDurationMinutes ? `${input.sessionDurationMinutes} minutes` : "30 minutes",
+    });
+    if (input.slotDisplayIst) details.push({ label: "Selected Slot", value: input.slotDisplayIst });
+    if (input.calBookingUid) details.push({ label: "Cal.com Booking UID", value: input.calBookingUid });
+    if (input.calBookingStatus) details.push({ label: "Cal.com Booking Status", value: input.calBookingStatus });
+    if (input.calMeetingUrl) details.push({ label: "Meeting URL", value: input.calMeetingUrl });
+    if (input.fallbackBookingUrl) details.push({ label: "Private Booking Link", value: input.fallbackBookingUrl });
+  }
+
+  return details;
 }
 
 function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
@@ -614,16 +603,25 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
     `Purchase Type: ${input.purchaseType === "product" ? "AI product" : "Talk to Expert session"}`,
     `Product / Service: ${input.purchaseName}`,
     `Description: ${input.purchaseDescription}`,
-    `Original USD Price: ${input.originalPriceUsd}`,
-    `Coupon Code: ${fallback(input.couponCode ?? "", "None")}`,
-    `Discount Amount: ${fallback(input.discountUsd ?? "", "Not applicable")}`,
+  ];
+
+  if (input.selectedPlanName) {
+    lines.push(`Selected Plan: ${input.selectedPlanName}`);
+    if (input.subscriptionDuration) lines.push(`Subscription Term: ${input.subscriptionDuration}`);
+  }
+
+  lines.push(`Original USD Price: ${input.originalPriceUsd}`);
+  if (input.couponCode) lines.push(`Coupon Code: ${input.couponCode}`);
+  if (input.discountUsd) lines.push(`Discount Amount: ${input.discountUsd}`);
+  
+  lines.push(
     `Discounted USD Payable Amount: ${input.finalPriceUsd}`,
     `USD to INR Rate Used: ${input.usdToInrRate} / USD`,
     `Conversion Timestamp: ${input.usdToInrRateFetchedAt}`,
     `Razorpay Payable Amount: ${input.finalPriceInr}`,
     `Razorpay Order ID: ${input.razorpayOrderId}`,
-    `Razorpay Payment ID: ${input.razorpayPaymentId}`,
-  ];
+    `Razorpay Payment ID: ${input.razorpayPaymentId}`
+  );
 
   if (input.purchaseType === "expert") {
     if (input.calBookingUid) {
@@ -646,7 +644,9 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
     }
   } else {
     lines.push(
-      "Next Steps: Vyntegra will send product access or next steps by email.",
+      input.selectedPlanName
+        ? "Next Steps: After payment verification, Vyntegra will send access/setup next steps by email."
+        : "Next Steps: Vyntegra will send product access or next steps by email.",
     );
   }
 
@@ -657,7 +657,9 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
 function buildRazorpayCustomerHtml(input: RazorpayPaymentSuccessEmailInput) {
   const bookingBody =
     input.purchaseType !== "expert"
-      ? "Vyntegra will send product access or next steps by email."
+      ? input.selectedPlanName
+        ? "After payment verification, Vyntegra will send access/setup next steps by email."
+        : "Vyntegra will send product access or next steps by email."
       : input.calBookingUid
         ? "Your expert session has been booked in Cal.com. Cal.com may also send its own booking confirmation."
         : input.fallbackBookingUrl
