@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
+import {
+  getSubscriptionAgentPlan,
+  isSubscriptionAgentSlug,
+} from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -24,56 +27,64 @@ function readPlanParam(value: string | string[] | undefined) {
   return value ?? "";
 }
 
+function findProduct(slug: string) {
+  return products.find((product) => product.slug === slug && product.active);
+}
+
 export function generateStaticParams() {
-  return [{ slug: "astro-vyn-gold" }];
+  return products
+    .filter((product) => product.active && isSubscriptionAgentSlug(product.slug))
+    .map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const product = findProduct(slug);
 
-  if (slug !== "astro-vyn-gold") {
+  if (!product || !isSubscriptionAgentSlug(product.slug)) {
     return {
       title: "AI Trading Software Agent Checkout | Vyntegra",
     };
   }
 
   return {
-    title: "Complete your Astro-Vyn Gold purchase | Vyntegra",
-    description:
-      "Review your selected Astro-Vyn Gold subscription and continue with secure payment.",
+    title: `Complete your ${product.name} purchase | Vyntegra`,
+    description: `Review your selected ${product.name} subscription and continue with secure payment.`,
   };
 }
 
-export default async function AstroVynGoldCheckoutPage({
+export default async function SubscriptionCheckoutPage({
   params,
   searchParams,
 }: PageProps) {
   const { slug } = await params;
-
-  if (slug !== "astro-vyn-gold") {
-    redirect(`/ai-trading-agents/${slug}#purchase`);
-  }
-
-  const product = products.find((item) => item.slug === "astro-vyn-gold");
+  const product = findProduct(slug);
 
   if (!product) {
     notFound();
   }
 
+  if (!isSubscriptionAgentSlug(product.slug)) {
+    redirect(`/ai-trading-agents/${product.slug}#purchase`);
+  }
+
   const query = await searchParams;
-  const selectedPlan = getAstroVynGoldPlan(readPlanParam(query.plan));
+  const selectedPlan = getSubscriptionAgentPlan(
+    product.slug,
+    readPlanParam(query.plan),
+  );
 
   if (!selectedPlan) {
     return (
       <main className="section-bg-primary astro-gold-checkout-page">
         <div className="astro-gold-checkout-shell">
           <section className="astro-gold-invalid-plan-card">
-            <p className="eyebrow">Astro-Vyn Gold Checkout</p>
+            <p className="eyebrow">{product.name} Checkout</p>
             <h1 className="subsection-title">Invalid subscription plan selected.</h1>
             <p className="body-standard">
-              Please choose a valid Astro-Vyn Gold subscription plan.
+              Please choose a valid {product.name} subscription plan.
             </p>
-            <Link className="btn btn-primary" href="/ai-trading-agents/astro-vyn-gold/plans">
+            <Link className="btn btn-primary" href={`/ai-trading-agents/${product.slug}/plans`}>
               Back to plans
             </Link>
           </section>
@@ -86,7 +97,7 @@ export default async function AstroVynGoldCheckoutPage({
     ...product,
     priceUsd: selectedPlan.priceUsd,
     fullDescription:
-      "Astro-Vyn Gold subscription access. After payment verification, Vyntegra will send access/setup next steps by email.",
+      `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
   };
   const paymentsConfigured = hasProductRazorpayCheckoutConfiguration();
   const cryptoPaymentConfig = getCryptoPaymentConfig();
@@ -95,8 +106,8 @@ export default async function AstroVynGoldCheckoutPage({
     <main className="section-bg-primary astro-gold-checkout-page">
       <div className="astro-gold-checkout-shell">
         <header className="astro-gold-checkout-hero">
-          <p className="eyebrow">Astro-Vyn Gold Checkout</p>
-          <h1 className="page-title">Complete your Astro-Vyn Gold purchase</h1>
+          <p className="eyebrow">{product.name} Checkout</p>
+          <h1 className="page-title">Complete your {product.name} purchase</h1>
           <p className="body-large">
             Review your selected subscription and continue with secure payment.
           </p>
@@ -108,7 +119,7 @@ export default async function AstroVynGoldCheckoutPage({
             <dl className="astro-gold-selected-plan-details">
               <div>
                 <dt>Product</dt>
-                <dd>Astro-Vyn Gold</dd>
+                <dd>{product.name}</dd>
               </div>
               <div>
                 <dt>Plan</dt>
@@ -137,10 +148,10 @@ export default async function AstroVynGoldCheckoutPage({
             </dl>
             <p className="astro-gold-checkout-risk-copy">
               Trading involves risk. Past performance and backtest results do
-              not guarantee future results. Astro-Vyn Gold is software tooling,
+              not guarantee future results. {product.name} is software tooling,
               not investment advice.
             </p>
-            <Link className="astro-gold-back-link" href="/ai-trading-agents/astro-vyn-gold/plans">
+            <Link className="astro-gold-back-link" href={`/ai-trading-agents/${product.slug}/plans`}>
               Change selected plan
             </Link>
           </section>

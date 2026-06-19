@@ -17,6 +17,12 @@ type RouteContext = {
   params: Promise<{ expertId: string }>;
 };
 
+function jsonNoStore(body: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  return Response.json(body, { ...init, headers });
+}
+
 function parseDateInput(value: string, boundary: "start" | "end") {
   if (dateOnlyPattern.test(value)) {
     const [year, month, day] = value.split("-").map(Number);
@@ -42,7 +48,7 @@ export async function GET(request: Request, context: RouteContext) {
   const expert = experts.find((item) => item.id === expertId && item.active);
 
   if (!expert) {
-    return Response.json(
+    return jsonNoStore(
       { success: false, message: "Expert is unavailable." },
       { status: 404 },
     );
@@ -53,7 +59,7 @@ export async function GET(request: Request, context: RouteContext) {
   const endParam = url.searchParams.get("end") ?? "";
 
   if (!startParam || !endParam) {
-    return Response.json(
+    return jsonNoStore(
       { success: false, message: "Start and end dates are required." },
       { status: 400 },
     );
@@ -63,21 +69,21 @@ export async function GET(request: Request, context: RouteContext) {
   const end = parseDateInput(endParam, "end");
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return Response.json(
+    return jsonNoStore(
       { success: false, message: "Start and end dates must be valid." },
       { status: 400 },
     );
   }
 
   if (end <= start) {
-    return Response.json(
+    return jsonNoStore(
       { success: false, message: "End date must be after start date." },
       { status: 400 },
     );
   }
 
   if (end.getTime() - start.getTime() > maxRangeMs) {
-    return Response.json(
+    return jsonNoStore(
       { success: false, message: "Date range cannot exceed 62 days." },
       { status: 400 },
     );
@@ -90,7 +96,7 @@ export async function GET(request: Request, context: RouteContext) {
       end: end.toISOString(),
     });
 
-    return Response.json({
+    return jsonNoStore({
       success: true,
       expertId,
       durationMinutes: 30,
@@ -102,7 +108,7 @@ export async function GET(request: Request, context: RouteContext) {
     });
   } catch (error) {
     if (error instanceof CalComAppError) {
-      return Response.json(
+      return jsonNoStore(
         {
           success: false,
           message:
@@ -114,7 +120,7 @@ export async function GET(request: Request, context: RouteContext) {
       );
     }
 
-    return Response.json(
+    return jsonNoStore(
       {
         success: false,
         message: "Live booking availability could not be loaded. Please try again.",

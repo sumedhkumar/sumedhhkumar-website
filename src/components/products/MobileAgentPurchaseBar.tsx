@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
+import { isSubscriptionAgentSlug } from "@/data/agent-subscription-plans";
 import Button from "@/components/ui/Button";
 import {
   useAgentPurchaseState,
@@ -28,7 +29,7 @@ export default function MobileAgentPurchaseBar({
 }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useAgentPurchaseState(product);
-  const isAstroVynGoldProduct = product.slug === "astro-vyn-gold";
+  const isSubscriptionProduct = isSubscriptionAgentSlug(product.slug);
 
   return (
     <>
@@ -36,11 +37,11 @@ export default function MobileAgentPurchaseBar({
         <div>
           <p className="body-compact">{product.name}</p>
           <p className="product-price" style={{ fontSize: 24 }}>
-            {isAstroVynGoldProduct ? "From $199" : formatUsd(product.priceUsd)}
+            {isSubscriptionProduct ? "From $199" : formatUsd(product.priceUsd)}
           </p>
         </div>
-        {isAstroVynGoldProduct ? (
-          <Button href="/ai-trading-agents/astro-vyn-gold/plans" variant="primary">
+        {isSubscriptionProduct ? (
+          <Button href={`/ai-trading-agents/${product.slug}/plans`} variant="primary">
             View Plans
           </Button>
         ) : (
@@ -50,7 +51,7 @@ export default function MobileAgentPurchaseBar({
         )}
       </div>
 
-      {open && !isAstroVynGoldProduct ? (
+      {open && !isSubscriptionProduct ? (
         <MobileAgentPurchaseSheet
           product={product}
           paymentsConfigured={paymentsConfigured}

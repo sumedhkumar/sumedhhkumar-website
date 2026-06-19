@@ -10,8 +10,11 @@ export async function GET() {
       success: true,
       rate: result.rate,
       source: result.source,
-      fetchedAt: result.fetchedAt,
+      exchangeRateFetchedAtUtc: result.fetchedAtUtc,
+      exchangeRateFetchedAtIstDisplay: result.fetchedAtIstDisplay,
+      exchangeRateIsFallback: result.isFallback,
       effectiveDateIst: result.effectiveDateIst,
+      fetchedAt: result.fetchedAtUtc,
     });
   } catch {
     return Response.json(

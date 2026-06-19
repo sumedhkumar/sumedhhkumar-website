@@ -7,9 +7,20 @@ import type { RazorpayPaymentSuccessEmailInput } from "@/lib/email";
 import {
   CalComAppError,
   createExpertBooking,
-  createPrivateFallbackLink,
   formatIstTimeLabel,
 } from "@/lib/server/calcom";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  isProductionPersistenceConfigured,
+  serviceUnavailableResponse,
+} from "@/lib/config";
+import {
+  hashRazorpaySignature,
+  type StoredRazorpayPayment,
+  updateRazorpayPaymentBookingStatus,
+  updateRazorpayPaymentEmailStatus,
+  upsertRazorpayVerifiedPayment,
+} from "@/lib/server/persistence";
 
 export const runtime = "nodejs";
 
@@ -20,8 +31,10 @@ type VerifyResponse = {
   paymentId: string;
   bookingConfirmed?: boolean;
   calBookingUid?: string;
-  fallbackBookingLinkSent?: boolean;
   supportFollowupRequired?: boolean;
+  paymentVerifiedAtUtc?: string;
+  paymentVerifiedAtIstDisplay?: string;
+  message?: string;
 };
 
 type RazorpayOrderWithNotes = {
@@ -33,9 +46,8 @@ type RazorpayPaymentDetails = {
   id: string;
   contact?: string | null;
   email?: string | null;
+  captured_at?: number | null;
 };
-
-const verifyResults = new Map<string, VerifyResponse>();
 
 function readString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -94,26 +106,6 @@ function formatRateFromNote(value: string) {
   return `₹${numberValue.toFixed(4)}`;
 }
 
-function formatIstTimestamp(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value || "Not provided";
-  }
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata",
-  })
-    .format(date)
-    .replace(",", "")
-    .replace(/\s/g, " ");
-}
-
 function formatSlotDisplay(slotStartUtc: string) {
   const date = new Date(slotStartUtc);
   if (Number.isNaN(date.getTime())) {
@@ -131,6 +123,50 @@ function formatSlotDisplay(slotStartUtc: string) {
   return `${dateLabel}, ${formatIstTimeLabel(date)} IST`;
 }
 
+function toRawRecord(value: unknown) {
+  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+}
+
+function responseFromStoredPayment(payment: StoredRazorpayPayment): VerifyResponse {
+  if (payment.purchaseType === "product") {
+    return {
+      success: true,
+      purchaseType: "product",
+      orderId: payment.razorpayOrderId,
+      paymentId: payment.razorpayPaymentId,
+      paymentVerifiedAtUtc: payment.verifiedAt,
+      paymentVerifiedAtIstDisplay: payment.verifiedAtIstDisplay ?? undefined,
+    };
+  }
+
+  if (payment.bookingStatus === "confirmed") {
+    return {
+      success: true,
+      purchaseType: "expert",
+      orderId: payment.razorpayOrderId,
+      paymentId: payment.razorpayPaymentId,
+      bookingConfirmed: true,
+      calBookingUid: payment.calBookingUid ?? undefined,
+      paymentVerifiedAtUtc: payment.verifiedAt,
+      paymentVerifiedAtIstDisplay: payment.verifiedAtIstDisplay ?? undefined,
+      message: "Booking confirmed. Please check your email for meeting details.",
+    };
+  }
+
+  return {
+    success: true,
+    purchaseType: "expert",
+    orderId: payment.razorpayOrderId,
+    paymentId: payment.razorpayPaymentId,
+    bookingConfirmed: false,
+    supportFollowupRequired: true,
+    paymentVerifiedAtUtc: payment.verifiedAt,
+    paymentVerifiedAtIstDisplay: payment.verifiedAtIstDisplay ?? undefined,
+    message:
+      "Payment confirmed. Vyntegra will confirm the consultation slot or share next steps by email.",
+  };
+}
+
 function buildEmailInput({
   notes,
   orderId,
@@ -142,10 +178,14 @@ function buildEmailInput({
   calBookingUid,
   calBookingStatus,
   calMeetingUrl,
-  fallbackBookingUrl,
   supportFollowupRequired,
   bookingErrorSummary,
   customerPhone,
+  timestamp,
+  paymentVerifiedAtUtc,
+  paymentVerifiedAtIstDisplay,
+  razorpayCapturedAtUtc,
+  razorpayCapturedAtIstDisplay,
 }: {
   notes: Record<string, unknown>;
   orderId: string;
@@ -157,13 +197,30 @@ function buildEmailInput({
   calBookingUid?: string;
   calBookingStatus?: string;
   calMeetingUrl?: string;
-  fallbackBookingUrl?: string;
   supportFollowupRequired?: boolean;
   bookingErrorSummary?: string;
   customerPhone?: string;
+  timestamp: string;
+  paymentVerifiedAtUtc: string;
+  paymentVerifiedAtIstDisplay: string;
+  razorpayCapturedAtUtc?: string;
+  razorpayCapturedAtIstDisplay?: string;
 }) {
+  const exchangeRateFetchedAtUtc =
+    readNote(notes, "exchangeRateFetchedAtUtc") ||
+    readNote(notes, "usdToInrRateFetchedAt");
+  const exchangeRateFetchedAtIstDisplay =
+    readNote(notes, "exchangeRateFetchedAtIstDisplay") ||
+    formatIstDateTime(exchangeRateFetchedAtUtc) ||
+    "";
+  const orderCreatedAtUtc = readNote(notes, "orderCreatedAtUtc");
+  const orderCreatedAtIstDisplay =
+    readNote(notes, "orderCreatedAtIstDisplay") ||
+    formatIstDateTime(orderCreatedAtUtc) ||
+    "";
+
   return {
-    timestamp: new Date().toISOString(),
+    timestamp,
     purchaseType,
     customerName: readNote(notes, "customerName"),
     customerEmail: readNote(notes, "customerEmail"),
@@ -176,9 +233,16 @@ function buildEmailInput({
     finalPriceUsd: formatUsdFromNote(readNote(notes, "finalPriceUsd")),
     usdToInrRate: formatRateFromNote(readNote(notes, "usdToInrRate")),
     usdToInrRateSource: readNote(notes, "usdToInrRateSource"),
-    usdToInrRateFetchedAt: formatIstTimestamp(
-      readNote(notes, "usdToInrRateFetchedAt"),
-    ),
+    usdToInrRateFetchedAt: exchangeRateFetchedAtIstDisplay,
+    exchangeRateFetchedAtUtc,
+    exchangeRateFetchedAtIstDisplay,
+    exchangeRateIsFallback: readNote(notes, "exchangeRateIsFallback") === "true",
+    orderCreatedAtUtc,
+    orderCreatedAtIstDisplay,
+    paymentVerifiedAtUtc,
+    paymentVerifiedAtIstDisplay,
+    razorpayCapturedAtUtc,
+    razorpayCapturedAtIstDisplay,
     usdToInrEffectiveDateIst: readNote(notes, "usdToInrEffectiveDateIst"),
     finalPriceInr: formatInrFromNote(readNote(notes, "finalPriceInr")),
     razorpayOrderId: orderId,
@@ -194,7 +258,6 @@ function buildEmailInput({
     calBookingUid,
     calBookingStatus,
     calMeetingUrl,
-    fallbackBookingUrl,
     supportFollowupRequired,
     bookingErrorSummary,
   };
@@ -213,10 +276,10 @@ async function trySendRazorpayPaymentSuccessEmails(
 ) {
   try {
     await sendRazorpayPaymentSuccessEmails(input);
-    return true;
-  } catch (error) {
-    console.error("Failed to send Razorpay success emails:", summarizeError(error));
-    return false;
+    return { sent: true as const };
+  } catch {
+    console.error("Failed to send Razorpay success emails.");
+    return { sent: false as const, error: "Email delivery failed." };
   }
 }
 
@@ -232,7 +295,6 @@ export async function POST(request: Request) {
     const signature = readString(body.razorpay_signature);
     const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
-    const idempotencyKey = `${orderId}:${paymentId}`;
 
     if (!orderId || !paymentId || !signature) {
       return Response.json(
@@ -241,9 +303,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const cachedResult = verifyResults.get(idempotencyKey);
-    if (cachedResult) {
-      return Response.json(cachedResult);
+    if (!isProductionPersistenceConfigured()) {
+      return serviceUnavailableResponse();
     }
 
     if (!keyId || !keySecret) {
@@ -265,6 +326,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const paymentVerifiedAtUtc = new Date().toISOString();
+    const paymentVerifiedAtIstDisplay =
+      formatIstDateTime(paymentVerifiedAtUtc) ?? "";
+
     const razorpay = new Razorpay({
       key_id: keyId,
       key_secret: keySecret,
@@ -275,7 +340,41 @@ export async function POST(request: Request) {
     )) as RazorpayPaymentDetails;
     const notes = order.notes ?? {};
     const razorpayCustomerPhone = readString(payment.contact);
+    const razorpayCapturedAtUtc =
+      typeof payment.captured_at === "number" && payment.captured_at > 0
+        ? new Date(payment.captured_at * 1000).toISOString()
+        : "";
+    const razorpayCapturedAtIstDisplay =
+      formatIstDateTime(razorpayCapturedAtUtc) ?? "";
     const targetType = readNote(notes, "targetType") === "expert" ? "expert" : "product";
+    const stored = await upsertRazorpayVerifiedPayment({
+      razorpayPaymentId: paymentId,
+      razorpayOrderId: orderId,
+      purchaseType: targetType,
+      verifiedAt: paymentVerifiedAtUtc,
+      verifiedAtIstDisplay: paymentVerifiedAtIstDisplay,
+      capturedAtUtc: razorpayCapturedAtUtc,
+      capturedAtIstDisplay: razorpayCapturedAtIstDisplay,
+      customerPhone: razorpayCustomerPhone,
+      bookingStatus: targetType === "product" ? "not_applicable" : "pending",
+      razorpaySignatureHash: hashRazorpaySignature(signature),
+      rawPayment: toRawRecord(payment),
+      rawVerificationPayload: {
+        razorpay_order_id: orderId,
+        razorpay_payment_id: paymentId,
+      },
+    });
+
+    if (stored.payment.razorpayOrderId !== orderId) {
+      return Response.json(
+        { message: "Payment verification failed." },
+        { status: 400 },
+      );
+    }
+
+    if (!stored.created) {
+      return Response.json(responseFromStoredPayment(stored.payment));
+    }
 
     if (targetType === "product") {
       const productId = readNote(notes, "productId");
@@ -291,7 +390,7 @@ export async function POST(request: Request) {
         );
       }
 
-      await trySendRazorpayPaymentSuccessEmails(
+      const emailResult = await trySendRazorpayPaymentSuccessEmails(
         buildEmailInput({
           notes,
           orderId,
@@ -299,10 +398,21 @@ export async function POST(request: Request) {
           purchaseType: "product",
           purchaseName: product.name,
           purchaseDescription: readNote(notes, "planId")
-            ? "Astro-Vyn Gold subscription access. After payment verification, Vyntegra will send access/setup next steps by email."
+            ? `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`
             : product.fullDescription || product.shortDescription,
           customerPhone: razorpayCustomerPhone,
+          timestamp: paymentVerifiedAtUtc,
+          paymentVerifiedAtUtc,
+          paymentVerifiedAtIstDisplay,
+          razorpayCapturedAtUtc: razorpayCapturedAtUtc || undefined,
+          razorpayCapturedAtIstDisplay:
+            razorpayCapturedAtIstDisplay || undefined,
         }),
+      );
+      await updateRazorpayPaymentEmailStatus(
+        paymentId,
+        emailResult.sent ? "sent" : "failed",
+        emailResult.sent ? undefined : emailResult.error,
       );
 
       const response: VerifyResponse = {
@@ -310,15 +420,15 @@ export async function POST(request: Request) {
         purchaseType: "product",
         orderId,
         paymentId,
+        paymentVerifiedAtUtc,
+        paymentVerifiedAtIstDisplay,
       };
-      verifyResults.set(idempotencyKey, response);
       return Response.json(response);
     }
 
     const expertId = readNote(notes, "expertId");
     const sessionId = readNote(notes, "sessionId");
     const slotStartUtc = readNote(notes, "slotStartUtc");
-    const calReservationUid = readNote(notes, "calReservationUid");
     const expert = experts.find((item) => item.id === expertId && item.active);
     const session = expert?.sessions.find(
       (item) => item.id === sessionId && item.active && item.durationMinutes === 30,
@@ -334,40 +444,10 @@ export async function POST(request: Request) {
     const purchaseName = `${expert.fullName} - ${session.label}`;
     const purchaseDescription = `${session.label}, ${session.durationMinutes} minutes with ${expert.fullName}.`;
     const slotDisplayIst = formatSlotDisplay(slotStartUtc);
-
-    if (!razorpayCustomerPhone) {
-      await trySendRazorpayPaymentSuccessEmails(
-        buildEmailInput({
-          notes,
-          orderId,
-          paymentId,
-          purchaseType: "expert",
-          purchaseName,
-          purchaseDescription,
-          slotDisplayIst,
-          supportFollowupRequired: true,
-          bookingErrorSummary:
-            "Razorpay did not return a customer contact number, so Vyntegra support must confirm the booking manually.",
-        }),
-      );
-
-      const response: VerifyResponse = {
-        success: true,
-        purchaseType: "expert",
-        orderId,
-        paymentId,
-        bookingConfirmed: false,
-        supportFollowupRequired: true,
-      };
-      verifyResults.set(idempotencyKey, response);
-      return Response.json(response);
-    }
-
     try {
       const booking = await createExpertBooking({
         expertId: expert.id,
         slotStartUtc,
-        calReservationUid,
         customerName: readNote(notes, "customerName"),
         customerEmail: readNote(notes, "customerEmail"),
         customerPhone: razorpayCustomerPhone,
@@ -381,7 +461,15 @@ export async function POST(request: Request) {
         throw new Error("Cal.com booking was created without a booking UID.");
       }
 
-      await trySendRazorpayPaymentSuccessEmails(
+      const calMeetingUrl = booking.meetingUrl || booking.location;
+      await updateRazorpayPaymentBookingStatus(paymentId, {
+        bookingStatus: "confirmed",
+        calBookingUid,
+        calBookingStatus: booking.status,
+        calMeetingUrl,
+      });
+
+      const emailResult = await trySendRazorpayPaymentSuccessEmails(
         buildEmailInput({
           notes,
           orderId,
@@ -392,9 +480,20 @@ export async function POST(request: Request) {
           slotDisplayIst,
           calBookingUid,
           calBookingStatus: booking.status,
-          calMeetingUrl: booking.meetingUrl || booking.location,
+          calMeetingUrl,
           customerPhone: razorpayCustomerPhone,
+          timestamp: paymentVerifiedAtUtc,
+          paymentVerifiedAtUtc,
+          paymentVerifiedAtIstDisplay,
+          razorpayCapturedAtUtc: razorpayCapturedAtUtc || undefined,
+          razorpayCapturedAtIstDisplay:
+            razorpayCapturedAtIstDisplay || undefined,
         }),
+      );
+      await updateRazorpayPaymentEmailStatus(
+        paymentId,
+        emailResult.sent ? "sent" : "failed",
+        emailResult.sent ? undefined : emailResult.error,
       );
 
       const response: VerifyResponse = {
@@ -404,72 +503,60 @@ export async function POST(request: Request) {
         paymentId,
         bookingConfirmed: true,
         calBookingUid,
+        paymentVerifiedAtUtc,
+        paymentVerifiedAtIstDisplay,
+        message: "Booking confirmed. Please check your email for meeting details.",
       };
-      verifyResults.set(idempotencyKey, response);
       return Response.json(response);
     } catch (bookingError) {
       const bookingErrorSummary = summarizeError(bookingError);
 
-      try {
-        const fallbackBookingUrl = await createPrivateFallbackLink({
-          expertId: expert.id,
-        });
+      await updateRazorpayPaymentBookingStatus(paymentId, {
+        bookingStatus: "manual_followup_required",
+        supportFollowupRequired: true,
+        bookingErrorSummary,
+      });
 
-        await trySendRazorpayPaymentSuccessEmails(
-          buildEmailInput({
-            notes,
-            orderId,
-            paymentId,
-            purchaseType: "expert",
-            purchaseName,
-            purchaseDescription,
-            slotDisplayIst,
-            fallbackBookingUrl,
-            bookingErrorSummary,
-            customerPhone: razorpayCustomerPhone,
-          }),
-        );
-
-        const response: VerifyResponse = {
-          success: true,
-          purchaseType: "expert",
+      const emailResult = await trySendRazorpayPaymentSuccessEmails(
+        buildEmailInput({
+          notes,
           orderId,
           paymentId,
-          bookingConfirmed: false,
-          fallbackBookingLinkSent: true,
-        };
-        verifyResults.set(idempotencyKey, response);
-        return Response.json(response);
-      } catch (fallbackError) {
-        await trySendRazorpayPaymentSuccessEmails(
-          buildEmailInput({
-            notes,
-            orderId,
-            paymentId,
-            purchaseType: "expert",
-            purchaseName,
-            purchaseDescription,
-            slotDisplayIst,
-            supportFollowupRequired: true,
-            bookingErrorSummary: [
-              `Booking: ${bookingErrorSummary}`,
-              `Private link: ${summarizeError(fallbackError)}`,
-            ].join("\n"),
-            customerPhone: razorpayCustomerPhone,
-          }),
-        );
-
-        const response: VerifyResponse = {
-          success: true,
           purchaseType: "expert",
-          orderId,
-          paymentId,
-          bookingConfirmed: false,
+          purchaseName,
+          purchaseDescription,
+          slotDisplayIst,
           supportFollowupRequired: true,
-        };
-        verifyResults.set(idempotencyKey, response);
-        return Response.json(response);
-      }
+          bookingErrorSummary:
+            `Expert payment verified but Cal.com booking failed/requires manual follow-up.\n${bookingErrorSummary}`,
+          customerPhone: razorpayCustomerPhone,
+          timestamp: paymentVerifiedAtUtc,
+          paymentVerifiedAtUtc,
+          paymentVerifiedAtIstDisplay,
+          razorpayCapturedAtUtc: razorpayCapturedAtUtc || undefined,
+          razorpayCapturedAtIstDisplay:
+            razorpayCapturedAtIstDisplay || undefined,
+        }),
+      );
+      await updateRazorpayPaymentEmailStatus(
+        paymentId,
+        emailResult.sent ? "sent" : "failed",
+        emailResult.sent ? undefined : emailResult.error,
+      );
+
+      const response: VerifyResponse = {
+        success: true,
+        purchaseType: "expert",
+        orderId,
+        paymentId,
+        bookingConfirmed: false,
+        supportFollowupRequired: true,
+        paymentVerifiedAtUtc,
+        paymentVerifiedAtIstDisplay,
+        message:
+          "Payment confirmed. Vyntegra will confirm the consultation slot or share next steps by email.",
+      };
+      return Response.json(response);
     }
   } catch {
     return Response.json(

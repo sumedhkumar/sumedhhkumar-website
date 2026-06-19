@@ -42,7 +42,6 @@ const contactEmail = readValue("CONTACT_MAIL") || officialContactEmail;
 const supportEmail = contactEmail;
 const adminEmail = readValue("ADMIN_MAIL_TO") || contactEmail;
 const adminPaymentEmail = adminEmail;
-const cryptoPaymentProofEmail = adminEmail;
 const customSolutionsRecipientEmail = adminEmail;
 const queryEmail = adminPaymentEmail;
 const smtpPort = readValue("SMTP_PORT") || "465";
@@ -55,10 +54,24 @@ const paymentMailFromName =
 const paymentMailReplyTo =
   readValue("PAYMENT_MAIL_REPLY_TO") || paymentMailFrom;
 const paymentMailFromEmail = `${paymentMailFromName} <${paymentMailFrom}>`;
+const cryptoProofMailbox = "ai.vyntegra@gmail.com";
+const cryptoProofSmtpPort = readValue("CRYPTO_PROOF_SMTP_PORT") || "465";
+const cryptoProofSmtpUser = readValue("CRYPTO_PROOF_SMTP_USER");
+const cryptoProofMailFromEmail = cryptoProofSmtpUser
+  ? `Vyntegra AI <${cryptoProofMailbox}>`
+  : "";
 
 export const appConfig = {
   appBaseUrl: readValue("APP_BASE_URL"),
   persistenceProvider: readValue("PERSISTENCE_PROVIDER") || "disabled",
+  databaseUrl: readValue("DATABASE_URL"),
+  databaseSsl: readFlagDefault("DATABASE_SSL", true),
+  autoMigrateDb: readFlag("AUTO_MIGRATE_DB"),
+  supabaseUrl: readValue("SUPABASE_URL"),
+  supabaseServiceRoleKey: readValue("SUPABASE_SERVICE_ROLE_KEY"),
+  supabaseStorageBucket: readValue("SUPABASE_STORAGE_BUCKET"),
+  adminExportToken: readValue("ADMIN_EXPORT_TOKEN"),
+  ipHashSalt: readValue("IP_HASH_SALT"),
   paymentsEnabled: readFlag("PAYMENTS_ENABLED"),
   stripeEnabled: readFlag("STRIPE_ENABLED"),
   stripeSecretKey: readValue("STRIPE_SECRET_KEY"),
@@ -87,7 +100,6 @@ export const appConfig = {
   supportEmail,
   adminEmail,
   adminPaymentEmail,
-  cryptoPaymentProofEmail,
   queryEmail,
   expertBookingEnabled: readFlag("EXPERT_BOOKING_ENABLED"),
   productAccessEnabled: readFlag("PRODUCT_ACCESS_ENABLED"),
@@ -102,12 +114,29 @@ export const appConfig = {
   paymentMailFromName,
   paymentMailReplyTo,
   paymentMailFromEmail,
+  cryptoProofMailbox,
+  cryptoProofSmtpHost: readValue("CRYPTO_PROOF_SMTP_HOST"),
+  cryptoProofSmtpPort,
+  cryptoProofSmtpSecure: readFlagDefault(
+    "CRYPTO_PROOF_SMTP_SECURE",
+    Number(cryptoProofSmtpPort) === 465,
+  ),
+  cryptoProofSmtpUser,
+  cryptoProofSmtpPass: readValue("CRYPTO_PROOF_SMTP_PASS"),
+  cryptoProofMailFromEmail,
 };
 
 export function isProductionPersistenceConfigured() {
   return (
-    appConfig.persistenceProvider !== "" &&
-    appConfig.persistenceProvider !== "disabled"
+    appConfig.persistenceProvider === "postgres" && Boolean(appConfig.databaseUrl)
+  );
+}
+
+export function isAttachmentStorageConfigured() {
+  return Boolean(
+    appConfig.supabaseUrl &&
+      appConfig.supabaseServiceRoleKey &&
+      appConfig.supabaseStorageBucket,
   );
 }
 
@@ -134,6 +163,21 @@ export function getSmtpConfigurationErrorMessage() {
   }
 
   return `Email service is not configured. Missing environment variables: ${missingVariables.join(", ")}.`;
+}
+
+export function hasCryptoProofSmtpConfiguration() {
+  return getMissingCryptoProofSmtpConfigurationVariables().length === 0;
+}
+
+export function getMissingCryptoProofSmtpConfigurationVariables() {
+  return [
+    ["CRYPTO_PROOF_SMTP_HOST", appConfig.cryptoProofSmtpHost],
+    ["CRYPTO_PROOF_SMTP_PORT", appConfig.cryptoProofSmtpPort],
+    ["CRYPTO_PROOF_SMTP_USER", appConfig.cryptoProofSmtpUser],
+    ["CRYPTO_PROOF_SMTP_PASS", appConfig.cryptoProofSmtpPass],
+  ]
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
 }
 
 export function hasStripeConfiguration() {

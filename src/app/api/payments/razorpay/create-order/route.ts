@@ -1,10 +1,15 @@
 import Razorpay from "razorpay";
 import { experts } from "@/data/experts";
 import { products } from "@/data/products";
-import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
+import { getSubscriptionAgentPlan } from "@/data/agent-subscription-plans";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getUsdToInrRate } from "@/lib/exchange-rate";
-import { CalComAppError, reserveExpertSlot } from "@/lib/server/calcom";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  isProductionPersistenceConfigured,
+  serviceUnavailableResponse,
+} from "@/lib/config";
+import { hashClientIp, saveRazorpayOrder } from "@/lib/server/persistence";
 
 export const runtime = "nodejs";
 
@@ -19,6 +24,20 @@ function isValidEmail(value: string) {
 function buildReceipt(productId: string) {
   const normalizedProductId = productId.replace(/[^a-zA-Z0-9_-]/g, "");
   return `vyn_${normalizedProductId}_${Date.now().toString(36)}`.slice(0, 40);
+}
+
+function getClientIp(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() ?? "unknown";
+  }
+
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function toRawRecord(value: unknown) {
+  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
 }
 
 export async function POST(request: Request) {
@@ -90,19 +109,18 @@ export async function POST(request: Request) {
   }
 
   const selectedPlan =
-    targetType === "product" && selectedPlanId
-      ? getAstroVynGoldPlan(selectedPlanId)
+    targetType === "product" && product && selectedPlanId
+      ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
       : null;
 
   if (selectedPlanId) {
     if (
       targetType !== "product" ||
       !product ||
-      product.slug !== "astro-vyn-gold" ||
       !selectedPlan
     ) {
       return Response.json(
-        { message: "Invalid Astro-Vyn Gold subscription plan selected." },
+        { message: "Invalid subscription plan selected." },
         { status: 400 },
       );
     }
@@ -142,6 +160,8 @@ export async function POST(request: Request) {
 
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const orderCreatedAtUtc = new Date().toISOString();
+  const orderCreatedAtIstDisplay = formatIstDateTime(orderCreatedAtUtc) ?? "";
   const usdToInrRateMetadata = await getUsdToInrRate();
   const usdToInrRate = usdToInrRateMetadata.rate;
 
@@ -214,86 +234,113 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!isProductionPersistenceConfigured()) {
+    return serviceUnavailableResponse();
+  }
+
   try {
-    let calReservationUid = "";
-
-    if (targetType === "expert" && expert) {
-      try {
-        calReservationUid = await reserveExpertSlot({
-          expertId: expert.id,
-          slotStartUtc,
-        });
-      } catch (error) {
-        if (error instanceof CalComAppError) {
-          return Response.json(
-            {
-              message:
-                error.status === 409
-                  ? "This slot is no longer available. Please select another slot."
-                  : "Live booking availability could not be reserved. Please try another slot.",
-            },
-            { status: error.status === 409 ? 409 : 502 },
-          );
-        }
-
-        return Response.json(
-          { message: "This slot is no longer available. Please select another slot." },
-          { status: 409 },
-        );
-      }
-    }
-
     const razorpay = new Razorpay({
       key_id: keyId,
       key_secret: keySecret,
     });
+    const orderNotes = {
+      targetType,
+      ...(targetType === "expert"
+        ? {
+            expertId: expert?.id ?? "",
+            expertSlug: expert?.slug ?? "",
+            expertName: expert?.fullName ?? "",
+            sessionId: session?.id ?? "",
+            sessionLabel: session?.label ?? "",
+            sessionDurationMinutes: "30",
+            slotStartUtc,
+            appointmentDate,
+            appointmentSlot,
+          }
+        : {
+            productId: product?.id ?? "",
+            slug: product?.slug ?? "",
+            productSlug: product?.slug ?? "",
+            productName: product?.name ?? "",
+            ...(selectedPlan
+              ? {
+                  serviceType: "AI Trading Software Agent",
+                  planId: selectedPlan.id,
+                  planName: selectedPlan.name,
+                  subscriptionDuration: selectedPlan.durationLabel,
+                  originalPriceUsd: selectedPlan.originalPriceUsd.toFixed(2),
+                  payablePriceUsd: selectedPlan.priceUsd.toFixed(2),
+                }
+              : {}),
+          }),
+      purchaseName,
+      customerName,
+      customerEmail,
+      originalPriceUsd: originalPriceUsd.toFixed(2),
+      discountUsd: discountUsd.toFixed(2),
+      finalPriceUsd: finalPriceUsd.toFixed(2),
+      usdToInrRate: usdToInrRate.toString(),
+      usdToInrRateSource: usdToInrRateMetadata.source,
+      usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAtUtc,
+      usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
+      usdAmount: finalPriceUsd.toFixed(2),
+      inrAmountPaise: amountPaise.toString(),
+      usdInrRate: usdToInrRate.toString(),
+      exchangeRateSource: usdToInrRateMetadata.source,
+      exchangeRateFetchedAtUtc: usdToInrRateMetadata.fetchedAtUtc,
+      exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata.fetchedAtIstDisplay,
+      exchangeRateIsFallback: usdToInrRateMetadata.isFallback.toString(),
+      orderCreatedAtUtc,
+      orderCreatedAtIstDisplay,
+      finalPriceInr: finalPriceInr.toFixed(2),
+      ...(appliedCoupon ? { couponCode: appliedCoupon } : {}),
+    };
     const order = await razorpay.orders.create({
       amount: amountPaise,
       currency: "INR",
       receipt: buildReceipt(purchaseId),
-      notes: {
-        targetType,
-        ...(targetType === "expert"
-          ? {
-              expertId: expert?.id ?? "",
-              expertSlug: expert?.slug ?? "",
-              expertName: expert?.fullName ?? "",
-              sessionId: session?.id ?? "",
-              sessionLabel: session?.label ?? "",
-              sessionDurationMinutes: "30",
-              slotStartUtc,
-              calReservationUid,
-              appointmentDate,
-              appointmentSlot,
-            }
-          : {
-              productId: product?.id ?? "",
-              slug: product?.slug ?? "",
-              productSlug: product?.slug ?? "",
-              productName: product?.name ?? "",
-              ...(selectedPlan
-                ? {
-                    planId: selectedPlan.id,
-                    planName: selectedPlan.name,
-                    subscriptionDuration: selectedPlan.durationLabel,
-                    originalPriceUsd: selectedPlan.originalPriceUsd.toFixed(2),
-                    payablePriceUsd: selectedPlan.priceUsd.toFixed(2),
-                  }
-                : {}),
-            }),
-        purchaseName,
-        customerName,
-        customerEmail,
-        originalPriceUsd: originalPriceUsd.toFixed(2),
-        discountUsd: discountUsd.toFixed(2),
-        finalPriceUsd: finalPriceUsd.toFixed(2),
-        usdToInrRate: usdToInrRate.toString(),
-        usdToInrRateSource: usdToInrRateMetadata.source,
-        usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAt,
-        usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
-        finalPriceInr: finalPriceInr.toFixed(2),
-        ...(appliedCoupon ? { couponCode: appliedCoupon } : {}),
-      },
+      notes: orderNotes,
+    });
+
+    await saveRazorpayOrder({
+      razorpayOrderId: order.id,
+      targetType,
+      orderCreatedAt: orderCreatedAtUtc,
+      orderCreatedAtIstDisplay,
+      customerName,
+      customerEmail,
+      productId: product?.id,
+      productSlug: product?.slug,
+      productName: product?.name,
+      expertId: expert?.id,
+      expertSlug: expert?.slug,
+      expertName: expert?.fullName,
+      sessionId: session?.id,
+      sessionLabel: session?.label,
+      sessionDurationMinutes: session?.durationMinutes,
+      slotStartUtc,
+      appointmentDate,
+      appointmentSlot,
+      selectedPlanId: selectedPlan?.id,
+      selectedPlanName: selectedPlan?.name,
+      subscriptionDuration: selectedPlan?.durationLabel,
+      originalPriceUsd,
+      discountUsd,
+      finalPriceUsd,
+      couponCode: appliedCoupon,
+      usdToInrRate,
+      usdToInrRateSource: usdToInrRateMetadata.source,
+      exchangeRateFetchedAtUtc: usdToInrRateMetadata.fetchedAtUtc,
+      exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata.fetchedAtIstDisplay,
+      exchangeRateIsFallback: usdToInrRateMetadata.isFallback,
+      usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
+      finalPriceInr,
+      amountPaise,
+      currency: "INR",
+      clientIpHash: hashClientIp(getClientIp(request)),
+      userAgent: request.headers.get("user-agent") ?? "",
+      rawNotes: orderNotes,
+      rawOrder: toRawRecord(order),
     });
 
     return Response.json({
@@ -317,10 +364,19 @@ export async function POST(request: Request) {
         : {}),
       usdToInrRate: usdToInrRate,
       usdToInrRateSource: usdToInrRateMetadata.source,
-      usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAt,
+      usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAtUtc,
       usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
+      usdAmount: finalPriceUsd,
+      inrAmountPaise: amountPaise,
+      usdInrRate: usdToInrRate,
+      exchangeRateSource: usdToInrRateMetadata.source,
+      exchangeRateFetchedAtUtc: usdToInrRateMetadata.fetchedAtUtc,
+      exchangeRateFetchedAtIstDisplay:
+        usdToInrRateMetadata.fetchedAtIstDisplay,
+      exchangeRateIsFallback: usdToInrRateMetadata.isFallback,
+      orderCreatedAtUtc,
+      orderCreatedAtIstDisplay,
       slotStartUtc,
-      calReservationUid,
       ...(appliedCoupon ? { couponCode: appliedCoupon, appliedCoupon } : {}),
     });
   } catch {

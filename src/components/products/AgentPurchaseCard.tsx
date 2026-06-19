@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   Dispatch,
   FormEvent,
@@ -13,7 +14,16 @@ import type {
   PaymentProvider,
   TradingAgentProduct,
 } from "@/types";
-import type { AstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
+import {
+  isSubscriptionAgentSlug,
+  type AgentSubscriptionPlan,
+} from "@/data/agent-subscription-plans";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  PaymentResultDialog,
+  RazorpayVerificationOverlay,
+  type PaymentDialogContent,
+} from "@/components/payments/RazorpayPaymentDialogs";
 import Button from "@/components/ui/Button";
 
 type PurchaseState = {
@@ -31,6 +41,11 @@ type PurchaseState = {
   usdToInrRateSource: string | null;
   usdToInrRateFetchedAt: string;
   usdToInrEffectiveDateIst: string;
+  exchangeRateFetchedAtUtc: string;
+  exchangeRateFetchedAtIstDisplay: string;
+  exchangeRateIsFallback: boolean;
+  orderCreatedAtUtc: string;
+  orderCreatedAtIstDisplay: string;
 };
 
 type CreateProductOrderResponse = {
@@ -46,6 +61,11 @@ type CreateProductOrderResponse = {
   usdToInrRateSource?: string;
   usdToInrRateFetchedAt?: string;
   usdToInrEffectiveDateIst?: string;
+  exchangeRateFetchedAtUtc?: string;
+  exchangeRateFetchedAtIstDisplay?: string;
+  exchangeRateIsFallback?: boolean;
+  orderCreatedAtUtc?: string;
+  orderCreatedAtIstDisplay?: string;
   appliedCoupon?: string;
   selectedPlanId?: string;
   selectedPlanName?: string;
@@ -60,6 +80,9 @@ type ExchangeRateResponse = {
   rate?: number;
   source?: string;
   fetchedAt?: string;
+  exchangeRateFetchedAtUtc?: string;
+  exchangeRateFetchedAtIstDisplay?: string;
+  exchangeRateIsFallback?: boolean;
   effectiveDateIst?: string;
   message?: string;
 };
@@ -70,6 +93,15 @@ type VerifyProductPaymentResponse = {
   paymentId?: string;
   message?: string;
 };
+
+type PaymentFlowState =
+  | "idle"
+  | "creating-order"
+  | "gateway-open"
+  | "verifying-payment"
+  | "success"
+  | "failed"
+  | "cancelled";
 
 type RazorpayCheckoutResponse = {
   razorpay_order_id: string;
@@ -190,30 +222,6 @@ function formatInr(value: number, fractionDigits = 2) {
   }).format(value);
 }
 
-function formatIstTimestamp(value?: string) {
-  if (!value) {
-    return "Loading";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata",
-  })
-    .format(date)
-    .replace(",", "")
-    .replace(/\s/g, " ");
-}
-
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -246,6 +254,11 @@ function createInitialState(product: TradingAgentProduct): PurchaseState {
     usdToInrRateSource: null,
     usdToInrRateFetchedAt: "",
     usdToInrEffectiveDateIst: "",
+    exchangeRateFetchedAtUtc: "",
+    exchangeRateFetchedAtIstDisplay: "",
+    exchangeRateIsFallback: false,
+    orderCreatedAtUtc: "",
+    orderCreatedAtIstDisplay: "",
   };
 }
 
@@ -253,7 +266,7 @@ type AgentPurchaseFormProps = {
   product: TradingAgentProduct;
   paymentsConfigured: boolean;
   cryptoPaymentConfig: CryptoPaymentConfig | null;
-  selectedPlan?: AstroVynGoldPlan;
+  selectedPlan?: AgentSubscriptionPlan;
   state: PurchaseState;
   setState: Dispatch<SetStateAction<PurchaseState>>;
 };
@@ -265,7 +278,7 @@ type CryptoPaymentPanelProps =
     finalAmountUsd: number;
     couponCode?: string;
     cryptoPaymentConfig: CryptoPaymentConfig | null;
-    selectedPlan?: AstroVynGoldPlan;
+    selectedPlan?: AgentSubscriptionPlan;
   };
 
 export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
@@ -753,7 +766,13 @@ export function AgentPurchaseForm({
   state,
   setState,
 }: AgentPurchaseFormProps) {
-  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const router = useRouter();
+  const [paymentFlowState, setPaymentFlowState] =
+    useState<PaymentFlowState>("idle");
+  const [successDialog, setSuccessDialog] =
+    useState<PaymentDialogContent | null>(null);
+  const [failureDialog, setFailureDialog] =
+    useState<PaymentDialogContent | null>(null);
   const checkoutCompletedRef = useRef(false);
   const unavailableMessage = "This product is not currently available for purchase.";
   const configurationMessage = "Online purchase configuration is pending.";
@@ -782,13 +801,21 @@ export function AgentPurchaseForm({
     !product.active ||
     !selectedPaymentConfigured ||
     !state.acceptedTerms ||
-    checkoutBusy ||
+    paymentFlowState === "creating-order" ||
+    paymentFlowState === "gateway-open" ||
+    paymentFlowState === "verifying-payment" ||
+    paymentFlowState === "success" ||
     !customerDetailsReady;
-  const buyButtonLabel = checkoutBusy
-    ? "Processing..."
-    : state.paymentProvider === "razorpay"
-      ? "Pay with Razorpay"
-      : "Continue to Crypto Payment";
+  const buyButtonLabel =
+    paymentFlowState === "creating-order"
+      ? "Creating order..."
+      : paymentFlowState === "gateway-open"
+        ? "Payment window open..."
+        : paymentFlowState === "verifying-payment"
+          ? "Verifying payment..."
+          : state.paymentProvider === "razorpay"
+            ? "Pay with Razorpay"
+            : "Continue to Crypto Payment";
   const razorpayAmountInr =
     state.usdToInrRate !== null
       ? Number((state.finalAmountUsd * state.usdToInrRate).toFixed(2))
@@ -818,9 +845,20 @@ export function AgentPurchaseForm({
             usdToInrRate: result.rate ?? current.usdToInrRate,
             usdToInrRateSource: result.source ?? current.usdToInrRateSource,
             usdToInrRateFetchedAt:
-              result.fetchedAt ?? current.usdToInrRateFetchedAt,
+              result.exchangeRateFetchedAtUtc ??
+              result.fetchedAt ??
+              current.usdToInrRateFetchedAt,
             usdToInrEffectiveDateIst:
               result.effectiveDateIst ?? current.usdToInrEffectiveDateIst,
+            exchangeRateFetchedAtUtc:
+              result.exchangeRateFetchedAtUtc ??
+              result.fetchedAt ??
+              current.exchangeRateFetchedAtUtc,
+            exchangeRateFetchedAtIstDisplay:
+              result.exchangeRateFetchedAtIstDisplay ??
+              current.exchangeRateFetchedAtIstDisplay,
+            exchangeRateIsFallback:
+              result.exchangeRateIsFallback ?? current.exchangeRateIsFallback,
           }));
         }
       } catch {
@@ -878,9 +916,20 @@ export function AgentPurchaseForm({
     }));
   }
 
+  function closeSuccessDialog() {
+    setSuccessDialog(null);
+    router.refresh();
+  }
+
+  function closeFailureDialog() {
+    setFailureDialog(null);
+    setPaymentFlowState("idle");
+  }
+
   async function verifyRazorpayPayment(response: RazorpayCheckoutResponse) {
     checkoutCompletedRef.current = true;
-    setStatus("Verifying payment with Vyntegra backend...");
+    setPaymentFlowState("verifying-payment");
+    setStatus("");
 
     try {
       const couponCode = state.couponCode.trim();
@@ -904,23 +953,31 @@ export function AgentPurchaseForm({
           verificationResponse,
         );
 
-      if (!verificationResult.success) {
+      if (
+        !verificationResult.success ||
+        verificationResult.orderId !== response.razorpay_order_id ||
+        verificationResult.paymentId !== response.razorpay_payment_id
+      ) {
         throw new Error("Payment verification failed.");
       }
 
-      setStatus(
-        "Payment verified successfully. Vyntegra will share access details after internal processing.",
-        "success",
-      );
-    } catch (error) {
-      setStatus(
-        error instanceof Error
-          ? error.message
-          : "Payment verification failed.",
-        "error",
-      );
-    } finally {
-      setCheckoutBusy(false);
+      setPaymentFlowState("success");
+      setStatus("");
+      setSuccessDialog({
+        title: "Payment successful",
+        body: "Please check your email for next steps.",
+        note:
+          "Vyntegra will share access/setup details after payment verification/internal processing.",
+      });
+    } catch {
+      setPaymentFlowState("failed");
+      setStatus("Payment verification failed.", "error");
+      setFailureDialog({
+        title: "Payment verification failed",
+        body:
+          "We could not verify the payment automatically. If money was deducted, please contact support@vyntegra.in with your payment details.",
+        supportLine: "",
+      });
     }
   }
 
@@ -941,7 +998,7 @@ export function AgentPurchaseForm({
       return;
     }
 
-    setCheckoutBusy(true);
+    setPaymentFlowState("creating-order");
     checkoutCompletedRef.current = false;
     setStatus("Loading Razorpay Checkout...");
 
@@ -996,10 +1053,25 @@ export function AgentPurchaseForm({
         usdToInrRate: order.usdToInrRate ?? current.usdToInrRate,
         usdToInrRateSource: order.usdToInrRateSource ?? current.usdToInrRateSource,
         usdToInrRateFetchedAt:
-          order.usdToInrRateFetchedAt ?? current.usdToInrRateFetchedAt,
+          order.exchangeRateFetchedAtUtc ??
+          order.usdToInrRateFetchedAt ??
+          current.usdToInrRateFetchedAt,
         usdToInrEffectiveDateIst:
           order.usdToInrEffectiveDateIst ??
           current.usdToInrEffectiveDateIst,
+        exchangeRateFetchedAtUtc:
+          order.exchangeRateFetchedAtUtc ??
+          order.usdToInrRateFetchedAt ??
+          current.exchangeRateFetchedAtUtc,
+        exchangeRateFetchedAtIstDisplay:
+          order.exchangeRateFetchedAtIstDisplay ??
+          current.exchangeRateFetchedAtIstDisplay,
+        exchangeRateIsFallback:
+          order.exchangeRateIsFallback ?? current.exchangeRateIsFallback,
+        orderCreatedAtUtc:
+          order.orderCreatedAtUtc ?? current.orderCreatedAtUtc,
+        orderCreatedAtIstDisplay:
+          order.orderCreatedAtIstDisplay ?? current.orderCreatedAtIstDisplay,
       }));
 
       const checkout = new Razorpay({
@@ -1029,8 +1101,8 @@ export function AgentPurchaseForm({
         modal: {
           ondismiss: () => {
             if (!checkoutCompletedRef.current) {
-              setCheckoutBusy(false);
-              setStatus("Payment window closed before completion.");
+              setPaymentFlowState("cancelled");
+              setStatus("Payment was not completed. You can try again when ready.");
             }
           },
         },
@@ -1038,13 +1110,14 @@ export function AgentPurchaseForm({
 
       checkout.on("payment.failed", () => {
         checkoutCompletedRef.current = true;
-        setCheckoutBusy(false);
+        setPaymentFlowState("failed");
         setStatus("Razorpay reported that the payment failed.", "error");
       });
       checkout.open();
+      setPaymentFlowState("gateway-open");
       setStatus("Complete the payment in the Razorpay window.");
     } catch (error) {
-      setCheckoutBusy(false);
+      setPaymentFlowState("failed");
       setStatus(
         error instanceof Error
           ? error.message
@@ -1198,14 +1271,21 @@ export function AgentPurchaseForm({
               : "Loading"}
           </span>
         </div>
-        {state.paymentProvider === "razorpay" ? (
+        {state.paymentProvider === "razorpay" &&
+        (state.exchangeRateFetchedAtIstDisplay ||
+          formatIstDateTime(state.exchangeRateFetchedAtUtc)) ? (
           <div className="purchase-pricing-row">
-            <span className="body-compact">Conversion timestamp:</span>
+            <span className="body-compact">Exchange rate fetched:</span>
             <span className="body-compact">
-              {formatIstTimestamp(
-                state.usdToInrRateFetchedAt || state.usdToInrEffectiveDateIst,
-              )}
+              {state.exchangeRateFetchedAtIstDisplay ||
+                formatIstDateTime(state.exchangeRateFetchedAtUtc)}
             </span>
+          </div>
+        ) : null}
+        {state.exchangeRateIsFallback ? (
+          <div className="purchase-pricing-row">
+            <span className="body-compact">Rate mode:</span>
+            <span className="body-compact">Using fallback USD-INR rate</span>
           </div>
         ) : null}
         <div className="purchase-pricing-row purchase-pricing-row-total">
@@ -1325,6 +1405,26 @@ export function AgentPurchaseForm({
       <Button type="button" variant="primary" disabled={buyDisabled} onClick={buyNow}>
         {buyButtonLabel}
       </Button>
+      {paymentFlowState === "verifying-payment" ? (
+        <RazorpayVerificationOverlay />
+      ) : null}
+      {successDialog ? (
+        <PaymentResultDialog
+          dialog={successDialog}
+          titleId="product-payment-success-title"
+          messageId="product-payment-success-message"
+          onDone={closeSuccessDialog}
+        />
+      ) : null}
+      {failureDialog ? (
+        <PaymentResultDialog
+          dialog={failureDialog}
+          titleId="product-payment-failure-title"
+          messageId="product-payment-failure-message"
+          buttonLabel="Close"
+          onDone={closeFailureDialog}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1333,17 +1433,17 @@ export function useAgentPurchaseState(product: TradingAgentProduct) {
   return useState<PurchaseState>(() => createInitialState(product));
 }
 
-function AstroVynGoldSubscriptionCtaCard() {
+function AgentSubscriptionCtaCard({ product }: { product: TradingAgentProduct }) {
   return (
     <div className="purchase-stack astro-gold-cta-stack">
       <div className="purchase-panel-header">
-        <h2 className="card-title">Subscription access for Astro-Vyn Gold</h2>
+        <h2 className="card-title">Subscription access for {product.name}</h2>
         <p className="product-price">From $199</p>
       </div>
       <p className="body-compact">
         Choose a demo or live-evaluation subscription term before checkout.
       </p>
-      <Button href="/ai-trading-agents/astro-vyn-gold/plans" variant="primary">
+      <Button href={`/ai-trading-agents/${product.slug}/plans`} variant="primary">
         View Plans
       </Button>
     </div>
@@ -1361,10 +1461,10 @@ export default function AgentPurchaseCard({
 }) {
   const [state, setState] = useAgentPurchaseState(product);
 
-  if (product.slug === "astro-vyn-gold") {
+  if (isSubscriptionAgentSlug(product.slug)) {
     return (
       <aside id="purchase" className="purchase-card desktop-purchase-card">
-        <AstroVynGoldSubscriptionCtaCard />
+        <AgentSubscriptionCtaCard product={product} />
       </aside>
     );
   }
@@ -1391,7 +1491,7 @@ export function AgentCheckoutPaymentPanel({
   product: TradingAgentProduct;
   paymentsConfigured: boolean;
   cryptoPaymentConfig: CryptoPaymentConfig | null;
-  selectedPlan: AstroVynGoldPlan;
+  selectedPlan: AgentSubscriptionPlan;
 }) {
   const [state, setState] = useAgentPurchaseState(product);
 

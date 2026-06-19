@@ -2,47 +2,53 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
-import { astroVynGoldPlans } from "@/data/astro-vyn-gold-plans";
+import {
+  agentSubscriptionPlans,
+  isSubscriptionAgentSlug,
+} from "@/data/agent-subscription-plans";
+import { products } from "@/data/products";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const astroGoldPlanChips = [
-  "MT5",
-  "XAUUSD Gold",
-  "Subscription Access",
-  "Demo First",
-];
+const planChips = ["MT5", "XAUUSD Gold", "Subscription Access", "Demo First"];
 
 function formatUsd(value: number) {
   return `$${value}`;
 }
 
+function findProduct(slug: string) {
+  return products.find((product) => product.slug === slug && product.active);
+}
+
 export function generateStaticParams() {
-  return [{ slug: "astro-vyn-gold" }];
+  return products
+    .filter((product) => product.active && isSubscriptionAgentSlug(product.slug))
+    .map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const product = findProduct(slug);
 
-  if (slug !== "astro-vyn-gold") {
+  if (!product || !isSubscriptionAgentSlug(product.slug)) {
     return {
       title: "AI Trading Software Agent Plans | Vyntegra",
     };
   }
 
   return {
-    title: "Choose your Astro-Vyn Gold subscription | Vyntegra",
-    description:
-      "Select an Astro-Vyn Gold subscription access term for demo testing or live evaluation.",
+    title: `Choose your ${product.name} subscription | Vyntegra`,
+    description: `Select a ${product.name} subscription access term for demo testing or live evaluation.`,
   };
 }
 
-export default async function AstroVynGoldPlansPage({ params }: PageProps) {
+export default async function SubscriptionPlansPage({ params }: PageProps) {
   const { slug } = await params;
+  const product = findProduct(slug);
 
-  if (slug !== "astro-vyn-gold") {
+  if (!product || !isSubscriptionAgentSlug(product.slug)) {
     notFound();
   }
 
@@ -50,15 +56,15 @@ export default async function AstroVynGoldPlansPage({ params }: PageProps) {
     <main className="section-bg-primary astro-gold-plans-page">
       <div className="astro-gold-plans-shell">
         <header className="astro-gold-plans-hero">
-          <p className="eyebrow">Astro-Vyn Gold Plans</p>
-          <h1 className="page-title">Choose your Astro-Vyn Gold subscription</h1>
+          <p className="eyebrow">{product.name} Plans</p>
+          <h1 className="page-title">Choose your {product.name} subscription</h1>
           <p className="body-large">
             Select the access term that fits your testing or live-evaluation
             plan. Start on demo before using any trading software on a live
             account.
           </p>
           <div className="astro-gold-badge-row" aria-label="Plan attributes">
-            {astroGoldPlanChips.map((chip) => (
+            {planChips.map((chip) => (
               <span key={chip} className="astro-gold-badge">
                 {chip}
               </span>
@@ -66,9 +72,9 @@ export default async function AstroVynGoldPlansPage({ params }: PageProps) {
           </div>
         </header>
 
-        <section className="astro-gold-plans-grid" aria-label="Astro-Vyn Gold subscription plans">
-          {astroVynGoldPlans.map((plan) => {
-            const checkoutHref = `/ai-trading-agents/astro-vyn-gold/checkout?plan=${plan.id}`;
+        <section className="astro-gold-plans-grid" aria-label={`${product.name} subscription plans`}>
+          {agentSubscriptionPlans.map((plan) => {
+            const checkoutHref = `/ai-trading-agents/${product.slug}/checkout?plan=${plan.id}`;
 
             return (
               <article key={plan.id} className="astro-gold-pricing-card">
@@ -96,13 +102,13 @@ export default async function AstroVynGoldPlansPage({ params }: PageProps) {
           <p>
             Subscriptions provide access for the selected term. Trading involves
             risk. Past performance and backtest results do not guarantee future
-            results. Astro-Vyn Gold is trading software, not investment advice.
+            results. {product.name} is trading software, not investment advice.
             Users are responsible for their own trading decisions.
           </p>
         </section>
 
-        <Link className="astro-gold-back-link" href="/ai-trading-agents/astro-vyn-gold">
-          Back to Astro-Vyn Gold overview
+        <Link className="astro-gold-back-link" href={`/ai-trading-agents/${product.slug}`}>
+          Back to {product.name} overview
         </Link>
       </div>
     </main>
