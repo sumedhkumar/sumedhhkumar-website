@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  astroVynGoldPlans,
-  getAstroVynGoldPlan,
-} from "@/data/astro-vyn-gold-plans";
+  agentSubscriptionPlans,
+  getSubscriptionAgentPlan,
+} from "@/data/agent-subscription-plans";
 import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
 
@@ -26,14 +26,14 @@ export default function CheckoutPlanClient({
 }: CheckoutPlanClientProps) {
   const searchParams = useSearchParams();
   const selectedPlan =
-    getAstroVynGoldPlan(searchParams.get("plan") ?? "") ??
-    astroVynGoldPlans[0];
+    getSubscriptionAgentPlan(product.slug, searchParams.get("plan") ?? "") ??
+    agentSubscriptionPlans[0];
 
   const checkoutProduct = {
     ...product,
     priceUsd: selectedPlan.priceUsd,
     fullDescription:
-      "Astro-Vyn Gold subscription access. After payment verification, Vyntegra will send access/setup next steps by email.",
+      `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
   };
 
   return (
@@ -43,7 +43,7 @@ export default function CheckoutPlanClient({
         <dl className="astro-gold-selected-plan-details">
           <div>
             <dt>Product</dt>
-            <dd>Astro-Vyn Gold</dd>
+            <dd>{product.name}</dd>
           </div>
           <div>
             <dt>Plan</dt>
@@ -72,10 +72,10 @@ export default function CheckoutPlanClient({
         </dl>
         <p className="astro-gold-checkout-risk-copy">
           Trading involves risk. Past performance and backtest results do not
-          guarantee future results. Astro-Vyn Gold is software tooling, not
+          guarantee future results. {product.name} is software tooling, not
           investment advice.
         </p>
-        <Link className="astro-gold-back-link" href="/ai-trading-agents/astro-vyn-gold/plans">
+        <Link className="astro-gold-back-link" href={`/ai-trading-agents/${product.slug}/plans`}>
           Change selected plan
         </Link>
       </section>
