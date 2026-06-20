@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
@@ -9,15 +10,31 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { CalComSlot, Expert, ExpertSession } from "@/types";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  PaymentResultDialog,
+  RazorpayVerificationOverlay,
+  type PaymentDialogContent,
+} from "@/components/payments/RazorpayPaymentDialogs";
 import Button from "@/components/ui/Button";
 
-type CheckoutPhase = "idle" | "creating" | "verifying";
+type PaymentFlowState =
+  | "idle"
+  | "creating-order"
+  | "gateway-open"
+  | "verifying-payment"
+  | "success"
+  | "failed"
+  | "cancelled";
 
 type ExchangeRateResponse = {
   success?: boolean;
   rate?: number;
   source?: string;
   fetchedAt?: string;
+  exchangeRateFetchedAtUtc?: string;
+  exchangeRateFetchedAtIstDisplay?: string;
+  exchangeRateIsFallback?: boolean;
   effectiveDateIst?: string;
   message?: string;
 };
@@ -35,14 +52,20 @@ type CreateExpertOrderResponse = {
   usdToInrRateSource?: string;
   usdToInrRateFetchedAt?: string;
   usdToInrEffectiveDateIst?: string;
+  exchangeRateFetchedAtUtc?: string;
+  exchangeRateFetchedAtIstDisplay?: string;
+  exchangeRateIsFallback?: boolean;
+  orderCreatedAtUtc?: string;
+  orderCreatedAtIstDisplay?: string;
   appliedCoupon?: string;
   message?: string;
 };
 
 type VerifyExpertPaymentResponse = {
   success?: boolean;
+  orderId?: string;
+  paymentId?: string;
   bookingConfirmed?: boolean;
-  fallbackBookingLinkSent?: boolean;
   supportFollowupRequired?: boolean;
   message?: string;
 };
@@ -139,30 +162,6 @@ function formatInr(value: number, fractionDigits = 2) {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(value);
-}
-
-function formatIstTimestamp(value?: string) {
-  if (!value) {
-    return "Loading";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata",
-  })
-    .format(date)
-    .replace(",", "")
-    .replace(/\s/g, " ");
 }
 
 function isValidEmail(value: string) {
@@ -430,6 +429,7 @@ export default function ExpertCheckout({
   expert: Expert;
   paymentsConfigured: boolean;
 }) {
+  const router = useRouter();
   const sessions = expert.sessions.filter(
     (session) => session.active && session.durationMinutes === 30,
   );
@@ -446,10 +446,17 @@ export default function ExpertCheckout({
   const [discountAmountUsd, setDiscountAmountUsd] = useState(0);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [exchangeFetchedAt, setExchangeFetchedAt] = useState("");
+  const [exchangeFetchedAtDisplay, setExchangeFetchedAtDisplay] = useState("");
+  const [exchangeRateIsFallback, setExchangeRateIsFallback] = useState(false);
   const [exchangeEffectiveDateIst, setExchangeEffectiveDateIst] = useState("");
-  const [checkoutPhase, setCheckoutPhase] = useState<CheckoutPhase>("idle");
+  const [paymentFlowState, setPaymentFlowState] =
+    useState<PaymentFlowState>("idle");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusTone, setStatusTone] = useState<"info" | "success" | "error">("info");
+  const [successDialog, setSuccessDialog] =
+    useState<PaymentDialogContent | null>(null);
+  const [failureDialog, setFailureDialog] =
+    useState<PaymentDialogContent | null>(null);
   const checkoutCompletedRef = useRef(false);
 
   const today = useMemo(() => new Date(), []);
@@ -472,7 +479,10 @@ export default function ExpertCheckout({
       selectedSession &&
       selectedSlot &&
       customerDetailsReady &&
-      checkoutPhase === "idle",
+      paymentFlowState !== "creating-order" &&
+      paymentFlowState !== "gateway-open" &&
+      paymentFlowState !== "verifying-payment" &&
+      paymentFlowState !== "success",
   );
   const currentStep = !selectedSessionId ? 1 : !selectedDate ? 2 : !selectedSlot ? 3 : 4;
 
@@ -536,7 +546,11 @@ export default function ExpertCheckout({
 
         if (!cancelled && result.success && typeof result.rate === "number") {
           setExchangeRate(result.rate);
-          setExchangeFetchedAt(result.fetchedAt ?? "");
+          setExchangeFetchedAt(
+            result.exchangeRateFetchedAtUtc ?? result.fetchedAt ?? "",
+          );
+          setExchangeFetchedAtDisplay(result.exchangeRateFetchedAtIstDisplay ?? "");
+          setExchangeRateIsFallback(result.exchangeRateIsFallback ?? false);
           setExchangeEffectiveDateIst(result.effectiveDateIst ?? "");
         }
       } catch {
@@ -600,6 +614,16 @@ export default function ExpertCheckout({
     setStatusTone(tone);
   }
 
+  function closeSuccessDialog() {
+    setSuccessDialog(null);
+    router.refresh();
+  }
+
+  function closeFailureDialog() {
+    setFailureDialog(null);
+    setPaymentFlowState("idle");
+  }
+
   function handleSelectDate(date: Date) {
     setSelectedDate(date);
     setSelectedSlot(null);
@@ -638,8 +662,8 @@ export default function ExpertCheckout({
 
   async function verifyRazorpayPayment(response: RazorpayCheckoutResponse) {
     checkoutCompletedRef.current = true;
-    setCheckoutPhase("verifying");
-    setStatus("Verifying payment with Vyntegra backend...");
+    setPaymentFlowState("verifying-payment");
+    setStatus("");
 
     try {
       const verificationResponse = await fetch("/api/payments/razorpay/verify", {
@@ -654,33 +678,39 @@ export default function ExpertCheckout({
       const verificationResult =
         await readJsonResponse<VerifyExpertPaymentResponse>(verificationResponse);
 
-      if (!verificationResult.success) {
+      if (
+        !verificationResult.success ||
+        verificationResult.orderId !== response.razorpay_order_id ||
+        verificationResult.paymentId !== response.razorpay_payment_id
+      ) {
         throw new Error("Payment verification failed.");
       }
 
       if (verificationResult.bookingConfirmed) {
-        setStatus(
-          "Payment successful. Your expert session has been booked. Confirmation details have been sent by email.",
-          "success",
-        );
-      } else if (verificationResult.fallbackBookingLinkSent) {
-        setStatus(
-          "Payment successful. We could not auto-confirm the selected slot, so a private booking link has been emailed to you. You can also contact support@vyntegra.in.",
-          "success",
-        );
+        setPaymentFlowState("success");
+        setStatus("");
+        setSuccessDialog({
+          title: "Booking successful",
+          body: "Please check your email for meeting details.",
+        });
       } else {
-        setStatus(
-          "Payment successful. Vyntegra support will contact you to arrange the expert session or process a refund if needed.",
-          "success",
-        );
+        setPaymentFlowState("success");
+        setStatus("");
+        setSuccessDialog({
+          title: "Payment successful",
+          body:
+            "Vyntegra will confirm the consultation slot or share next steps by email.",
+        });
       }
-    } catch (error) {
-      setStatus(
-        error instanceof Error ? error.message : "Payment verification failed.",
-        "error",
-      );
-    } finally {
-      setCheckoutPhase("idle");
+    } catch {
+      setPaymentFlowState("failed");
+      setStatus("Payment verification failed.", "error");
+      setFailureDialog({
+        title: "Payment verification failed",
+        body:
+          "We could not verify the payment automatically. If money was deducted, please contact support@vyntegra.in with your payment details.",
+        supportLine: "",
+      });
     }
   }
 
@@ -698,7 +728,7 @@ export default function ExpertCheckout({
       return;
     }
 
-    setCheckoutPhase("creating");
+    setPaymentFlowState("creating-order");
     checkoutCompletedRef.current = false;
     setStatus("Loading Razorpay Checkout...");
 
@@ -750,7 +780,17 @@ export default function ExpertCheckout({
         setExchangeRate(order.usdToInrRate);
       }
 
-      setExchangeFetchedAt(order.usdToInrRateFetchedAt ?? exchangeFetchedAt);
+      setExchangeFetchedAt(
+        order.exchangeRateFetchedAtUtc ??
+          order.usdToInrRateFetchedAt ??
+          exchangeFetchedAt,
+      );
+      setExchangeFetchedAtDisplay(
+        order.exchangeRateFetchedAtIstDisplay ?? exchangeFetchedAtDisplay,
+      );
+      setExchangeRateIsFallback(
+        order.exchangeRateIsFallback ?? exchangeRateIsFallback,
+      );
       setExchangeEffectiveDateIst(
         order.usdToInrEffectiveDateIst ?? exchangeEffectiveDateIst,
       );
@@ -782,8 +822,8 @@ export default function ExpertCheckout({
         modal: {
           ondismiss: () => {
             if (!checkoutCompletedRef.current) {
-              setCheckoutPhase("idle");
-              setStatus("Payment window closed before completion.");
+              setPaymentFlowState("cancelled");
+              setStatus("Payment was not completed. You can try again when ready.");
             }
           },
         },
@@ -791,13 +831,14 @@ export default function ExpertCheckout({
 
       checkout.on("payment.failed", () => {
         checkoutCompletedRef.current = true;
-        setCheckoutPhase("idle");
+        setPaymentFlowState("failed");
         setStatus("Razorpay reported that the payment failed.", "error");
       });
       checkout.open();
+      setPaymentFlowState("gateway-open");
       setStatus("Complete the payment in the Razorpay window.");
     } catch (error) {
-      setCheckoutPhase("idle");
+      setPaymentFlowState("failed");
       setStatus(
         error instanceof Error
           ? error.message
@@ -988,10 +1029,18 @@ export default function ExpertCheckout({
             {exchangeRate !== null ? `${formatInr(exchangeRate, 4)} / USD` : "Loading"}
           </span>
         </div>
-        <div className="pricing-row">
-          <span>Conversion timestamp:</span>
-          <span>{formatIstTimestamp(exchangeFetchedAt || exchangeEffectiveDateIst)}</span>
-        </div>
+        {exchangeFetchedAtDisplay || formatIstDateTime(exchangeFetchedAt) ? (
+          <div className="pricing-row">
+            <span>Exchange rate fetched:</span>
+            <span>{exchangeFetchedAtDisplay || formatIstDateTime(exchangeFetchedAt)}</span>
+          </div>
+        ) : null}
+        {exchangeRateIsFallback ? (
+          <div className="pricing-row">
+            <span>Rate mode:</span>
+            <span>Using fallback USD-INR rate</span>
+          </div>
+        ) : null}
         <div className="pricing-row pricing-row-total">
           <span>Razorpay payable amount:</span>
           <span>{finalAmountInr !== null ? formatInr(finalAmountInr) : "Loading"}</span>
@@ -1083,12 +1132,34 @@ export default function ExpertCheckout({
         disabled={!paymentReady}
         onClick={startRazorpayCheckout}
       >
-        {checkoutPhase === "idle"
-          ? "Pay with Razorpay"
-          : checkoutPhase === "creating"
+        {paymentFlowState === "creating-order"
             ? "Creating order..."
-            : "Verifying payment..."}
+            : paymentFlowState === "gateway-open"
+              ? "Payment window open..."
+              : paymentFlowState === "verifying-payment"
+                ? "Verifying payment..."
+                : "Pay with Razorpay"}
       </Button>
+      {paymentFlowState === "verifying-payment" ? (
+        <RazorpayVerificationOverlay />
+      ) : null}
+      {successDialog ? (
+        <PaymentResultDialog
+          dialog={successDialog}
+          titleId="expert-payment-success-title"
+          messageId="expert-payment-success-message"
+          onDone={closeSuccessDialog}
+        />
+      ) : null}
+      {failureDialog ? (
+        <PaymentResultDialog
+          dialog={failureDialog}
+          titleId="expert-payment-failure-title"
+          messageId="expert-payment-failure-message"
+          buttonLabel="Close"
+          onDone={closeFailureDialog}
+        />
+      ) : null}
     </div>
   );
 }

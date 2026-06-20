@@ -8,10 +8,6 @@ export const CAL_COM_TIME_ZONE =
 
 const SLOTS_API_VERSION =
   process.env.CAL_COM_SLOTS_API_VERSION || "2024-09-04";
-const RESERVATIONS_API_VERSION =
-  process.env.CAL_COM_RESERVATIONS_API_VERSION || "2024-09-04";
-const PRIVATE_LINKS_API_VERSION =
-  process.env.CAL_COM_PRIVATE_LINKS_API_VERSION || "2024-09-04";
 const BOOKINGS_API_VERSION =
   process.env.CAL_COM_BOOKINGS_API_VERSION || "2026-02-25";
 const SESSION_DURATION_MINUTES = 30;
@@ -257,53 +253,6 @@ export async function getAvailableSlotsForExpert({
   return collectSlots(payload);
 }
 
-export async function reserveExpertSlot({
-  expertId,
-  slotStartUtc,
-}: {
-  expertId: string;
-  slotStartUtc: string;
-}) {
-  const { eventTypeId } = assertCalComConfigured(expertId);
-  const reservationDuration = Number(
-    process.env.CAL_COM_RESERVATION_DURATION_MINUTES || 10,
-  );
-  const payload = await calComFetch("/slots/reservations", {
-    method: "POST",
-    apiVersion: RESERVATIONS_API_VERSION,
-    body: JSON.stringify({
-      eventTypeId,
-      slotStart: slotStartUtc,
-      reservationDuration,
-    }),
-  });
-  const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
-  const reservationUid =
-    isRecord(data) && typeof data.reservationUid === "string"
-      ? data.reservationUid
-      : "";
-
-  if (!reservationUid) {
-    throw new CalComAppError(
-      "This slot is no longer available. Please select another slot.",
-      409,
-      "calcom_reservation_failed",
-    );
-  }
-
-  return reservationUid;
-}
-
-function shouldRetryWithoutReservation(error: unknown) {
-  if (!(error instanceof CalComAppError)) {
-    return false;
-  }
-
-  const message = error.message.toLowerCase();
-  return message.includes("reservedslotuid") &&
-    (message.includes("unknown") || message.includes("unrecognized"));
-}
-
 function normalizeBooking(payload: unknown): CalComBookingResult {
   const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
 
@@ -331,7 +280,6 @@ function normalizeBooking(payload: unknown): CalComBookingResult {
 export async function createExpertBooking({
   expertId,
   slotStartUtc,
-  calReservationUid,
   customerName,
   customerEmail,
   customerPhone,
@@ -341,7 +289,6 @@ export async function createExpertBooking({
 }: {
   expertId: string;
   slotStartUtc: string;
-  calReservationUid?: string;
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
@@ -366,63 +313,12 @@ export async function createExpertBooking({
       source: "vyntegra-talk-to-expert",
       purchaseName,
     },
-    ...(calReservationUid ? { reservedSlotUid: calReservationUid } : {}),
   };
 
-  try {
-    const payload = await calComFetch("/bookings", {
-      method: "POST",
-      apiVersion: BOOKINGS_API_VERSION,
-      body: JSON.stringify(body),
-    });
-    return normalizeBooking(payload);
-  } catch (error) {
-    if (calReservationUid && shouldRetryWithoutReservation(error)) {
-      const payload = await calComFetch("/bookings", {
-        method: "POST",
-        apiVersion: BOOKINGS_API_VERSION,
-        body: JSON.stringify({ ...body, reservedSlotUid: undefined }),
-      });
-      return normalizeBooking(payload);
-    }
-
-    throw error;
-  }
-}
-
-export async function createPrivateFallbackLink({
-  expertId,
-}: {
-  expertId: string;
-}) {
-  const { eventTypeId } = assertCalComConfigured(expertId);
-  const expiryDays = Number(process.env.CAL_COM_PRIVATE_LINK_EXPIRY_DAYS || 7);
-  const expiresAt = new Date(
-    Date.now() + expiryDays * 24 * 60 * 60 * 1000,
-  ).toISOString();
-  const payload = await calComFetch(
-    `/event-types/${eventTypeId}/private-links`,
-    {
-      method: "POST",
-      apiVersion: PRIVATE_LINKS_API_VERSION,
-      body: JSON.stringify({
-        maxUsageCount: 1,
-        expiresAt,
-      }),
-    },
-  );
-  const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
-
-  if (isRecord(data)) {
-    const link = data.link || data.url || data.privateLinkUrl;
-    if (typeof link === "string") {
-      return link;
-    }
-  }
-
-  throw new CalComAppError(
-    "Unable to create private booking link.",
-    502,
-    "calcom_private_link_failed",
-  );
+  const payload = await calComFetch("/bookings", {
+    method: "POST",
+    apiVersion: BOOKINGS_API_VERSION,
+    body: JSON.stringify(body),
+  });
+  return normalizeBooking(payload);
 }

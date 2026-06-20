@@ -1,22 +1,49 @@
-// src/lib/exchange-rate.ts
+import { formatIstDateTime } from "@/lib/time";
+
 export type ExchangeRateMetadata = {
   rate: number;
   source: "live" | "cache" | "env-fallback" | "hardcoded-fallback";
-  fetchedAt: string;
+  fetchedAtUtc: string;
+  fetchedAtIstDisplay: string;
+  isFallback: boolean;
   effectiveDateIst: string;
+  fetchedAt: string;
 };
 
 type CachedRate = {
   rate: number;
-  fetchedAt: Date;
+  fetchedAtUtc: string;
   effectiveDateIst: string;
 };
 
 const DEFAULT_FALLBACK_RATE = 85;
 const PRIMARY_API_URL = "https://open.er-api.com/v6/latest/USD";
+const fallbackSnapshotEstablishedAtUtc = new Date().toISOString();
 
 // In-memory cache
 let cachedRate: CachedRate | null = null;
+
+function buildSnapshot({
+  rate,
+  source,
+  fetchedAtUtc,
+  effectiveDateIst,
+}: {
+  rate: number;
+  source: ExchangeRateMetadata["source"];
+  fetchedAtUtc: string;
+  effectiveDateIst: string;
+}): ExchangeRateMetadata {
+  return {
+    rate,
+    source,
+    fetchedAtUtc,
+    fetchedAtIstDisplay: formatIstDateTime(fetchedAtUtc) ?? "",
+    isFallback: source === "env-fallback" || source === "hardcoded-fallback",
+    effectiveDateIst,
+    fetchedAt: fetchedAtUtc,
+  };
+}
 
 /**
  * Returns the current date in IST formatted as YYYY-MM-DD.
@@ -88,51 +115,51 @@ export async function forceRefreshUsdToInrRate(): Promise<ExchangeRateMetadata> 
     }
 
     const rate = Number(data.rates.INR.toFixed(4));
-    const fetchedAt = new Date();
+    const fetchedAtUtc = new Date().toISOString();
 
     cachedRate = {
       rate,
-      fetchedAt,
+      fetchedAtUtc,
       effectiveDateIst,
     };
 
-    return {
+    return buildSnapshot({
       rate,
       source: "live",
-      fetchedAt: fetchedAt.toISOString(),
+      fetchedAtUtc,
       effectiveDateIst,
-    };
+    });
   } catch (error) {
     console.error("Failed to fetch live USD-INR rate:", error);
     
     // Fallback to cache
     if (cachedRate) {
-      return {
+      return buildSnapshot({
         rate: cachedRate.rate,
         source: "cache",
-        fetchedAt: cachedRate.fetchedAt.toISOString(),
+        fetchedAtUtc: cachedRate.fetchedAtUtc,
         effectiveDateIst: cachedRate.effectiveDateIst,
-      };
+      });
     }
 
     // Fallback to Env
     const envRate = getEnvFallbackRate();
     if (envRate !== null) {
-      return {
+      return buildSnapshot({
         rate: envRate,
         source: "env-fallback",
-        fetchedAt: new Date().toISOString(),
+        fetchedAtUtc: fallbackSnapshotEstablishedAtUtc,
         effectiveDateIst,
-      };
+      });
     }
 
     // Hardcoded fallback
-    return {
+    return buildSnapshot({
       rate: DEFAULT_FALLBACK_RATE,
       source: "hardcoded-fallback",
-      fetchedAt: new Date().toISOString(),
+      fetchedAtUtc: fallbackSnapshotEstablishedAtUtc,
       effectiveDateIst,
-    };
+    });
   }
 }
 
@@ -145,12 +172,12 @@ export async function getUsdToInrRate(): Promise<ExchangeRateMetadata> {
   const effectiveDateIst = getEffectiveDateIst();
 
   if (cachedRate && cachedRate.effectiveDateIst === effectiveDateIst) {
-    return {
+    return buildSnapshot({
       rate: cachedRate.rate,
       source: "cache",
-      fetchedAt: cachedRate.fetchedAt.toISOString(),
+      fetchedAtUtc: cachedRate.fetchedAtUtc,
       effectiveDateIst: cachedRate.effectiveDateIst,
-    };
+    });
   }
 
   return forceRefreshUsdToInrRate();

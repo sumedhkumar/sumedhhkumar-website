@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import {
   appConfig,
+  hasCryptoProofSmtpConfiguration,
   getSmtpConfigurationErrorMessage,
   hasSmtpConfiguration,
 } from "@/lib/config";
@@ -78,7 +79,16 @@ export type RazorpayPaymentSuccessEmailInput = {
   finalPriceUsd: string;
   usdToInrRate: string;
   usdToInrRateSource?: string;
-  usdToInrRateFetchedAt: string;
+  usdToInrRateFetchedAt?: string;
+  exchangeRateFetchedAtUtc?: string;
+  exchangeRateFetchedAtIstDisplay?: string;
+  exchangeRateIsFallback?: boolean;
+  orderCreatedAtUtc?: string;
+  orderCreatedAtIstDisplay?: string;
+  paymentVerifiedAtUtc?: string;
+  paymentVerifiedAtIstDisplay?: string;
+  razorpayCapturedAtUtc?: string;
+  razorpayCapturedAtIstDisplay?: string;
   usdToInrEffectiveDateIst?: string;
   finalPriceInr: string;
   razorpayOrderId: string;
@@ -94,7 +104,6 @@ export type RazorpayPaymentSuccessEmailInput = {
   calBookingUid?: string;
   calBookingStatus?: string;
   calMeetingUrl?: string;
-  fallbackBookingUrl?: string;
   supportFollowupRequired?: boolean;
   bookingErrorSummary?: string;
 };
@@ -365,7 +374,10 @@ function buildCustomSolutionsCustomerHtml(input: CustomSolutionsEmailInput) {
   });
 }
 
-function buildCryptoPaymentProofBody(input: CryptoPaymentProofEmailInput) {
+function buildCryptoPaymentProofBody(
+  input: CryptoPaymentProofEmailInput,
+  hasScreenshotAttachment: boolean,
+) {
   const lines = [
     "A new crypto payment proof has been submitted.",
     `Full Name: ${input.fullName}`,
@@ -386,14 +398,19 @@ function buildCryptoPaymentProofBody(input: CryptoPaymentProofEmailInput) {
     `Network: ${input.network}`,
     `Wallet Address Shown: ${input.walletAddress}`,
     `Submitted At: ${input.timestamp}`,
-    "Payment screenshot is attached.",
+    hasScreenshotAttachment
+      ? "Payment screenshot is attached."
+      : "The payment screenshot is retained in the Vyntegra AI mailbox.",
     "Please verify the payment manually before providing access details or confirming the booking."
   );
 
   return lines.join("\n\n");
 }
 
-function buildCryptoPaymentProofHtml(input: CryptoPaymentProofEmailInput) {
+function buildCryptoPaymentProofHtml(
+  input: CryptoPaymentProofEmailInput,
+  hasScreenshotAttachment: boolean,
+) {
   const details = [
     { label: "Full Name", value: input.fullName },
     { label: "Customer Email", value: input.emailAddress },
@@ -419,8 +436,9 @@ function buildCryptoPaymentProofHtml(input: CryptoPaymentProofEmailInput) {
     title: `New crypto payment proof submitted - ${input.productName}`,
     intro: "A new crypto payment proof has been submitted.",
     details,
-    note:
-      "Payment screenshot is attached. Please verify the payment manually before providing access details or confirming the booking.",
+    note: hasScreenshotAttachment
+      ? "Payment screenshot is attached. Please verify the payment manually before providing access details or confirming the booking."
+      : "The payment screenshot is retained in the Vyntegra AI mailbox. Please verify the payment manually before providing access details or confirming the booking.",
   });
 }
 
@@ -466,7 +484,7 @@ function buildCryptoPaymentCustomerHtml(input: CryptoPaymentProofEmailInput) {
       },
     ],
     note:
-      "The payment screenshot is attached for your reference. Uploading a screenshot does not automatically confirm payment.",
+      "Uploading a screenshot does not automatically confirm payment. Vyntegra will email you after manual verification.",
   });
 }
 
@@ -548,8 +566,8 @@ function buildRazorpayCustomerSubject(input: RazorpayPaymentSuccessEmailInput) {
   }
 
   return input.calBookingUid
-    ? "Vyntegra payment successful - Expert session booked"
-    : "Vyntegra payment successful - Booking action required";
+    ? "Talk to Expert booking confirmed"
+    : "Talk to Expert payment confirmed - booking follow-up required";
 }
 
 function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
@@ -571,7 +589,24 @@ function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
   details.push({ label: "Discounted USD Payable Amount", value: input.finalPriceUsd });
   details.push({ label: "USD to INR Rate Used", value: `${input.usdToInrRate} / USD` });
   if (input.usdToInrRateSource) details.push({ label: "Rate Source", value: input.usdToInrRateSource });
-  details.push({ label: "Conversion Timestamp", value: input.usdToInrRateFetchedAt });
+  if (input.exchangeRateIsFallback) {
+    details.push({ label: "Rate Mode", value: "Using fallback USD-INR rate" });
+  }
+  if (input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt) {
+    details.push({
+      label: "Exchange rate fetched",
+      value: input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt || "",
+    });
+  }
+  if (input.orderCreatedAtIstDisplay) {
+    details.push({ label: "Order created", value: input.orderCreatedAtIstDisplay });
+  }
+  if (input.paymentVerifiedAtIstDisplay) {
+    details.push({ label: "Payment verified", value: input.paymentVerifiedAtIstDisplay });
+  }
+  if (input.razorpayCapturedAtIstDisplay) {
+    details.push({ label: "Razorpay captured", value: input.razorpayCapturedAtIstDisplay });
+  }
   if (input.usdToInrEffectiveDateIst) details.push({ label: "Effective Date IST", value: input.usdToInrEffectiveDateIst });
   details.push(
     { label: "Razorpay Payable Amount", value: input.finalPriceInr },
@@ -590,7 +625,6 @@ function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
     if (input.calBookingUid) details.push({ label: "Cal.com Booking UID", value: input.calBookingUid });
     if (input.calBookingStatus) details.push({ label: "Cal.com Booking Status", value: input.calBookingStatus });
     if (input.calMeetingUrl) details.push({ label: "Meeting URL", value: input.calMeetingUrl });
-    if (input.fallbackBookingUrl) details.push({ label: "Private Booking Link", value: input.fallbackBookingUrl });
   }
 
   return details;
@@ -617,10 +651,34 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
   lines.push(
     `Discounted USD Payable Amount: ${input.finalPriceUsd}`,
     `USD to INR Rate Used: ${input.usdToInrRate} / USD`,
-    `Conversion Timestamp: ${input.usdToInrRateFetchedAt}`,
+  );
+
+  if (input.exchangeRateIsFallback) {
+    lines.push("Rate Mode: Using fallback USD-INR rate");
+  }
+
+  if (input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt) {
+    lines.push(
+      `Exchange rate fetched: ${input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt}`,
+    );
+  }
+
+  if (input.orderCreatedAtIstDisplay) {
+    lines.push(`Order created: ${input.orderCreatedAtIstDisplay}`);
+  }
+
+  if (input.paymentVerifiedAtIstDisplay) {
+    lines.push(`Payment verified: ${input.paymentVerifiedAtIstDisplay}`);
+  }
+
+  if (input.razorpayCapturedAtIstDisplay) {
+    lines.push(`Razorpay captured: ${input.razorpayCapturedAtIstDisplay}`);
+  }
+
+  lines.push(
     `Razorpay Payable Amount: ${input.finalPriceInr}`,
     `Razorpay Order ID: ${input.razorpayOrderId}`,
-    `Razorpay Payment ID: ${input.razorpayPaymentId}`
+    `Razorpay Payment ID: ${input.razorpayPaymentId}`,
   );
 
   if (input.purchaseType === "expert") {
@@ -631,15 +689,9 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
         input.slotDisplayIst ? `Selected Slot: ${input.slotDisplayIst}` : "",
         input.calMeetingUrl ? `Meeting URL: ${input.calMeetingUrl}` : "",
       );
-    } else if (input.fallbackBookingUrl) {
-      lines.push(
-        "Booking Status: Payment successful; selected slot could not be auto-confirmed.",
-        `Private Booking Link: ${input.fallbackBookingUrl}`,
-        "Use the private link or contact support@vyntegra.in for a custom slot or refund.",
-      );
     } else {
       lines.push(
-        "Booking Status: Payment successful; Vyntegra support will contact you to arrange the expert session or process a 100% refund if needed.",
+        "Booking Status: Payment confirmed. Vyntegra will confirm the consultation slot or share next steps by email.",
       );
     }
   } else {
@@ -662,9 +714,7 @@ function buildRazorpayCustomerHtml(input: RazorpayPaymentSuccessEmailInput) {
         : "Vyntegra will send product access or next steps by email."
       : input.calBookingUid
         ? "Your expert session has been booked in Cal.com. Cal.com may also send its own booking confirmation."
-        : input.fallbackBookingUrl
-          ? `Payment is successful. The selected slot could not be auto-confirmed, so use this private Cal.com booking link or contact support@vyntegra.in: ${input.fallbackBookingUrl}`
-          : "Payment is successful. Vyntegra support will contact you to arrange the expert session or process a 100% refund if needed.";
+        : "Payment confirmed. Vyntegra will confirm the consultation slot or share next steps by email.";
 
   return buildEmailHtml({
     title: buildRazorpayCustomerSubject(input),
@@ -727,12 +777,30 @@ function createEmailTransporter() {
   });
 }
 
+function createCryptoProofEmailTransporter() {
+  return nodemailer.createTransport({
+    host: appConfig.cryptoProofSmtpHost,
+    port: Number(appConfig.cryptoProofSmtpPort),
+    secure: appConfig.cryptoProofSmtpSecure,
+    auth: {
+      user: appConfig.cryptoProofSmtpUser,
+      pass: appConfig.cryptoProofSmtpPass,
+    },
+  });
+}
+
 function assertSmtpConfiguration() {
   if (!hasSmtpConfiguration()) {
     throw new Error(
       getSmtpConfigurationErrorMessage() ||
         "Email service is not configured.",
     );
+  }
+}
+
+function assertCryptoProofSmtpConfiguration() {
+  if (!hasCryptoProofSmtpConfiguration()) {
+    throw new Error("Crypto proof email service is not configured.");
   }
 }
 
@@ -801,40 +869,44 @@ export async function sendCryptoPaymentProofEmails(
   input: CryptoPaymentProofEmailInput,
 ) {
   assertSmtpConfiguration();
+  assertCryptoProofSmtpConfiguration();
 
-  const transporter = createEmailTransporter();
+  const salesTransporter = createEmailTransporter();
+  const aiTransporter = createCryptoProofEmailTransporter();
 
-  await transporter.sendMail({
-    from: appConfig.smtpFromEmail,
-    to: appConfig.cryptoPaymentProofEmail,
-    replyTo: appConfig.supportEmail,
-    subject: `New crypto payment proof submitted - ${input.productName}`,
-    text: buildCryptoPaymentProofBody(input),
-    html: buildCryptoPaymentProofHtml(input),
-    attachments: [
-      {
-        filename: input.attachment.filename,
-        content: input.attachment.content,
-        contentType: input.attachment.contentType,
-      },
-    ],
-  });
-
-  await transporter.sendMail({
-    from: appConfig.smtpFromEmail,
-    to: input.emailAddress,
-    replyTo: appConfig.supportEmail,
-    subject: `Vyntegra payment proof received - ${input.productName}`,
-    text: buildCryptoPaymentCustomerBody(input),
-    html: buildCryptoPaymentCustomerHtml(input),
-    attachments: [
-      {
-        filename: input.attachment.filename,
-        content: input.attachment.content,
-        contentType: input.attachment.contentType,
-      },
-    ],
-  });
+  await Promise.all([
+    salesTransporter.sendMail({
+      from: appConfig.paymentMailFromEmail,
+      to: input.emailAddress,
+      replyTo: appConfig.paymentMailReplyTo,
+      subject: `Vyntegra payment proof received - ${input.productName}`,
+      text: buildCryptoPaymentCustomerBody(input),
+      html: buildCryptoPaymentCustomerHtml(input),
+    }),
+    salesTransporter.sendMail({
+      from: appConfig.paymentMailFromEmail,
+      to: appConfig.paymentMailFrom,
+      replyTo: appConfig.paymentMailReplyTo,
+      subject: `New crypto payment proof submitted - ${input.productName}`,
+      text: buildCryptoPaymentProofBody(input, false),
+      html: buildCryptoPaymentProofHtml(input, false),
+    }),
+    aiTransporter.sendMail({
+      from: appConfig.cryptoProofMailFromEmail,
+      to: appConfig.cryptoProofMailbox,
+      replyTo: appConfig.cryptoProofMailbox,
+      subject: `Crypto payment proof attachment - ${input.productName}`,
+      text: buildCryptoPaymentProofBody(input, true),
+      html: buildCryptoPaymentProofHtml(input, true),
+      attachments: [
+        {
+          filename: input.attachment.filename,
+          content: input.attachment.content,
+          contentType: input.attachment.contentType,
+        },
+      ],
+    }),
+  ]);
 }
 
 export async function sendPaymentQueryEmail(input: PaymentQueryEmailInput) {

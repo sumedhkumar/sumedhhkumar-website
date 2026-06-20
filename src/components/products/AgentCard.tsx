@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import type { TradingAgentProduct } from "@/types";
+import { isSubscriptionAgentSlug } from "@/data/agent-subscription-plans";
 import Button from "@/components/ui/Button";
 
 function formatUsd(value: number) {
@@ -16,6 +17,7 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
   const platformOrMarket = [product.platform, product.market]
     .filter(Boolean)
     .join(" - ");
+  const isSubscriptionProduct = isSubscriptionAgentSlug(product.slug);
 
   return (
     <article
@@ -93,7 +95,7 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
         </ul>
 
         <p className="product-price" style={{ marginTop: 20 }}>
-          {formatUsd(product.priceUsd)}
+          {isSubscriptionProduct ? "From $199" : formatUsd(product.priceUsd)}
         </p>
 
         <div
@@ -108,10 +110,14 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
             View Details
           </Button>
           <Button
-            href={`/ai-trading-agents/${product.slug}#purchase`}
+            href={
+              isSubscriptionProduct
+                ? `/ai-trading-agents/${product.slug}/plans`
+                : `/ai-trading-agents/${product.slug}#purchase`
+            }
             variant="primary"
           >
-            Buy Agent <ArrowRight size={16} strokeWidth={1.75} />
+            {isSubscriptionProduct ? "View Plans" : "Buy Agent"} <ArrowRight size={16} strokeWidth={1.75} />
           </Button>
         </div>
         <div style={{ marginTop: 12, display: "grid" }}>

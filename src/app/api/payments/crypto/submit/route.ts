@@ -1,12 +1,37 @@
-import { hasCryptoConfiguration, hasSmtpConfiguration, serviceUnavailableResponse } from "@/lib/config";
+import { after } from "next/server";
+import {
+  hasCryptoConfiguration,
+  hasCryptoProofSmtpConfiguration,
+  hasSmtpConfiguration,
+  isProductionPersistenceConfigured,
+  serviceUnavailableResponse,
+} from "@/lib/config";
 import {
   sendCryptoPaymentProofEmails,
   sendPaymentQueryEmail,
 } from "@/lib/email";
-import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
+import { getSubscriptionAgentPlan } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  hashClientIp,
+  saveCryptoPaymentProofSubmission,
+  saveCryptoPaymentQuerySubmission,
+  summarizePersistenceError,
+  updateSubmissionEmailStatus,
+} from "@/lib/server/persistence";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  buildSubmissionAttachmentPath,
+  deletePrivateSubmissionAttachment,
+  isAttachmentStorageConfigured,
+  sanitizeStorageFilename,
+  uploadPrivateSubmissionAttachment,
+} from "@/lib/server/supabase-storage";
+
+export const runtime = "nodejs";
 
 const allowedProofTypes = new Set([
   "image/jpeg",
@@ -88,8 +113,8 @@ function buildProductPaymentSummary(
   selectedPlanId: string,
 ) {
   const selectedPlan =
-    product.slug === "astro-vyn-gold" && selectedPlanId
-      ? getAstroVynGoldPlan(selectedPlanId)
+    selectedPlanId
+      ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
       : null;
   const originalPriceUsd = selectedPlan
     ? selectedPlan.originalPriceUsd
@@ -149,9 +174,13 @@ function buildPaymentSummaryFromForm(formData: FormData) {
   }
 
   const productId = sanitizeText(formData.get("productId"));
-  const product = products.find((item) => item.id === productId);
+  const product = products.find((item) => item.id === productId && item.active);
 
   if (!product) {
+    return null;
+  }
+
+  if (selectedPlanId && !getSubscriptionAgentPlan(product.slug, selectedPlanId)) {
     return null;
   }
 
@@ -305,13 +334,52 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!hasSmtpConfiguration()) {
+    if (!isProductionPersistenceConfigured() || !hasSmtpConfiguration()) {
       return serviceUnavailableResponse();
     }
 
+    const timestamp = new Date().toISOString();
+    const productId = sanitizeText(formData.get("productId"));
+    const selectedPlanId = sanitizeText(formData.get("selectedPlanId"));
+    const product = products.find((item) => item.id === productId);
+    const selectedPlan = product
+      ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
+      : null;
+    let submissionId = "";
+
     try {
+      const submission = await saveCryptoPaymentQuerySubmission({
+        timestamp,
+        submittedAtIstDisplay: formatIstDateTime(timestamp) ?? "",
+        fullName,
+        emailAddress,
+        message,
+        purchaseType: "product",
+        productId: product?.id ?? "",
+        productSlug: product?.slug ?? "",
+        productName: paymentSummary?.purchaseName ?? "",
+        selectedPlanId,
+        selectedPlanName: selectedPlan?.name ?? "",
+        subscriptionDuration: selectedPlan?.durationLabel ?? "",
+        originalProductPrice: paymentSummary?.originalProductPrice ?? "",
+        couponCode: paymentSummary?.couponCode ?? "",
+        discountAmount: paymentSummary?.discountAmount ?? "",
+        finalPayablePrice: paymentSummary?.finalPayablePrice ?? "",
+        clientIpHash: hashClientIp(ip),
+        userAgent: request.headers.get("user-agent") ?? "",
+        rawPayload: {
+          fullName,
+          emailAddress,
+          message,
+          productId,
+          selectedPlanId,
+          paymentSummary,
+        },
+      });
+      submissionId = submission.id;
+
       await sendPaymentQueryEmail({
-        timestamp: new Date().toISOString(),
+        timestamp,
         fullName,
         emailAddress,
         message,
@@ -319,13 +387,26 @@ export async function POST(request: Request) {
         productPrice: paymentSummary?.finalPayablePrice ?? "",
         bookingDetails: paymentSummary?.bookingDetails ?? "",
       });
+      await updateSubmissionEmailStatus(submissionId, "sent");
 
       return Response.json({
         ok: true,
         message:
           "Your query has been submitted. Vyntegra will respond within 24 hours.",
       });
-    } catch {
+    } catch (error) {
+      if (submissionId) {
+        try {
+          await updateSubmissionEmailStatus(
+            submissionId,
+            "failed",
+            summarizePersistenceError(error),
+          );
+        } catch {
+          // Return the existing safe failure response if the status write fails.
+        }
+      }
+
       return Response.json(
         {
           ok: false,
@@ -376,7 +457,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!hasSmtpConfiguration()) {
+  if (
+    !isProductionPersistenceConfigured() ||
+    !hasSmtpConfiguration() ||
+    !hasCryptoProofSmtpConfiguration() ||
+    !isAttachmentStorageConfigured()
+  ) {
     return serviceUnavailableResponse();
   }
 
@@ -386,33 +472,36 @@ export async function POST(request: Request) {
     return serviceUnavailableResponse();
   }
 
-  try {
-    await sendCryptoPaymentProofEmails({
-      timestamp: new Date().toISOString(),
-      fullName,
-      emailAddress,
-      productName: paymentSummary.purchaseName,
-      originalProductPrice: paymentSummary.originalProductPrice,
-      couponCode: paymentSummary.couponCode,
-      discountAmount: paymentSummary.discountAmount,
-      finalPayablePrice: paymentSummary.finalPayablePrice,
-      amountPaid: paymentSummary.finalPayablePrice,
-      bookingDetails: paymentSummary.bookingDetails,
-      token: cryptoConfig.token,
-      network: cryptoConfig.network,
-      walletAddress: cryptoConfig.walletAddress,
-      transactionHash,
-      attachment: {
-        filename: paymentScreenshot.name,
-        content: Buffer.from(await paymentScreenshot.arrayBuffer()),
-        contentType: paymentScreenshot.type || "application/octet-stream",
-      },
-    });
+  const timestamp = new Date().toISOString();
+  const productId = sanitizeText(formData.get("productId"));
+  const selectedPlanId = sanitizeText(formData.get("selectedPlanId"));
+  const product = products.find((item) => item.id === productId);
+  const selectedPlan = product
+    ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
+    : null;
+  const screenshotContent = Buffer.from(await paymentScreenshot.arrayBuffer());
+  const submissionId = randomUUID();
+  const attachmentId = randomUUID();
+  const attachmentContentType =
+    paymentScreenshot.type || "application/octet-stream";
+  const safeFilename = sanitizeStorageFilename(
+    paymentScreenshot.name,
+    attachmentContentType,
+  );
+  const storagePath = buildSubmissionAttachmentPath({
+    submissionType: "crypto_payment_proof",
+    timestamp,
+    submissionId,
+    attachmentId,
+    safeFilename,
+  });
+  let uploadedStorage: { bucket: string; path: string } | null = null;
 
-    return Response.json({
-      ok: true,
-      message:
-        "Your payment proof has been submitted successfully. Our team will verify the payment and get back to you by email.",
+  try {
+    uploadedStorage = await uploadPrivateSubmissionAttachment({
+      path: storagePath,
+      content: screenshotContent,
+      contentType: attachmentContentType,
     });
   } catch {
     return Response.json(
@@ -424,4 +513,122 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  const paymentProofEmailInput = {
+    timestamp,
+    fullName,
+    emailAddress,
+    productName: paymentSummary.purchaseName,
+    originalProductPrice: paymentSummary.originalProductPrice,
+    couponCode: paymentSummary.couponCode,
+    discountAmount: paymentSummary.discountAmount,
+    finalPayablePrice: paymentSummary.finalPayablePrice,
+    amountPaid: paymentSummary.finalPayablePrice,
+    bookingDetails: paymentSummary.bookingDetails,
+    token: cryptoConfig.token,
+    network: cryptoConfig.network,
+    walletAddress: cryptoConfig.walletAddress,
+    transactionHash,
+    attachment: {
+      filename: paymentScreenshot.name,
+      content: screenshotContent,
+      contentType: attachmentContentType,
+    },
+  };
+
+  try {
+    await saveCryptoPaymentProofSubmission({
+      submissionId,
+      timestamp,
+      submittedAtIstDisplay: formatIstDateTime(timestamp) ?? "",
+      fullName,
+      emailAddress,
+      purchaseType: "product",
+      productId: product?.id ?? "",
+      productSlug: product?.slug ?? "",
+      productName: paymentSummary.purchaseName,
+      selectedPlanId,
+      selectedPlanName: selectedPlan?.name ?? "",
+      subscriptionDuration: selectedPlan?.durationLabel ?? "",
+      originalProductPrice: paymentSummary.originalProductPrice,
+      couponCode: paymentSummary.couponCode,
+      discountAmount: paymentSummary.discountAmount,
+      finalPayablePrice: paymentSummary.finalPayablePrice,
+      amountPaid: paymentSummary.finalPayablePrice,
+      cryptoToken: cryptoConfig.token,
+      cryptoNetwork: cryptoConfig.network,
+      cryptoWalletAddress: cryptoConfig.walletAddress,
+      transactionHash,
+      clientIpHash: hashClientIp(ip),
+      userAgent: request.headers.get("user-agent") ?? "",
+      rawPayload: {
+        fullName,
+        emailAddress,
+        productId,
+        selectedPlanId,
+        paymentSummary,
+        transactionHash,
+        cryptoToken: cryptoConfig.token,
+        cryptoNetwork: cryptoConfig.network,
+        cryptoWalletAddress: cryptoConfig.walletAddress,
+        paymentScreenshot: {
+          filename: paymentScreenshot.name,
+          contentType: paymentScreenshot.type,
+          sizeBytes: paymentScreenshot.size,
+        },
+      },
+      attachment: {
+        id: attachmentId,
+        kind: "crypto_payment_screenshot",
+        filename: paymentScreenshot.name,
+        safeFilename,
+        contentType: attachmentContentType,
+        sizeBytes: screenshotContent.byteLength,
+        sha256Hash: createHash("sha256").update(screenshotContent).digest("hex"),
+        storageBucket: uploadedStorage.bucket,
+        storagePath: uploadedStorage.path,
+      },
+    });
+  } catch {
+    try {
+      await deletePrivateSubmissionAttachment(
+        uploadedStorage.bucket,
+        uploadedStorage.path,
+      );
+    } catch {
+      // The database failure remains the primary response.
+    }
+
+    return Response.json(
+      {
+        ok: false,
+        message:
+          "Payment proof could not be submitted. Please check the required fields and try again.",
+      },
+      { status: 500 },
+    );
+  }
+
+  after(async () => {
+    try {
+      await sendCryptoPaymentProofEmails(paymentProofEmailInput);
+      await updateSubmissionEmailStatus(submissionId, "sent");
+    } catch (error) {
+      try {
+        await updateSubmissionEmailStatus(
+          submissionId,
+          "failed",
+          summarizePersistenceError(error),
+        );
+      } catch {
+        console.error("Failed to update crypto payment proof email status.");
+      }
+    }
+  });
+
+  return Response.json({
+    ok: true,
+    message:
+      "Your payment proof has been submitted successfully. Our team will verify the payment and get back to you by email.",
+  });
 }

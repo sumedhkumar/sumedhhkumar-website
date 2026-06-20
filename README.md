@@ -9,6 +9,24 @@ Run `npm install`, then `npm run dev` for local development. Use `npm run lint`,
 ## Environment Variables
 Copy `.env.example` to a real local environment file and fill only genuine values. Do not commit real secret values.
 
+## Supabase Postgres + Private Storage Setup
+Create a Supabase project. Set the following values manually in `.env.local` for local development and in the Vercel project environment for deployment; do not commit real values. In **Project Settings > Database**, copy the pooled or transaction-pooler connection string into `DATABASE_URL`, set `PERSISTENCE_PROVIDER=postgres` and `DATABASE_SSL=true`, and configure `ADMIN_EXPORT_TOKEN` plus a private `IP_HASH_SALT`. Production form submissions and payment records are rejected unless both `PERSISTENCE_PROVIDER=postgres` and `DATABASE_URL` are configured.
+
+Create the schema using one of these approaches:
+
+- Option A: run [`db/schema.sql`](db/schema.sql) in the provider's database console.
+- Option B: set `AUTO_MIGRATE_DB=true` for one deployment or run, verify the tables exist, then set it back to `false`.
+
+In **Storage**, create the private bucket named `vyntegra-submission-attachments`. Set `SUPABASE_STORAGE_BUCKET=vyntegra-submission-attachments`, copy the project URL to `SUPABASE_URL`, and place the service role key in `SUPABASE_SERVICE_ROLE_KEY`. Never expose this key in client code, never prefix it with `NEXT_PUBLIC_`, and do not use an anon key for private attachment writes or downloads.
+
+The read-only exports require `Authorization: Bearer <ADMIN_EXPORT_TOKEN>` (or `x-admin-token`). For example:
+
+```bash
+curl -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" "https://your-domain.example/api/admin/submissions?limit=50"
+curl -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" "https://your-domain.example/api/admin/razorpay-payments?purchaseType=product"
+curl -L -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" "https://your-domain.example/api/admin/submissions/<submissionId>/attachments/<attachmentId>" -o proof-file
+```
+
 ## Real Data Insertion
 The default public state intentionally contains empty products, experts, coupons, testimonials, contact details, wallet values, and protected access mappings.
 
@@ -44,6 +62,11 @@ Set `CRYPTO_WALLET_ADDRESS` and `CRYPTO_WALLET_NETWORK` only with genuine produc
 
 ## SMTP
 The Custom Solutions form can operate when `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, and `CUSTOM_SOLUTIONS_RECIPIENT_EMAIL` are configured and tested.
+
+## Crypto Proof Email Delivery
+Keep `SMTP_*` authenticated as `support@vyntegra.in`; it remains responsible for support mail and must be permitted to send as the `sales@vyntegra.in` alias. Crypto proof delivery also requires the separate `CRYPTO_PROOF_SMTP_HOST`, `CRYPTO_PROOF_SMTP_PORT`, `CRYPTO_PROOF_SMTP_SECURE`, `CRYPTO_PROOF_SMTP_USER`, and `CRYPTO_PROOF_SMTP_PASS` settings for `ai.vyntegra@gmail.com`.
+
+Each persisted crypto proof sends three messages: a Sales confirmation to the customer without an attachment, an attachment-free Sales notification to `sales@vyntegra.in`, and an AI self-copy with the uploaded proof attached.
 
 ## Launch-Blocking Checklist
 - final legal review

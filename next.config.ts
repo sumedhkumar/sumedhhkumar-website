@@ -34,16 +34,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: "/ai-trading-agents/vyntegra-pulse/:path*",
-        destination: "/ai-trading-agents/astro-vyn-gold/:path*",
-        permanent: true,
-      },
-      {
-        source: "/ai-trading-agents/vyntegra-pulse",
-        destination: "/ai-trading-agents/astro-vyn-gold",
-        permanent: true,
-      },
-      {
         source: "/ai-trading-agents/:slug/purchase",
         destination: "/ai-trading-agents/:slug#purchase",
         permanent: false,

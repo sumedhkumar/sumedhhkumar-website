@@ -38,7 +38,7 @@ export const coupons: Coupon[] = [
     expiresAt: "",
     totalUsageLimit: null,
     perCustomerUsageLimit: null,
-    applicableProductIds: ["agent-pulse", "agent-sentinel", "agent-drift"],
+    applicableProductIds: ["agent-pulse", "agent-sentinel"],
     applicableExpertIds: ["products-only"],
     applicableSessionIds: [],
     usageCount: 0,

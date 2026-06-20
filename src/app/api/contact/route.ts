@@ -1,5 +1,18 @@
-import { hasSmtpConfiguration, serviceUnavailableResponse } from "@/lib/config";
+import {
+  hasSmtpConfiguration,
+  isProductionPersistenceConfigured,
+  serviceUnavailableResponse,
+} from "@/lib/config";
 import { sendContactEmails } from "@/lib/email";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  hashClientIp,
+  saveContactSubmission,
+  summarizePersistenceError,
+  updateSubmissionEmailStatus,
+} from "@/lib/server/persistence";
+
+export const runtime = "nodejs";
 
 const requestWindowMs = 15 * 60 * 1000;
 const maxRequestsPerWindow = 5;
@@ -131,26 +144,70 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!hasSmtpConfiguration()) {
+  if (!isProductionPersistenceConfigured() || !hasSmtpConfiguration()) {
     return serviceUnavailableResponse();
+  }
+
+  const timestamp = new Date().toISOString();
+  let submissionId = "";
+
+  try {
+    const submission = await saveContactSubmission({
+      timestamp,
+      submittedAtIstDisplay: formatIstDateTime(timestamp) ?? "",
+      fullName,
+      emailAddress,
+      phoneOrWhatsapp,
+      subject,
+      message,
+      clientIpHash: hashClientIp(ip),
+      userAgent: request.headers.get("user-agent") ?? "",
+      rawPayload: {
+        fullName,
+        emailAddress,
+        phoneOrWhatsapp,
+        subject,
+        message,
+      },
+    });
+    submissionId = submission.id;
+  } catch {
+    return Response.json(
+      {
+        ok: false,
+        message: "Something went wrong. Please try again.",
+      },
+      { status: 500 },
+    );
   }
 
   try {
     await sendContactEmails({
-      timestamp: new Date().toISOString(),
+      timestamp,
       fullName,
       emailAddress,
       phoneOrWhatsapp,
       subject,
       message,
     });
+    await updateSubmissionEmailStatus(submissionId, "sent");
 
     return Response.json({
       ok: true,
       message:
         "Your enquiry has been submitted. Vyntegra will get back to you soon.",
     });
-  } catch {
+  } catch (error) {
+    try {
+      await updateSubmissionEmailStatus(
+        submissionId,
+        "failed",
+        summarizePersistenceError(error),
+      );
+    } catch {
+      // Preserve the existing safe error response if the status write also fails.
+    }
+
     return Response.json(
       {
         ok: false,

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAstroVynGoldPlan } from "@/data/astro-vyn-gold-plans";
+import { getSubscriptionAgentPlan } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -13,7 +13,7 @@ type PageProps = {
 };
 
 function findProduct(slug: string) {
-  return products.find((product) => product.slug === slug);
+  return products.find((product) => product.slug === slug && product.active);
 }
 
 export const metadata: Metadata = {
@@ -42,9 +42,14 @@ export default async function CryptoPaymentPage({
   const selectedPlanId =
     typeof query.plan === "string" ? query.plan.trim() : "";
   const selectedPlan =
-    product.slug === "astro-vyn-gold" && selectedPlanId
-      ? getAstroVynGoldPlan(selectedPlanId)
+    selectedPlanId
+      ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
       : null;
+
+  if (selectedPlanId && !selectedPlan) {
+    notFound();
+  }
+
   const productPriceUsd = selectedPlan ? selectedPlan.priceUsd : product.priceUsd;
   const couponResult = couponCode && !selectedPlan
     ? validateCoupon({

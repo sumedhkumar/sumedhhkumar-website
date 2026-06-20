@@ -1,5 +1,26 @@
-import { hasSmtpConfiguration, serviceUnavailableResponse } from "@/lib/config";
+import {
+  hasSmtpConfiguration,
+  isProductionPersistenceConfigured,
+  serviceUnavailableResponse,
+} from "@/lib/config";
 import { sendCustomSolutionsEmails } from "@/lib/email";
+import { formatIstDateTime } from "@/lib/time";
+import {
+  hashClientIp,
+  saveCustomSolutionSubmission,
+  summarizePersistenceError,
+  updateSubmissionEmailStatus,
+} from "@/lib/server/persistence";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  buildSubmissionAttachmentPath,
+  deletePrivateSubmissionAttachment,
+  isAttachmentStorageConfigured,
+  sanitizeStorageFilename,
+  uploadPrivateSubmissionAttachment,
+} from "@/lib/server/supabase-storage";
+
+export const runtime = "nodejs";
 
 const allowedExtensions = [
   ".pdf",
@@ -186,21 +207,138 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!hasSmtpConfiguration()) {
+  if (
+    !isProductionPersistenceConfigured() ||
+    !hasSmtpConfiguration() ||
+    (supportingFile && !isAttachmentStorageConfigured())
+  ) {
     return serviceUnavailableResponse();
   }
 
-  try {
-    const attachment = supportingFile
-      ? {
-          filename: supportingFile.name,
-          content: Buffer.from(await supportingFile.arrayBuffer()),
-          contentType: supportingFile.type || "application/octet-stream",
-        }
-      : undefined;
+  const timestamp = new Date().toISOString();
+  const attachmentSubmissionId = supportingFile ? randomUUID() : "";
+  let attachment:
+    | {
+        id: string;
+        kind: "custom_solution_supporting_file";
+        filename: string;
+        safeFilename: string;
+        contentType: string;
+        sizeBytes: number;
+        sha256Hash: string;
+        storageBucket: string;
+        storagePath: string;
+      }
+    | undefined;
+  let emailAttachment:
+    | { filename: string; content: Buffer; contentType: string }
+    | undefined;
 
+  if (supportingFile) {
+    try {
+      const content = Buffer.from(await supportingFile.arrayBuffer());
+      const attachmentId = randomUUID();
+      const contentType = supportingFile.type || "application/octet-stream";
+      const safeFilename = sanitizeStorageFilename(supportingFile.name, contentType);
+      const storagePath = buildSubmissionAttachmentPath({
+        submissionType: "custom_solution",
+        timestamp,
+        submissionId: attachmentSubmissionId,
+        attachmentId,
+        safeFilename,
+      });
+      const uploaded = await uploadPrivateSubmissionAttachment({
+        path: storagePath,
+        content,
+        contentType,
+      });
+      attachment = {
+        id: attachmentId,
+        kind: "custom_solution_supporting_file",
+        filename: supportingFile.name,
+        safeFilename,
+        contentType,
+        sizeBytes: content.byteLength,
+        sha256Hash: createHash("sha256").update(content).digest("hex"),
+        storageBucket: uploaded.bucket,
+        storagePath: uploaded.path,
+      };
+      emailAttachment = {
+        filename: supportingFile.name,
+        content,
+        contentType,
+      };
+    } catch {
+      return Response.json(
+        {
+          ok: false,
+          message: "Your requirements could not be submitted. Please try again.",
+        },
+        { status: 500 },
+      );
+    }
+  }
+  let submissionId = "";
+
+  try {
+    const submission = await saveCustomSolutionSubmission({
+      submissionId: attachmentSubmissionId || undefined,
+      timestamp,
+      submittedAtIstDisplay: formatIstDateTime(timestamp) ?? "",
+      fullName,
+      emailAddress,
+      phoneOrWhatsapp,
+      companyOrOrganization,
+      solutionType,
+      requirementsDescription,
+      preferredTimeline,
+      sourcePage: sourcePage || "Homepage Custom Solutions Section",
+      clientIpHash: hashClientIp(ip),
+      userAgent: request.headers.get("user-agent") ?? "",
+      rawPayload: {
+        fullName,
+        emailAddress,
+        phoneOrWhatsapp,
+        companyOrOrganization,
+        solutionType,
+        requirementsDescription,
+        preferredTimeline,
+        sourcePage: sourcePage || "Homepage Custom Solutions Section",
+        supportingFile: supportingFile
+          ? {
+              filename: supportingFile.name,
+              contentType: supportingFile.type,
+              sizeBytes: supportingFile.size,
+            }
+          : null,
+      },
+      attachment,
+    });
+    submissionId = submission.id;
+  } catch {
+    if (attachment) {
+      try {
+        await deletePrivateSubmissionAttachment(
+          attachment.storageBucket,
+          attachment.storagePath,
+        );
+      } catch {
+        // The failed database write remains the primary failure response.
+      }
+    }
+
+    return Response.json(
+      {
+        ok: false,
+        message: "Your requirements could not be submitted. Please try again.",
+      },
+      { status: 500 },
+    );
+  }
+
+  try {
     await sendCustomSolutionsEmails({
-      timestamp: new Date().toISOString(),
+      timestamp,
       fullName,
       emailAddress,
       phoneOrWhatsapp,
@@ -212,15 +350,26 @@ export async function POST(request: Request) {
         ? `${supportingFile.name} (${supportingFile.size} bytes)`
         : "No supporting file uploaded",
       sourcePage: sourcePage || "Homepage Custom Solutions Section",
-      attachment,
+      attachment: emailAttachment,
     });
+    await updateSubmissionEmailStatus(submissionId, "sent");
 
     return Response.json({
       ok: true,
       message:
         "Your requirement has been submitted. Vyntegra will review it and respond within 24 hours.",
     });
-  } catch {
+  } catch (error) {
+    try {
+      await updateSubmissionEmailStatus(
+        submissionId,
+        "failed",
+        summarizePersistenceError(error),
+      );
+    } catch {
+      // Keep the client-facing response stable when the status update fails.
+    }
+
     return Response.json(
       {
         ok: false,
