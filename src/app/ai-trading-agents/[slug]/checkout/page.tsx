@@ -8,11 +8,10 @@ import {
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
-import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
+import CheckoutPlanClient from "./CheckoutPlanClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ plan?: string | string[] }>;
 };
 
 function formatUsd(value: number) {
@@ -55,7 +54,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SubscriptionCheckoutPage({
   params,
-  searchParams,
 }: PageProps) {
   const { slug } = await params;
   const product = findProduct(slug);
@@ -160,9 +158,8 @@ export default async function SubscriptionCheckoutPage({
             product={checkoutProduct}
             paymentsConfigured={paymentsConfigured}
             cryptoPaymentConfig={cryptoPaymentConfig}
-            selectedPlan={selectedPlan}
           />
-        </div>
+        </Suspense>
       </div>
     </main>
   );

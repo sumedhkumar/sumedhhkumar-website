@@ -1,0 +1,76 @@
+name: Build Hostinger static output
+
+on:
+  push:
+    branches:
+      - vyntegra-v2
+
+permissions:
+  contents: write
+
+jobs:
+  build-static:
+    if: ${{ !contains(github.event.head_commit.message, '[hostinger-static]') }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: node scripts/build-hostinger-static.mjs
+
+      - name: Sync static output to repository root
+        shell: pwsh
+        run: |
+          $items = @(
+            ".htaccess",
+            "404.html",
+            "__next.__PAGE__.txt",
+            "__next._full.txt",
+            "__next._head.txt",
+            "__next._index.txt",
+            "__next._tree.txt",
+            "_next",
+            "_not-found",
+            "404",
+            "ai-trading-agents",
+            "contact",
+            "custom-solutions",
+            "experts",
+            "icon.svg",
+            "images",
+            "index.html",
+            "index.txt",
+            "payments",
+            "privacy",
+            "refund-policy",
+            "shipping-delivery",
+            "terms"
+          )
+          foreach ($item in $items) {
+            if (Test-Path -LiteralPath $item) {
+              Remove-Item -LiteralPath $item -Recurse -Force
+            }
+          }
+          Copy-Item -Path "out\*" -Destination "." -Recurse -Force
+          Copy-Item -LiteralPath "out\.htaccess" -Destination ".htaccess" -Force
+
+      - name: Commit static output
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .htaccess 404.html __next.*.txt _next _not-found 404 ai-trading-agents contact custom-solutions experts icon.svg images index.html index.txt payments privacy refund-policy shipping-delivery terms
+          if (-not (git diff --cached --quiet)) {
+            git commit -m "Build Hostinger static output [hostinger-static]"
+            git push
+          } else {
+            Write-Host "Static output is already up to date."
+          }
