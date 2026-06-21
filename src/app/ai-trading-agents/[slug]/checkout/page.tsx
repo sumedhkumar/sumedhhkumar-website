@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import {
-  getSubscriptionAgentPlan,
-  isSubscriptionAgentSlug,
-} from "@/data/agent-subscription-plans";
+import { isSubscriptionAgentSlug } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -13,7 +10,6 @@ import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCa
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ plan?: string | string[] }>;
 };
 
 function formatUsd(value: number) {
@@ -59,10 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function SubscriptionCheckoutPage({
-  params,
-  searchParams,
-}: PageProps) {
+export default async function SubscriptionCheckoutPage({ params }: PageProps) {
   const { slug } = await params;
   const product = findProduct(slug);
 
@@ -74,37 +67,6 @@ export default async function SubscriptionCheckoutPage({
     redirect(`/ai-trading-agents/${product.slug}#purchase`);
   }
 
-  const query = await searchParams;
-  const selectedPlan = getSubscriptionAgentPlan(
-    product.slug,
-    readPlanParam(query.plan),
-  );
-
-  if (!selectedPlan) {
-    return (
-      <main className="section-bg-primary astro-gold-checkout-page">
-        <div className="astro-gold-checkout-shell">
-          <section className="astro-gold-invalid-plan-card">
-            <p className="eyebrow">{product.name} Checkout</p>
-            <h1 className="subsection-title">Invalid subscription plan selected.</h1>
-            <p className="body-standard">
-              Please choose a valid {product.name} subscription plan.
-            </p>
-            <Link className="btn btn-primary" href={`/ai-trading-agents/${product.slug}/plans`}>
-              Back to plans
-            </Link>
-          </section>
-        </div>
-      </main>
-    );
-  }
-
-  const checkoutProduct = {
-    ...product,
-    priceUsd: selectedPlan.priceUsd,
-    fullDescription:
-      `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
-  };
   const paymentsConfigured = hasProductRazorpayCheckoutConfiguration();
   const cryptoPaymentConfig = getCryptoPaymentConfig();
 
@@ -166,9 +128,8 @@ export default async function SubscriptionCheckoutPage({
             product={checkoutProduct}
             paymentsConfigured={paymentsConfigured}
             cryptoPaymentConfig={cryptoPaymentConfig}
-            selectedPlan={selectedPlan}
           />
-        </div>
+        </Suspense>
       </div>
     </main>
   );

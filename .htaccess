@@ -1,0 +1,22 @@
+Options -Indexes
+DirectoryIndex index.html
+
+RewriteEngine On
+
+RewriteRule ^experts/sumedhhkumar/?$ /experts/sumedh-kumar/ [R=301,L]
+RewriteRule ^experts/sumedh/?$ /experts/sumedh-kumar/ [R=301,L]
+RewriteRule ^experts/sumedhhkumar-bhalerao/?$ /experts/sumedh-kumar/ [R=301,L]
+RewriteRule ^experts/sumedhkumar-bhalerao/?$ /experts/sumedh-kumar/ [R=301,L]
+
+RewriteRule ^ai-trading-agents/agent-pulse/?$ /ai-trading-agents/astro-vyn-gold/ [R=301,L]
+RewriteRule ^ai-trading-agents/pulse/?$ /ai-trading-agents/astro-vyn-gold/ [R=301,L]
+RewriteRule ^ai-trading-agents/vyntegra-pulse/?$ /ai-trading-agents/astro-vyn-gold/ [R=301,L]
+RewriteRule ^ai-trading-agents/vyntegra-pulse/(.*)$ /ai-trading-agents/astro-vyn-gold/$1 [R=301,L]
+RewriteRule ^ai-trading-agents/([^/]+)/purchase/?$ /ai-trading-agents/$1/#purchase [R=302,L]
+RewriteRule ^razorpay-test/?$ / [R=302,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+[^/])$ /$1/ [R=301,L]
+
+ErrorDocument 404 /404.html
