@@ -1,11 +1,4 @@
-import {
-  ArrowRight,
-  CalendarCheck,
-  Code2,
-  Search,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Code2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import HeroCanvas from "@/components/home/HeroCanvas";
 
@@ -42,106 +35,6 @@ export default function Hero() {
           <p className="hero-risk-note">
             Trading involves risk. Software can support execution, but it cannot guarantee results.
           </p>
-        </div>
-
-        <div className="hero-visual" aria-hidden="true">
-          <div className="hero-floating-note hero-floating-note-left">
-            <Sparkles size={15} strokeWidth={1.75} />
-            Product scope ready
-          </div>
-          <div className="hero-floating-note hero-floating-note-right">
-            <ShieldCheck size={15} strokeWidth={1.75} />
-            Secure checkout
-          </div>
-
-          <div className="hero-console-tabs">
-            <span className="hero-console-tab hero-console-tab-active">
-              <Sparkles size={14} strokeWidth={1.75} />
-              Strategy
-            </span>
-            <span className="hero-console-tab">
-              <Code2 size={14} strokeWidth={1.75} />
-              Systems
-            </span>
-            <span className="hero-console-tab">
-              <ShieldCheck size={14} strokeWidth={1.75} />
-              Delivery
-            </span>
-          </div>
-
-          <div className="hero-command-bar">
-            <div className="hero-command-field">
-              <span>Focus</span>
-              <strong>Practical systems</strong>
-            </div>
-            <div className="hero-command-field">
-              <span>Standard</span>
-              <strong>Clear scope</strong>
-            </div>
-            <div className="hero-command-field">
-              <span>Outcome</span>
-              <strong>Production ready</strong>
-            </div>
-            <div className="hero-search-button">
-              <Search size={18} strokeWidth={1.9} />
-            </div>
-          </div>
-
-          <div className="hero-panel hero-panel-middle">
-            <div className="hero-chart-header">
-              <span>Vyntegra operating layer</span>
-              <strong>Live</strong>
-            </div>
-            <svg
-              className="hero-chart"
-              viewBox="0 0 420 150"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="hero-chart-line" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0%" stopColor="#5C482B" />
-                  <stop offset="48%" stopColor="#B8914A" />
-                  <stop offset="100%" stopColor="#D8CBA6" />
-                </linearGradient>
-                <linearGradient id="hero-chart-fill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#B8914A" stopOpacity="0.24" />
-                  <stop offset="100%" stopColor="#B8914A" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M8 126 L 412 126 M8 88 L 412 88 M8 50 L 412 50"
-                stroke="rgba(255, 255, 255, 0.08)"
-                strokeWidth="1"
-              />
-              <path
-                d="M8 116 C 44 80, 72 96, 104 70 S 170 48, 210 74 S 282 112, 326 56 S 380 34, 412 44 L 412 150 L 8 150 Z"
-                fill="url(#hero-chart-fill)"
-              />
-              <path
-                d="M8 116 C 44 80, 72 96, 104 70 S 170 48, 210 74 S 282 112, 326 56 S 380 34, 412 44"
-                stroke="url(#hero-chart-line)"
-                strokeWidth="3"
-                fill="none"
-              />
-            </svg>
-          </div>
-
-          <div className="hero-panel-bottom">
-            <div className="hero-mini-panel">
-              <CalendarCheck size={17} strokeWidth={1.75} />
-              <div>
-                <span className="hero-mini-label">Discovery</span>
-                <strong>Requirements mapped</strong>
-              </div>
-            </div>
-            <div className="hero-mini-panel">
-              <Code2 size={17} strokeWidth={1.75} />
-              <div>
-                <span className="hero-mini-label">Execution</span>
-                <strong>Scoped delivery</strong>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

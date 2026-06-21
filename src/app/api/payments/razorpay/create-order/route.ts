@@ -2,6 +2,7 @@ import Razorpay from "razorpay";
 import { experts } from "@/data/experts";
 import { products } from "@/data/products";
 import { getSubscriptionAgentPlan } from "@/data/agent-subscription-plans";
+import { calculateFinalPrice } from "@/lib/pricing";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getUsdToInrRate } from "@/lib/exchange-rate";
 import { formatIstDateTime } from "@/lib/time";
@@ -114,20 +115,9 @@ export async function POST(request: Request) {
       : null;
 
   if (selectedPlanId) {
-    if (
-      targetType !== "product" ||
-      !product ||
-      !selectedPlan
-    ) {
+    if (targetType !== "product" || !product || !selectedPlan) {
       return Response.json(
         { message: "Invalid subscription plan selected." },
-        { status: 400 },
-      );
-    }
-
-    if (couponCode) {
-      return Response.json(
-        { message: "Coupons are not available for this subscription checkout." },
         { status: 400 },
       );
     }
@@ -162,10 +152,10 @@ export async function POST(request: Request) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   const orderCreatedAtUtc = new Date().toISOString();
   const orderCreatedAtIstDisplay = formatIstDateTime(orderCreatedAtUtc) ?? "";
-  const usdToInrRateMetadata = await getUsdToInrRate();
-  const usdToInrRate = usdToInrRateMetadata.rate;
+  const usdToInrRateMetadata = targetType === "expert" ? await getUsdToInrRate() : null;
+  const usdToInrRate = usdToInrRateMetadata?.rate;
 
-  if (!keyId || !keySecret || !usdToInrRate) {
+  if (!keyId || !keySecret || (targetType === "expert" && !usdToInrRate)) {
     return Response.json(
       { message: "Unable to create payment order." },
       { status: 500 },
@@ -182,34 +172,30 @@ export async function POST(request: Request) {
   const originalPriceUsd =
     targetType === "expert"
       ? session?.feeUsd ?? 0
-      : selectedPlan
-        ? selectedPlan.originalPriceUsd
-        : product?.priceUsd ?? 0;
-  let discountUsd =
-    selectedPlan && targetType === "product"
-      ? selectedPlan.originalPriceUsd - selectedPlan.priceUsd
-      : 0;
-  let finalPriceUsd =
-    selectedPlan && targetType === "product"
-      ? selectedPlan.priceUsd
-      : originalPriceUsd;
+      : product?.priceUsd ?? 0;
+  let discountUsd = 0;
+  let finalPriceUsd = originalPriceUsd;
   let appliedCoupon = "";
+  let finalOriginalPriceUsd = originalPriceUsd;
 
-  if (couponCode && !selectedPlan) {
+  if (targetType === "product" && selectedPlan && product) {
+    const pricing = calculateFinalPrice(product.slug, selectedPlan.id, couponCode || "");
+    if (!pricing.ok) {
+      return Response.json({ message: pricing.message }, { status: 400 });
+    }
+    finalOriginalPriceUsd = pricing.originalPriceUsd;
+    discountUsd = pricing.discountUsd;
+    finalPriceUsd = pricing.finalPriceUsd;
+    appliedCoupon = pricing.appliedCoupon;
+  } else if (couponCode && targetType === "expert") {
     const couponResult = validateCoupon({
       code: couponCode,
       amountUsd: originalPriceUsd,
-      target:
-        targetType === "expert"
-          ? {
-              type: "expert",
-              expertId: expert?.id ?? "",
-              sessionId: session?.id ?? "",
-            }
-          : {
-              type: "product",
-              productId: product?.id ?? "",
-            },
+      target: {
+        type: "expert",
+        expertId: expert?.id ?? "",
+        sessionId: session?.id ?? "",
+      },
     });
 
     if (!couponResult.ok) {
@@ -224,8 +210,11 @@ export async function POST(request: Request) {
     appliedCoupon = couponCode.toUpperCase();
   }
 
-  const finalPriceInr = Number((finalPriceUsd * usdToInrRate).toFixed(2));
-  const amountPaise = Math.round(finalPriceInr * 100);
+  const finalPriceInr = targetType === "expert" && usdToInrRate ? Number((finalPriceUsd * usdToInrRate).toFixed(2)) : 0;
+  
+  // Send USD for products, INR for experts
+  const orderCurrency = targetType === "expert" ? "INR" : "USD";
+  const amountPaise = targetType === "expert" ? Math.round(finalPriceInr * 100) : Math.round(finalPriceUsd * 100);
 
   if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
     return Response.json(
@@ -268,36 +257,40 @@ export async function POST(request: Request) {
                   planId: selectedPlan.id,
                   planName: selectedPlan.name,
                   subscriptionDuration: selectedPlan.durationLabel,
-                  originalPriceUsd: selectedPlan.originalPriceUsd.toFixed(2),
-                  payablePriceUsd: selectedPlan.priceUsd.toFixed(2),
+                  originalPriceUsd: finalOriginalPriceUsd.toFixed(2),
+                  payablePriceUsd: finalPriceUsd.toFixed(2),
                 }
               : {}),
           }),
       purchaseName,
       customerName,
       customerEmail,
-      originalPriceUsd: originalPriceUsd.toFixed(2),
+      originalPriceUsd: finalOriginalPriceUsd.toFixed(2),
       discountUsd: discountUsd.toFixed(2),
       finalPriceUsd: finalPriceUsd.toFixed(2),
-      usdToInrRate: usdToInrRate.toString(),
-      usdToInrRateSource: usdToInrRateMetadata.source,
-      usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAtUtc,
-      usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
-      usdAmount: finalPriceUsd.toFixed(2),
-      inrAmountPaise: amountPaise.toString(),
-      usdInrRate: usdToInrRate.toString(),
-      exchangeRateSource: usdToInrRateMetadata.source,
-      exchangeRateFetchedAtUtc: usdToInrRateMetadata.fetchedAtUtc,
-      exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata.fetchedAtIstDisplay,
-      exchangeRateIsFallback: usdToInrRateMetadata.isFallback.toString(),
+      ...(targetType === "expert" ? {
+        usdToInrRate: usdToInrRate!.toString(),
+        usdToInrRateSource: usdToInrRateMetadata!.source,
+        usdToInrRateFetchedAt: usdToInrRateMetadata!.fetchedAtUtc,
+        usdToInrEffectiveDateIst: usdToInrRateMetadata!.effectiveDateIst,
+        usdAmount: finalPriceUsd.toFixed(2),
+        inrAmountPaise: amountPaise.toString(),
+        usdInrRate: usdToInrRate!.toString(),
+        exchangeRateSource: usdToInrRateMetadata!.source,
+        exchangeRateFetchedAtUtc: usdToInrRateMetadata!.fetchedAtUtc,
+        exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata!.fetchedAtIstDisplay,
+        exchangeRateIsFallback: usdToInrRateMetadata!.isFallback.toString(),
+        finalPriceInr: finalPriceInr.toFixed(2),
+      } : {
+        usdAmount: finalPriceUsd.toFixed(2)
+      }),
       orderCreatedAtUtc,
       orderCreatedAtIstDisplay,
-      finalPriceInr: finalPriceInr.toFixed(2),
       ...(appliedCoupon ? { couponCode: appliedCoupon } : {}),
     };
     const order = await razorpay.orders.create({
       amount: amountPaise,
-      currency: "INR",
+      currency: orderCurrency,
       receipt: buildReceipt(purchaseId),
       notes: orderNotes,
     });
@@ -324,19 +317,21 @@ export async function POST(request: Request) {
       selectedPlanId: selectedPlan?.id,
       selectedPlanName: selectedPlan?.name,
       subscriptionDuration: selectedPlan?.durationLabel,
-      originalPriceUsd,
+      originalPriceUsd: finalOriginalPriceUsd,
       discountUsd,
       finalPriceUsd,
       couponCode: appliedCoupon,
-      usdToInrRate,
-      usdToInrRateSource: usdToInrRateMetadata.source,
-      exchangeRateFetchedAtUtc: usdToInrRateMetadata.fetchedAtUtc,
-      exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata.fetchedAtIstDisplay,
-      exchangeRateIsFallback: usdToInrRateMetadata.isFallback,
-      usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
-      finalPriceInr,
+      ...(targetType === "expert" ? {
+        usdToInrRate: usdToInrRate!,
+        usdToInrRateSource: usdToInrRateMetadata!.source,
+        exchangeRateFetchedAtUtc: usdToInrRateMetadata!.fetchedAtUtc,
+        exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata!.fetchedAtIstDisplay,
+        exchangeRateIsFallback: usdToInrRateMetadata!.isFallback,
+        usdToInrEffectiveDateIst: usdToInrRateMetadata!.effectiveDateIst,
+        finalPriceInr,
+      } : {}),
       amountPaise,
-      currency: "INR",
+      currency: orderCurrency,
       clientIpHash: hashClientIp(getClientIp(request)),
       userAgent: request.headers.get("user-agent") ?? "",
       rawNotes: orderNotes,
@@ -350,30 +345,31 @@ export async function POST(request: Request) {
       currency: order.currency,
       productName: purchaseName,
       purchaseName,
-      originalPriceUsd,
+      originalPriceUsd: finalOriginalPriceUsd,
       discountUsd,
       finalPriceUsd,
-      finalPriceInr,
+      ...(targetType === "expert" ? {
+        finalPriceInr,
+        usdToInrRate: usdToInrRate!,
+        usdToInrRateSource: usdToInrRateMetadata!.source,
+        usdToInrRateFetchedAt: usdToInrRateMetadata!.fetchedAtUtc,
+        usdToInrEffectiveDateIst: usdToInrRateMetadata!.effectiveDateIst,
+        inrAmountPaise: amountPaise,
+        usdInrRate: usdToInrRate!,
+        exchangeRateSource: usdToInrRateMetadata!.source,
+        exchangeRateFetchedAtUtc: usdToInrRateMetadata!.fetchedAtUtc,
+        exchangeRateFetchedAtIstDisplay: usdToInrRateMetadata!.fetchedAtIstDisplay,
+        exchangeRateIsFallback: usdToInrRateMetadata!.isFallback,
+      } : {}),
       ...(selectedPlan
         ? {
             selectedPlanId: selectedPlan.id,
             selectedPlanName: selectedPlan.name,
             subscriptionDuration: selectedPlan.durationLabel,
-            payablePriceUsd: selectedPlan.priceUsd,
+            payablePriceUsd: finalPriceUsd,
           }
         : {}),
-      usdToInrRate: usdToInrRate,
-      usdToInrRateSource: usdToInrRateMetadata.source,
-      usdToInrRateFetchedAt: usdToInrRateMetadata.fetchedAtUtc,
-      usdToInrEffectiveDateIst: usdToInrRateMetadata.effectiveDateIst,
       usdAmount: finalPriceUsd,
-      inrAmountPaise: amountPaise,
-      usdInrRate: usdToInrRate,
-      exchangeRateSource: usdToInrRateMetadata.source,
-      exchangeRateFetchedAtUtc: usdToInrRateMetadata.fetchedAtUtc,
-      exchangeRateFetchedAtIstDisplay:
-        usdToInrRateMetadata.fetchedAtIstDisplay,
-      exchangeRateIsFallback: usdToInrRateMetadata.isFallback,
       orderCreatedAtUtc,
       orderCreatedAtIstDisplay,
       slotStartUtc,

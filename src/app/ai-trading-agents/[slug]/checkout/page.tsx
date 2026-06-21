@@ -8,6 +8,7 @@ import {
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
+import { calculateFinalPrice } from "@/lib/pricing";
 import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
 
 type PageProps = {
@@ -16,7 +17,12 @@ type PageProps = {
 };
 
 function formatUsd(value: number) {
-  return `$${value}`;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function readPlanParam(value: string | string[] | undefined) {
@@ -136,9 +142,9 @@ export default async function SubscriptionCheckoutPage({
                 </dd>
               </div>
               <div>
-                <dt>Payable price</dt>
+                <dt>Default payable price</dt>
                 <dd className="astro-gold-selected-payable">
-                  {formatUsd(selectedPlan.priceUsd)}
+                  {formatUsd(calculateFinalPrice(product.slug, selectedPlan.id, "EARLYACCESS").finalPriceUsd || selectedPlan.priceUsd)}
                 </dd>
               </div>
               <div>

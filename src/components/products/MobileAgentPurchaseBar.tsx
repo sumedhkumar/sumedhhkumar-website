@@ -37,7 +37,7 @@ export default function MobileAgentPurchaseBar({
         <div>
           <p className="body-compact">{product.name}</p>
           <p className="product-price" style={{ fontSize: 24 }}>
-            {isSubscriptionProduct ? "From $199" : formatUsd(product.priceUsd)}
+            {isSubscriptionProduct ? `From ${formatUsd(product.priceUsd)}` : formatUsd(product.priceUsd)}
           </p>
         </div>
         {isSubscriptionProduct ? (

@@ -11,6 +11,7 @@ import {
   summarizePersistenceError,
   updateSubmissionEmailStatus,
 } from "@/lib/server/persistence";
+import { experts } from "@/data/experts";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,8 @@ type ContactRequestBody = {
   phoneOrWhatsapp?: string;
   subject?: string;
   message?: string;
+  enquiryType?: string;
+  expertSlug?: string;
   website?: string;
 };
 
@@ -125,13 +128,26 @@ export async function POST(request: Request) {
   const fullName = sanitizeText(body.fullName);
   const emailAddress = sanitizeText(body.emailAddress);
   const phoneOrWhatsapp = sanitizeText(body.phoneOrWhatsapp);
-  const subject = sanitizeText(body.subject);
-  const message = sanitizeText(body.message);
+  const enquiryType = sanitizeText(body.enquiryType);
+  const expert =
+    enquiryType === "expert_booking"
+      ? experts.find((item) => item.slug === sanitizeText(body.expertSlug) && item.active)
+      : null;
+  const subject = expert
+    ? `Expert consultation booking enquiry - ${expert.fullName}`
+    : sanitizeText(body.subject);
+  const message = expert
+    ? `Booking enquiry for a consultation with ${expert.fullName}.`
+    : sanitizeText(body.message);
   const errors = validateSubmission({
     fullName,
     emailAddress,
     message,
   });
+
+  if (enquiryType === "expert_booking" && !expert) {
+    errors.expertSlug = "Select a valid expert.";
+  }
 
   if (Object.keys(errors).length > 0) {
     return Response.json(
@@ -168,6 +184,9 @@ export async function POST(request: Request) {
         phoneOrWhatsapp,
         subject,
         message,
+        enquiryType: expert ? "expert_booking" : "contact",
+        expertSlug: expert?.slug ?? "",
+        expertName: expert?.fullName ?? "",
       },
     });
     submissionId = submission.id;
@@ -189,6 +208,8 @@ export async function POST(request: Request) {
       phoneOrWhatsapp,
       subject,
       message,
+      enquiryType: expert ? "expert_booking" : undefined,
+      expertName: expert?.fullName,
     });
     await updateSubmissionEmailStatus(submissionId, "sent");
 

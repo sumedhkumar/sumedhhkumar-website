@@ -33,8 +33,8 @@ export default function PrivacyPage() {
             <h2 className="subsection-title">Payment and Booking Information</h2>
             <p>
               For payments, Vyntegra may receive payment-related metadata from
-              Razorpay, such as order ID, payment ID, payment status, contact
-              details returned by the gateway, amount, currency, and timestamps.
+              payment service providers, such as order ID, payment ID, payment
+              status, contact details, amount, currency, and timestamps.
               For Talk to Expert sessions, booking-related details may be used
               to confirm and coordinate the consultation.
             </p>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
               Vyntegra may use third-party service providers for payment
               processing, email delivery, booking/availability management,
               hosting, analytics, or operational support. These may include
-              Razorpay, email service providers, booking providers, and hosting
+              payment service providers, email service providers, booking providers, and hosting
               providers, depending on the service used.
             </p>
           </section>

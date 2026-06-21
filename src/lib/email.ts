@@ -13,6 +13,8 @@ export type ContactEmailInput = {
   phoneOrWhatsapp: string;
   subject: string;
   message: string;
+  enquiryType?: "expert_booking";
+  expertName?: string;
 };
 
 export type CustomSolutionsEmailInput = {
@@ -225,7 +227,9 @@ function buildEmailHtml({
 
 function buildContactAdminBody(input: ContactEmailInput) {
   const lines = [
-    "A new enquiry has been submitted.",
+    input.enquiryType === "expert_booking"
+      ? "A new expert consultation booking enquiry has been submitted."
+      : "A new enquiry has been submitted.",
     `Full Name: ${input.fullName}`,
     `Email: ${input.emailAddress}`,
   ];
@@ -245,8 +249,14 @@ function buildContactAdminHtml(input: ContactEmailInput) {
   details.push({ label: "Submitted At", value: input.timestamp });
 
   return buildEmailHtml({
-    title: "New Vyntegra enquiry submitted",
-    intro: "A new enquiry has been submitted.",
+    title:
+      input.enquiryType === "expert_booking"
+        ? "New expert consultation booking enquiry"
+        : "New Vyntegra enquiry submitted",
+    intro:
+      input.enquiryType === "expert_booking"
+        ? "A customer has requested an expert consultation."
+        : "A new enquiry has been submitted.",
     details,
     blocks: [{ heading: "Message", body: input.message }],
   });
@@ -255,13 +265,19 @@ function buildContactAdminHtml(input: ContactEmailInput) {
 function buildContactCustomerBody(input: ContactEmailInput) {
   const lines = [
     `Hi ${input.fullName},`,
-    "We have received your enquiry.",
+    input.enquiryType === "expert_booking"
+      ? "We have received your consultation booking enquiry."
+      : "We have received your enquiry.",
   ];
   if (input.subject) lines.push(`Subject: ${input.subject}`);
   lines.push(
-    "Your submitted message:",
-    input.message,
-    "Our team will review your message and get back to you within 24 hours.",
+    input.enquiryType === "expert_booking"
+      ? "The Vyntegra team will contact you soon about availability and next steps."
+      : "Your submitted message:",
+    ...(input.enquiryType === "expert_booking" ? [] : [input.message]),
+    ...(input.enquiryType === "expert_booking"
+      ? []
+      : ["Our team will review your message and get back to you within 24 hours."]),
     "Regards,",
     "Vyntegra"
   );
@@ -274,17 +290,22 @@ function buildContactCustomerHtml(input: ContactEmailInput) {
   details.push({ label: "Submitted At", value: input.timestamp });
 
   return buildEmailHtml({
-    title: "Vyntegra enquiry received",
-    intro: `Hi ${input.fullName}, we have received your enquiry.`,
+    title:
+      input.enquiryType === "expert_booking"
+        ? "Vyntegra consultation enquiry received"
+        : "Vyntegra enquiry received",
+    intro:
+      input.enquiryType === "expert_booking"
+        ? `Hi ${input.fullName}, we have received your consultation booking enquiry.`
+        : `Hi ${input.fullName}, we have received your enquiry.`,
     details,
     blocks: [
-      {
-        heading: "Your submitted message",
-        body: input.message,
-      },
-      {
-        body: "Our team will review your message and get back to you within 24 hours.",
-      },
+      ...(input.enquiryType === "expert_booking"
+        ? [{ body: "The Vyntegra team will contact you soon about availability and next steps." }]
+        : [
+            { heading: "Your submitted message", body: input.message },
+            { body: "Our team will review your message and get back to you within 24 hours." },
+          ]),
     ],
   });
 }
@@ -587,17 +608,22 @@ function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
   if (input.couponCode) details.push({ label: "Coupon Code", value: input.couponCode });
   if (input.discountUsd) details.push({ label: "Discount Amount", value: input.discountUsd });
   details.push({ label: "Discounted USD Payable Amount", value: input.finalPriceUsd });
-  details.push({ label: "USD to INR Rate Used", value: `${input.usdToInrRate} / USD` });
-  if (input.usdToInrRateSource) details.push({ label: "Rate Source", value: input.usdToInrRateSource });
-  if (input.exchangeRateIsFallback) {
-    details.push({ label: "Rate Mode", value: "Using fallback USD-INR rate" });
+  if (input.purchaseType === "expert") {
+    details.push({ label: "USD to INR Rate Used", value: `${input.usdToInrRate} / USD` });
+    if (input.usdToInrRateSource) details.push({ label: "Rate Source", value: input.usdToInrRateSource });
+    if (input.exchangeRateIsFallback) {
+      details.push({ label: "Rate Mode", value: "Using fallback USD-INR rate" });
+    }
+    if (input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt) {
+      details.push({
+        label: "Exchange rate fetched",
+        value: input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt || "",
+      });
+    }
+    if (input.usdToInrEffectiveDateIst) details.push({ label: "Effective Date IST", value: input.usdToInrEffectiveDateIst });
+    details.push({ label: "Razorpay Payable Amount", value: input.finalPriceInr });
   }
-  if (input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt) {
-    details.push({
-      label: "Exchange rate fetched",
-      value: input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt || "",
-    });
-  }
+
   if (input.orderCreatedAtIstDisplay) {
     details.push({ label: "Order created", value: input.orderCreatedAtIstDisplay });
   }
@@ -607,9 +633,8 @@ function buildRazorpayDetails(input: RazorpayPaymentSuccessEmailInput) {
   if (input.razorpayCapturedAtIstDisplay) {
     details.push({ label: "Razorpay captured", value: input.razorpayCapturedAtIstDisplay });
   }
-  if (input.usdToInrEffectiveDateIst) details.push({ label: "Effective Date IST", value: input.usdToInrEffectiveDateIst });
+
   details.push(
-    { label: "Razorpay Payable Amount", value: input.finalPriceInr },
     { label: "Razorpay Order ID", value: input.razorpayOrderId },
     { label: "Razorpay Payment ID", value: input.razorpayPaymentId }
   );
@@ -648,19 +673,22 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
   if (input.couponCode) lines.push(`Coupon Code: ${input.couponCode}`);
   if (input.discountUsd) lines.push(`Discount Amount: ${input.discountUsd}`);
   
-  lines.push(
-    `Discounted USD Payable Amount: ${input.finalPriceUsd}`,
-    `USD to INR Rate Used: ${input.usdToInrRate} / USD`,
-  );
+  lines.push(`Discounted USD Payable Amount: ${input.finalPriceUsd}`);
 
-  if (input.exchangeRateIsFallback) {
-    lines.push("Rate Mode: Using fallback USD-INR rate");
-  }
+  if (input.purchaseType === "expert") {
+    lines.push(`USD to INR Rate Used: ${input.usdToInrRate} / USD`);
 
-  if (input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt) {
-    lines.push(
-      `Exchange rate fetched: ${input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt}`,
-    );
+    if (input.exchangeRateIsFallback) {
+      lines.push("Rate Mode: Using fallback USD-INR rate");
+    }
+
+    if (input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt) {
+      lines.push(
+        `Exchange rate fetched: ${input.exchangeRateFetchedAtIstDisplay || input.usdToInrRateFetchedAt}`,
+      );
+    }
+    
+    lines.push(`Razorpay Payable Amount: ${input.finalPriceInr}`);
   }
 
   if (input.orderCreatedAtIstDisplay) {
@@ -676,7 +704,6 @@ function buildRazorpayCustomerBody(input: RazorpayPaymentSuccessEmailInput) {
   }
 
   lines.push(
-    `Razorpay Payable Amount: ${input.finalPriceInr}`,
     `Razorpay Order ID: ${input.razorpayOrderId}`,
     `Razorpay Payment ID: ${input.razorpayPaymentId}`,
   );

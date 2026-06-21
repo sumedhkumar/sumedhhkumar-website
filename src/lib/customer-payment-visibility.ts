@@ -1,0 +1,2 @@
+export const RAZORPAY_PRODUCT_CHECKOUT_ENABLED = false;
+export const RAZORPAY_EXPERT_CHECKOUT_ENABLED = false;
