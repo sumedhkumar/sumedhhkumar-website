@@ -24,11 +24,8 @@ export default function ExpertsPage() {
             Use this section if you want expert guidance before choosing an agent, building a custom trading system, or converting your strategy into software. Consultations are for technical and workflow guidance only. They do not guarantee trading results.
           </p>
           <p className="body-standard" style={{ marginTop: 16 }}>
-            Live availability is shown during booking. 30-minute expert sessions
-            are confirmed only after successful Razorpay payment and successful
-            booking creation. If Vyntegra cannot confirm or deliver your paid
-            consultation and a mutually acceptable replacement slot cannot be
-            arranged, the consultation payment will be refunded.
+            Send a consultation enquiry from the expert profile. The Vyntegra
+            team will contact you soon to discuss availability and next steps.
           </p>
         </header>
 

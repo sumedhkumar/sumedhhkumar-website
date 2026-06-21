@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import {
-  agentSubscriptionPlans,
+  getAgentSubscriptionPlans,
   isSubscriptionAgentSlug,
   type SubscriptionAgentSlug,
 } from "@/data/agent-subscription-plans";
@@ -11,9 +11,9 @@ import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
 import AgentPurchaseCard from "@/components/products/AgentPurchaseCard";
+import AgentVisualGallery from "@/components/products/AgentVisualGallery";
 import MobileAgentPurchaseBar from "@/components/products/MobileAgentPurchaseBar";
 import ProductFAQ from "@/components/products/ProductFAQ";
-import EmptyState from "@/components/ui/EmptyState";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -24,16 +24,16 @@ type Product = (typeof products)[number];
 type SubscriptionPageConfig = {
   subtitle: string;
   badges: string[];
-  performanceTitle: string;
-  performanceLabels: string[];
   backtestTitle: string;
   backtestMetrics: [string, string][];
   overviewTitle: string;
   overviewCopy: string;
+  specifications: [string, string][];
   worksTitle: string;
   worksSteps: string[];
-  riskControls: string[];
-  setupNotes: string[];
+  includedItems?: string[];
+  operatingNotes: string[];
+  performanceDisclaimer?: string;
 };
 
 function findProduct(slug: string) {
@@ -42,18 +42,14 @@ function findProduct(slug: string) {
 
 function renderList(items: string[]) {
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 0", display: "grid", gap: 10 }}>
+    <ul className="pdp-checklist">
       {items.map((item) => (
-        <li
-          key={item}
-          className="body-standard"
-          style={{ display: "flex", alignItems: "flex-start", gap: 8 }}
-        >
+        <li key={item} className="body-standard pdp-checklist-item">
           <CheckCircle2
             size={16}
             color="#B8914A"
             strokeWidth={1.75}
-            style={{ flex: "0 0 auto", marginTop: 4 }}
+            className="pdp-checklist-icon"
           />
           <span>{item}</span>
         </li>
@@ -67,9 +63,7 @@ const subscriptionConfigs: Record<SubscriptionAgentSlug, SubscriptionPageConfig>
     subtitle:
       "Rule-based Gold trading software for MetaTrader 5, built for selective XAUUSD workflows during the London session.",
     badges: ["MT5", "XAUUSD Gold", "London Session", "Fixed Risk"],
-    performanceTitle: "Live Trading Results",
-    performanceLabels: ["Myfxbook placeholder", "MQL5 placeholder"],
-    backtestTitle: "Backtest Snapshot",
+    backtestTitle: "Backtest reference",
     backtestMetrics: [
       ["Backtest period", "2023-2025"],
       ["Mode", "Selective setups"],
@@ -78,21 +72,29 @@ const subscriptionConfigs: Record<SubscriptionAgentSlug, SubscriptionPageConfig>
     overviewTitle: "How Astro-Vyn Gold works",
     overviewCopy:
       "Astro-Vyn Gold focuses on selective XAUUSD setups, fixed-risk execution, spread checks, breakeven logic, trailing stops, and lot caps for account protection.",
-    worksTitle: "Setup workflow",
+    specifications: [
+      ["Platform", "MetaTrader 5 (MT5)"],
+      ["Instrument", "XAUUSD Gold"],
+      ["Operating focus", "Selective London-session workflows"],
+      ["Execution controls", "Spread checks, breakeven, trailing stops, and lot caps"],
+      ["Access", "Subscription license based on the selected plan"],
+    ],
+    worksTitle: "Get started",
     worksSteps: [
       "Choose a subscription term and complete checkout.",
       "Install and configure the software on MetaTrader 5.",
       "Run it on demo first and review behavior across London-session setups.",
     ],
-    riskControls: [
-      "Spread checks before entries",
-      "Breakeven and trailing stop logic",
-      "Controlled trade frequency",
-      "Lot caps for account protection",
+    includedItems: [
+      "Compiled Astro-Vyn Gold MT5 EA file for installation.",
+      "Subscription license based on the selected plan.",
+      "Setup guide and updates during the active subscription.",
+      "Support access through the existing Vyntegra support flow.",
     ],
-    setupNotes: [
-      "MetaTrader 5 account access is required.",
-      "A stable VPS or desktop environment is recommended.",
+    operatingNotes: [
+      "MetaTrader 5 account access is required; a stable VPS or desktop environment is recommended.",
+      "Execution controls include spread checks, breakeven logic, trailing stops, and lot caps.",
+      "Fixed-risk parameters and controlled trade frequency are part of the operating model.",
       "Demo testing is recommended before live-market evaluation.",
     ],
   },
@@ -107,9 +109,7 @@ const subscriptionConfigs: Record<SubscriptionAgentSlug, SubscriptionPageConfig>
       "Fixed Risk",
       "No Martingale",
     ],
-    performanceTitle: "Performance Data Snapshots",
-    performanceLabels: ["Data Snapshot 1", "Data Snapshot 2", "Data Snapshot 3"],
-    backtestTitle: "Historical Backtest Snapshot",
+    backtestTitle: "Historical test reference",
     backtestMetrics: [
       ["Instrument", "XAUUSD"],
       ["Win rate", "91%"],
@@ -121,27 +121,93 @@ const subscriptionConfigs: Record<SubscriptionAgentSlug, SubscriptionPageConfig>
     overviewTitle: "Strategy Overview",
     overviewCopy:
       "Sentinel-Vyn is designed for MetaTrader 5 Gold workflows. It uses Donchian breakout signals with ATR-based stop logic, dynamic trailing stops, volatility-adapted controls, and fixed-risk execution rules.",
-    worksTitle: "How Sentinel-Vyn works",
+    specifications: [
+      ["Platform", "MetaTrader 5 (MT5)"],
+      ["Instrument", "XAUUSD Gold"],
+      ["Strategy", "Donchian breakout with ATR-based trailing"],
+      ["Risk model", "Fixed-risk settings with day filters and cooldowns"],
+      ["Access", "Subscription license based on the selected plan"],
+    ],
+    worksTitle: "Get started",
     worksSteps: [
       "Configure the software on MetaTrader 5 for XAUUSD.",
       "Use demo mode first to observe behavior across changing volatility.",
       "Review day filters, cooldowns, ATR stop logic, and trailing-stop settings before any live-market evaluation.",
     ],
-    riskControls: [
-      "Fixed-risk configuration",
-      "No martingale, grid, or doubling-down logic",
-      "ATR stop and dynamic trailing-stop support",
-      "Day filters and cooldowns to reduce overactivity",
-      "Minimum deposit reference of $500, with $1000 preferred",
-      "Leverage reference range of 1:100 to 1:500 depending on broker rules and user risk tolerance",
+    includedItems: [
+      "Compiled Sentinel-Vyn MT5 EA file for installation.",
+      "Subscription license based on the selected plan.",
+      "Setup guide and updates during the active subscription.",
+      "Support access through the existing Vyntegra support flow.",
     ],
-    setupNotes: [
-      "Requires MetaTrader 5 and XAUUSD access.",
-      "Run demo testing before live-market evaluation.",
-      "Users remain responsible for risk settings, account exposure, and trading decisions.",
+    operatingNotes: [
+      "MetaTrader 5 and XAUUSD access are required; test on demo before live-market evaluation.",
+      "Fixed-risk operation does not use martingale, grid, or doubling-down logic.",
+      "ATR stop logic, dynamic trailing, day filters, and cooldowns support the operating controls.",
+      "The deposit reference is $500, with $1,000 preferred; leverage guidance is 1:100 to 1:500 depending on broker rules and risk tolerance.",
+      "You remain responsible for risk settings, account exposure, and trading decisions.",
+    ],
+  },
+  "apex-flux": {
+    subtitle:
+      "The Bitcoin trading software agent that does not chase. It waits for 18 SMA confirmation, then manages momentum with dynamic trailing exits.",
+    badges: [
+      "MT5",
+      "BTCUSD Perpetual Futures",
+      "5 Minute",
+      "18 SMA Momentum",
+      "Dynamic Trail",
+    ],
+    backtestTitle: "Provided test-period reference",
+    backtestMetrics: [
+      ["Total PnL", "+$7,587.45 (+0.76%)"],
+      ["Profit factor", "8.458"],
+      ["Win rate", "63.85% (83 of 130 trades)"],
+      ["Reported max drawdown", "0.03% ($302.60)"],
+      ["Total trades", "130 across 21 days"],
+    ],
+    performanceDisclaimer:
+      "Past performance is not a guarantee of future results. These are provided test-period results, not a forecast. Trading involves risk. Always test on demo first and use risk settings appropriate for your account.",
+    overviewTitle: "How Apex-Flux works",
+    overviewCopy:
+      "Apex-Flux is built for BTCUSD perpetual futures on MetaTrader 5. It uses 18 SMA momentum confirmation on the 5-minute chart to support selective trend entries, then uses dynamic trailing exits to manage an extended move until the trend invalidates.",
+    specifications: [
+      ["Platform", "MetaTrader 5 (MT5)"],
+      ["Instrument", "BTCUSD perpetual futures"],
+      ["Timeframe", "5 minutes"],
+      ["Strategy", "18 SMA momentum with dynamic trailing exits"],
+      ["Access", "Subscription license based on the selected plan"],
+    ],
+    worksTitle: "Get started",
+    worksSteps: [
+      "Download and install the compiled MT5 EA.",
+      "Connect it to a BTCUSD 5-minute chart on MetaTrader 5.",
+      "Enable automated trading, monitor settings, and test on demo before live use.",
+    ],
+    includedItems: [
+      "Compiled Apex-Flux MT5 EA file for installation.",
+      "Subscription license based on the selected plan.",
+      "Setup guide and updates during the active subscription.",
+      "Support access through the existing Vyntegra support flow.",
+    ],
+    operatingNotes: [
+      "Designed for BTCUSD perpetual futures unless another instrument has been separately tested.",
+      "MetaTrader 5 with BTCUSD access is required; a VPS is recommended for 24/7 Bitcoin markets.",
+      "The deposit reference is $500, with $1,000 or more providing additional operating room; leverage guidance is 1:10 to 1:50 depending on broker rules and risk tolerance.",
+      "Entries are SMA-confirmed, trades are independent, and the product does not use grid, martingale, or doubling-down logic.",
+      "Risk per trade is configurable; 1-2% is a reference range, not a requirement. Demo testing for 1-2 weeks is recommended before live use.",
     ],
   },
 };
+
+function formatUsdInline(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 function SubscriptionProductOverview({ product }: { product: Product }) {
   if (!isSubscriptionAgentSlug(product.slug)) {
@@ -152,12 +218,11 @@ function SubscriptionProductOverview({ product }: { product: Product }) {
 
   return (
     <>
-      <header className="astro-gold-hero-panel">
-        <p className="eyebrow" style={{ marginBottom: 8 }}>
-          AI Trading Software Agent
-        </p>
-        <h1 className="page-title">{product.name}</h1>
-        <p className="body-large astro-gold-subtitle">{config.subtitle}</p>
+      {/* ── Hero ── */}
+      <header className="astro-gold-hero-panel pdp-hero">
+        <p className="eyebrow pdp-hero-eyebrow">AI Trading Software Agent</p>
+        <h1 className="page-title pdp-hero-title">{product.name}</h1>
+        <p className="body-large astro-gold-subtitle pdp-hero-subtitle">{config.subtitle}</p>
         <div className="astro-gold-badge-row" aria-label="Product attributes">
           {config.badges.map((badge) => (
             <span key={badge} className="astro-gold-badge">
@@ -167,86 +232,109 @@ function SubscriptionProductOverview({ product }: { product: Product }) {
         </div>
       </header>
 
-      <section>
-        <h2 className="subsection-title">{config.overviewTitle}</h2>
-        <p className="body-standard" style={{ marginTop: 16 }}>
+      {/* ── Overview + Specifications ── */}
+      <section className="agent-product-summary pdp-section">
+        <div className="pdp-section-header">
+          <h2 className="subsection-title">{config.overviewTitle}</h2>
+        </div>
+        <p className="body-standard pdp-overview-copy">
           {config.overviewCopy}
         </p>
-      </section>
-
-      <section>
-        <h2 className="subsection-title">{config.performanceTitle}</h2>
-        <div className="astro-gold-placeholder-grid" aria-label="Performance data placeholders">
-          {config.performanceLabels.map((label) => (
-            <div
-              key={label}
-              className="astro-gold-data-placeholder"
-              role="img"
-              aria-label={label}
-              style={{ aspectRatio: "16 / 9" }}
-            >
-              <span>{label}</span>
-            </div>
-          ))}
+        <div className="pdp-specs-block">
+          <h3 className="agent-inline-heading">Technical specifications</h3>
+          <dl className="agent-specification-list">
+            {config.specifications.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
-      <section>
-        <h2 className="subsection-title">{config.backtestTitle}</h2>
-        <div className="astro-gold-metric-grid">
+      {/* ── Backtest Metrics ── */}
+      <section className="pdp-section pdp-metrics-section">
+        <div className="pdp-section-header">
+          <p className="eyebrow">Performance Data</p>
+          <h2 className="subsection-title">{config.backtestTitle}</h2>
+        </div>
+        <div className="astro-gold-metric-grid pdp-metric-grid">
           {config.backtestMetrics.map(([label, value]) => (
-            <div key={label} className="astro-gold-metric-card">
-              <span>{label}</span>
-              <strong>{value}</strong>
+            <div key={label} className="astro-gold-metric-card pdp-metric-card">
+              <span className="pdp-metric-label">{label}</span>
+              <strong className="pdp-metric-value">{value}</strong>
             </div>
           ))}
         </div>
-        <p className="astro-gold-risk-disclaimer">
-          Historical backtests are simulations based on past data and do not
-          guarantee future results. Trading involves risk. Test on demo before
-          using trading software in live market conditions.
+        <p className="astro-gold-risk-disclaimer pdp-disclaimer">
+          {config.performanceDisclaimer ??
+            "Historical backtests are simulations based on past data and do not guarantee future results. Trading involves risk. Test on demo before using trading software in live market conditions."}
         </p>
       </section>
 
-      <section>
-        <div className="astro-gold-section-heading">
+      {/* ── Subscription Plans ── */}
+      <section className="pdp-section pdp-plans-section">
+        <div className="astro-gold-section-heading pdp-plans-header">
           <div>
             <p className="eyebrow">Subscription Access</p>
             <h2 className="subsection-title">Choose your access term</h2>
           </div>
-          <Link className="btn btn-secondary" href={`/ai-trading-agents/${product.slug}/plans`}>
+          <Link className="btn btn-secondary pdp-plans-cta" href={`/ai-trading-agents/${product.slug}/plans`}>
             Compare Plans
           </Link>
         </div>
-        <div className="astro-gold-plan-grid">
-          {agentSubscriptionPlans.map((plan) => (
-            <article key={plan.id} className="astro-gold-plan-card">
-              <p>{plan.durationLabel}</p>
-              <h3>{plan.name}</h3>
-              <span>${plan.originalPriceUsd}</span>
-              <strong>${plan.priceUsd}</strong>
-            </article>
-          ))}
+        <div className="astro-gold-plan-grid pdp-plan-grid">
+          {getAgentSubscriptionPlans(product.slug).map((plan, index) => {
+            const badgeLabel = index === 0 ? "Entry Access" : index === 1 ? "Recommended" : "Best Value";
+            const discountedPrice = plan.originalPriceUsd * 0.5;
+            return (
+              <article key={plan.id} className="astro-gold-plan-card pdp-plan-card">
+                <span className="pdp-plan-badge">{badgeLabel}</span>
+                <p className="pdp-plan-duration">{plan.durationLabel}</p>
+                <h3 className="pdp-plan-name">{plan.name}</h3>
+                <div className="pdp-plan-pricing">
+                  <span className="pdp-plan-original">{formatUsdInline(plan.originalPriceUsd)}</span>
+                  <strong className="pdp-plan-final">{formatUsdInline(discountedPrice)}</strong>
+                </div>
+                <span className="pdp-plan-coupon-tag">with EARLYACCESS</span>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      <section>
-        <h2 className="subsection-title">{config.worksTitle}</h2>
-        <ol className="astro-gold-step-list">
+      {/* ── Get Started Steps ── */}
+      <section className="pdp-section pdp-steps-section">
+        <div className="pdp-section-header">
+          <p className="eyebrow">Setup</p>
+          <h2 className="subsection-title">{config.worksTitle}</h2>
+        </div>
+        <ol className="astro-gold-step-list pdp-step-list">
           {config.worksSteps.map((step) => (
             <li key={step}>{step}</li>
           ))}
         </ol>
       </section>
 
-      <section>
-        <h2 className="subsection-title">Setup requirements</h2>
-        {renderList(config.setupNotes)}
-      </section>
+      {/* ── What you get ── */}
+      {config.includedItems ? (
+        <section className="pdp-section pdp-included-section">
+          <div className="pdp-section-header">
+            <p className="eyebrow">Included</p>
+            <h2 className="subsection-title">What you get</h2>
+          </div>
+          {renderList(config.includedItems)}
+        </section>
+      ) : null}
 
-      <section>
-        <h2 className="subsection-title">Risk controls</h2>
-        {renderList(config.riskControls)}
+      {/* ── Operating Notes ── */}
+      <section className="pdp-section pdp-notes-section">
+        <div className="pdp-section-header">
+          <p className="eyebrow">Requirements</p>
+          <h2 className="subsection-title">Operating requirements and controls</h2>
+        </div>
+        {renderList(config.operatingNotes)}
       </section>
     </>
   );
@@ -331,34 +419,6 @@ export default async function ProductPage({ params }: PageProps) {
               </section>
 
               <section>
-                <h2 className="subsection-title">Product Visuals</h2>
-                {product.screenshots.length > 0 ? (
-                  <div className="product-screenshot-grid">
-                    {product.screenshots.map((screenshot) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={screenshot}
-                        src={screenshot}
-                        alt={`${product.name} product screenshot`}
-                        style={{
-                          width: "100%",
-                          borderRadius: 8,
-                          border: "1px solid rgba(255, 255, 255, 0.08)",
-                        }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ marginTop: 16 }}>
-                    <EmptyState
-                      heading="Product visuals pending"
-                      copy="Detailed interface visuals will be added before the product is made available for purchase."
-                    />
-                  </div>
-                )}
-              </section>
-
-              <section>
                 <h2 className="subsection-title">Before you use this agent</h2>
                 {renderList([
                   "Review the agent details carefully.",
@@ -389,23 +449,27 @@ export default async function ProductPage({ params }: PageProps) {
             </>
           ) : null}
 
-          <section>
-            <h2 className="subsection-title">Frequently Asked Questions</h2>
-            <div style={{ marginTop: 16 }}>
+          <section className="pdp-section pdp-faq-section">
+            <div className="pdp-section-header">
+              <p className="eyebrow">Support</p>
+              <h2 className="subsection-title">Frequently Asked Questions</h2>
+            </div>
+            <div className="pdp-faq-list">
               <ProductFAQ faqs={product.faqs} />
             </div>
           </section>
 
           {product.reviews.length > 0 ? (
-            <section>
-              <h2 className="subsection-title">Reviews</h2>
-              <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
+            <section className="pdp-section pdp-reviews-section">
+              <div className="pdp-section-header">
+                <p className="eyebrow">Feedback</p>
+                <h2 className="subsection-title">Reviews</h2>
+              </div>
+              <div className="pdp-reviews-grid">
                 {product.reviews.map((review) => (
-                  <article key={review.reviewText} className="standard-card">
-                    <p className="body-standard">{review.reviewText}</p>
-                    <p className="tag" style={{ marginTop: 12 }}>
-                      {review.reviewerName}
-                    </p>
+                  <article key={review.reviewText} className="pdp-review-card">
+                    <p className="body-standard pdp-review-text">{review.reviewText}</p>
+                    <p className="pdp-review-author">{review.reviewerName}</p>
                   </article>
                 ))}
               </div>
@@ -413,11 +477,14 @@ export default async function ProductPage({ params }: PageProps) {
           ) : null}
         </div>
 
-        <AgentPurchaseCard
-          product={product}
-          paymentsConfigured={paymentsConfigured}
-          cryptoPaymentConfig={cryptoPaymentConfig}
-        />
+        <aside className="product-aside">
+          <AgentVisualGallery product={product} />
+          <AgentPurchaseCard
+            product={product}
+            paymentsConfigured={paymentsConfigured}
+            cryptoPaymentConfig={cryptoPaymentConfig}
+          />
+        </aside>
       </div>
       <MobileAgentPurchaseBar
         product={product}

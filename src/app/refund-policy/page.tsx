@@ -48,18 +48,13 @@ export default function RefundPolicyPage() {
           <section className="legal-section">
             <h2 className="subsection-title">Talk to Expert Consultations</h2>
             <p>
-              A Talk to Expert payment relates to a 30-minute consultation
-              request and is confirmed after successful Razorpay payment and
-              booking confirmation. If Vyntegra cannot confirm or deliver your
-              paid consultation and a mutually acceptable replacement slot cannot
-              be arranged, the consultation payment will be refunded.
+              Talk to Expert consultations begin with a booking enquiry. The
+              Vyntegra team will contact customers to discuss availability,
+              consultation scope, and any applicable next steps.
             </p>
             <p>
-              Customer no-show, late arrival, or voluntary cancellation close to
-              the session time may not be eligible for refund unless Vyntegra
-              decides otherwise. Refunds, where approved, will be processed to
-              the original payment method as per payment gateway and banking
-              timelines.
+              Consultation-specific payment, cancellation, and refund terms, if
+              applicable, will be shared during the follow-up process.
             </p>
           </section>
 

@@ -12,7 +12,7 @@ import {
 } from "@/lib/email";
 import { getSubscriptionAgentPlan } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
-import { validateCoupon } from "@/lib/coupon-validation";
+import { calculateFinalPrice } from "@/lib/pricing";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
 import { formatIstDateTime } from "@/lib/time";
 import {
@@ -103,64 +103,39 @@ function formatUsd(value: number) {
   }).format(value);
 }
 
-function normalizeCouponCode(code: string) {
-  return code.trim().toUpperCase();
-}
+
 
 function buildProductPaymentSummary(
   product: (typeof products)[number],
   couponCode: string,
   selectedPlanId: string,
 ) {
-  const selectedPlan =
-    selectedPlanId
-      ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
-      : null;
-  const originalPriceUsd = selectedPlan
-    ? selectedPlan.originalPriceUsd
-    : product.priceUsd;
-  const finalPriceUsd = selectedPlan ? selectedPlan.priceUsd : product.priceUsd;
-  const purchaseName = selectedPlan
-    ? `${product.name} - ${selectedPlan.name}`
-    : product.name;
-  const originalProductPrice = formatUsd(originalPriceUsd);
-  const noCouponSummary = {
-    purchaseType: "product" as const,
-    purchaseName,
-    originalProductPrice,
-    couponCode: "",
-    discountAmount: "",
-    finalPayablePrice: formatUsd(finalPriceUsd),
-    bookingDetails: selectedPlan
-      ? `Subscription duration: ${selectedPlan.durationLabel}`
-      : "",
-  };
-
-  if (!couponCode || selectedPlan) {
-    return noCouponSummary;
+  const selectedPlan = selectedPlanId
+    ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
+    : null;
+    
+  if (!selectedPlan) {
+    return {
+      purchaseType: "product" as const,
+      purchaseName: product.name,
+      originalProductPrice: formatUsd(product.priceUsd),
+      couponCode: "",
+      discountAmount: "",
+      finalPayablePrice: formatUsd(product.priceUsd),
+      bookingDetails: "",
+    };
   }
 
-  const couponResult = validateCoupon({
-    code: couponCode,
-    amountUsd: product.priceUsd,
-    target: {
-      type: "product",
-      productId: product.id,
-    },
-  });
-
-  if (!couponResult.ok || couponResult.discountAmountUsd <= 0) {
-    return noCouponSummary;
-  }
+  const pricing = calculateFinalPrice(product.slug, selectedPlan.id, couponCode);
 
   return {
     purchaseType: "product" as const,
-    purchaseName: product.name,
-    originalProductPrice,
-    couponCode: normalizeCouponCode(couponCode),
-    discountAmount: formatUsd(couponResult.discountAmountUsd),
-    finalPayablePrice: formatUsd(couponResult.finalAmountUsd),
-    bookingDetails: "",
+    purchaseName: `${product.name} - ${selectedPlan.name}`,
+    originalProductPrice: formatUsd(pricing.originalPriceUsd),
+    couponCode: pricing.appliedCoupon,
+    discountAmount: pricing.discountUsd > 0 ? formatUsd(pricing.discountUsd) : "",
+    finalPayablePrice: formatUsd(pricing.finalPriceUsd),
+    bookingDetails: `Subscription duration: ${selectedPlan.durationLabel}`,
   };
 }
 

@@ -4,6 +4,7 @@ import { getSubscriptionAgentPlan } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { validateCoupon } from "@/lib/coupon-validation";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
+import { calculateFinalPrice } from "@/lib/pricing";
 import { CryptoPaymentPanel } from "@/components/products/AgentPurchaseCard";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -50,21 +51,33 @@ export default async function CryptoPaymentPage({
     notFound();
   }
 
-  const productPriceUsd = selectedPlan ? selectedPlan.priceUsd : product.priceUsd;
-  const couponResult = couponCode && !selectedPlan
-    ? validateCoupon({
+  const productPriceUsd = selectedPlan ? selectedPlan.originalPriceUsd : product.priceUsd;
+  
+  let finalAmountUsd = productPriceUsd;
+  let validCouponCode = "";
+
+  if (couponCode) {
+    if (selectedPlan) {
+      const pricing = calculateFinalPrice(product.slug, selectedPlan.id, couponCode);
+      if (pricing.ok) {
+        finalAmountUsd = pricing.finalPriceUsd;
+        validCouponCode = pricing.appliedCoupon;
+      }
+    } else {
+      const couponResult = validateCoupon({
         code: couponCode,
         amountUsd: productPriceUsd,
         target: {
           type: "product",
           productId: product.id,
         },
-      })
-    : null;
-  const finalAmountUsd =
-    couponResult?.ok && couponResult.discountAmountUsd > 0
-      ? couponResult.finalAmountUsd
-      : productPriceUsd;
+      });
+      if (couponResult.ok && couponResult.discountAmountUsd > 0) {
+        finalAmountUsd = couponResult.finalAmountUsd;
+        validCouponCode = couponCode;
+      }
+    }
+  }
   const cryptoPaymentConfig = getCryptoPaymentConfig();
 
   return (
@@ -88,7 +101,7 @@ export default async function CryptoPaymentPage({
             targetType="product"
             product={product}
             finalAmountUsd={finalAmountUsd}
-            couponCode={couponResult?.ok ? couponCode : ""}
+            couponCode={validCouponCode}
             cryptoPaymentConfig={cryptoPaymentConfig}
             selectedPlan={selectedPlan ?? undefined}
           />

@@ -48,8 +48,8 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
           {expert.specialization}
         </p>
         <p className="body-compact" style={{ marginTop: 12 }}>
-          Live availability is shown during booking. Sessions are confirmed
-          after successful Razorpay payment and booking creation.
+          Send a booking enquiry and the Vyntegra team will contact you soon
+          about availability and next steps.
         </p>
         <p className="body-compact" style={{ marginTop: 8 }}>
           {expert.qualifications[0] ?? ""}
@@ -76,11 +76,8 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
           <Button href={`/experts/${expert.slug}`} variant="secondary">
             View Profile
           </Button>
-          <Button
-            href={`/experts/${expert.slug}/checkout`}
-            variant="primary"
-          >
-            Book Consultation <ArrowRight size={16} strokeWidth={1.75} />
+          <Button href={`/experts/${expert.slug}#booking-enquiry`} variant="primary">
+            Request Consultation <ArrowRight size={16} strokeWidth={1.75} />
           </Button>
         </div>
       </div>

@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import {
-  agentSubscriptionPlans,
+  getAgentSubscriptionPlans,
   isSubscriptionAgentSlug,
 } from "@/data/agent-subscription-plans";
+import { calculateFinalPrice } from "@/lib/pricing";
 import { products } from "@/data/products";
 
 type PageProps = {
@@ -15,7 +16,12 @@ type PageProps = {
 const planChips = ["MT5", "XAUUSD Gold", "Subscription Access", "Demo First"];
 
 function formatUsd(value: number) {
-  return `$${value}`;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function findProduct(slug: string) {
@@ -59,9 +65,8 @@ export default async function SubscriptionPlansPage({ params }: PageProps) {
           <p className="eyebrow">{product.name} Plans</p>
           <h1 className="page-title">Choose your {product.name} subscription</h1>
           <p className="body-large">
-            Select the access term that fits your testing or live-evaluation
             plan. Start on demo before using any trading software on a live
-            account.
+            account. All plans include the EARLYACCESS 50% discount.
           </p>
           <div className="astro-gold-badge-row" aria-label="Plan attributes">
             {planChips.map((chip) => (
@@ -73,13 +78,20 @@ export default async function SubscriptionPlansPage({ params }: PageProps) {
         </header>
 
         <section className="astro-gold-plans-grid" aria-label={`${product.name} subscription plans`}>
-          {agentSubscriptionPlans.map((plan) => {
+          {getAgentSubscriptionPlans(product.slug).map((plan, index) => {
             const checkoutHref = `/ai-trading-agents/${product.slug}/checkout?plan=${plan.id}`;
+            const badgeLabel = index === 0 ? "Entry Access" : index === 1 ? "Recommended" : "Best Value";
+            // Get final price with default EARLYACCESS coupon
+            const pricing = calculateFinalPrice(product.slug, plan.id, "EARLYACCESS");
+            const priceUsd = pricing.ok ? pricing.finalPriceUsd : plan.priceUsd;
 
             return (
               <article key={plan.id} className="astro-gold-pricing-card">
                 <div className="astro-gold-pricing-card-top">
                   <div>
+                    <span className="astro-gold-badge" style={{ marginBottom: 8, display: "inline-block" }}>
+                      {badgeLabel}
+                    </span>
                     <p className="body-compact">{plan.durationLabel}</p>
                     <h2 className="card-title">{plan.name}</h2>
                   </div>
@@ -87,8 +99,10 @@ export default async function SubscriptionPlansPage({ params }: PageProps) {
                 </div>
                 <p className="astro-gold-pricing-note">{plan.note}</p>
                 <div className="astro-gold-pricing-price-row">
-                  <span>{formatUsd(plan.originalPriceUsd)}</span>
-                  <strong>{formatUsd(plan.priceUsd)}</strong>
+                  <span style={{ textDecoration: "line-through", color: "#9CA0A7" }}>
+                    {formatUsd(plan.originalPriceUsd)}
+                  </span>
+                  <strong>{formatUsd(priceUsd)}</strong>
                 </div>
                 <Link className="btn btn-primary" href={checkoutHref}>
                   Buy Now

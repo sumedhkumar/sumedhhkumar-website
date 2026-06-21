@@ -1,36 +1,44 @@
-export const subscriptionAgentSlugs = ["astro-vyn-gold", "sentinel-vyn"] as const;
+import { REGULAR_PRICES } from "@/lib/pricing";
+
+export const subscriptionAgentSlugs = [
+  "astro-vyn-gold",
+  "sentinel-vyn",
+  "apex-flux",
+] as const;
 
 export type SubscriptionAgentSlug = (typeof subscriptionAgentSlugs)[number];
 
-export const agentSubscriptionPlans = [
+export const baseAgentSubscriptionPlans = [
   {
-    id: "demo-2-months",
-    name: "Demo - 2 Months",
+    id: "pilot-license",
+    name: "Pilot License",
     durationLabel: "2 Months",
-    originalPriceUsd: 399,
-    priceUsd: 199,
-    note: "For demo testing and workflow evaluation before live use.",
+    note: "For entry access and workflow evaluation before extended live use.",
   },
   {
-    id: "six-months",
-    name: "6 Months",
+    id: "pro-license",
+    name: "Pro License",
     durationLabel: "6 Months",
-    originalPriceUsd: 1099,
-    priceUsd: 549,
-    note: "For extended evaluation across market cycles.",
+    note: "For extended evaluation across market cycles. Recommended.",
   },
   {
-    id: "one-year",
-    name: "1 Year",
-    durationLabel: "1 Year",
-    originalPriceUsd: 1999,
-    priceUsd: 999,
-    note: "For long-term access and ongoing workflow use.",
+    id: "elite-license",
+    name: "Elite License",
+    durationLabel: "12 Months",
+    note: "For long-term access and ongoing workflow use. Best Value.",
   },
 ] as const;
 
-export type AgentSubscriptionPlan = (typeof agentSubscriptionPlans)[number];
-export type AgentSubscriptionPlanId = AgentSubscriptionPlan["id"];
+export type AgentSubscriptionPlanId = (typeof baseAgentSubscriptionPlans)[number]["id"];
+
+export type AgentSubscriptionPlan = {
+  id: AgentSubscriptionPlanId;
+  name: string;
+  durationLabel: string;
+  originalPriceUsd: number;
+  priceUsd: number;
+  note: string;
+};
 
 export function isSubscriptionAgentSlug(
   slug: string,
@@ -38,14 +46,26 @@ export function isSubscriptionAgentSlug(
   return subscriptionAgentSlugs.includes(slug as SubscriptionAgentSlug);
 }
 
-export function getAgentSubscriptionPlan(planId: string) {
-  return agentSubscriptionPlans.find((plan) => plan.id === planId) ?? null;
-}
-
-export function getSubscriptionAgentPlan(slug: string, planId: string) {
+export function getSubscriptionAgentPlan(slug: string, planId: string): AgentSubscriptionPlan | null {
   if (!isSubscriptionAgentSlug(slug)) {
     return null;
   }
 
-  return getAgentSubscriptionPlan(planId);
+  const basePlan = baseAgentSubscriptionPlans.find((plan) => plan.id === planId);
+  if (!basePlan) {
+    return null;
+  }
+
+  const price = REGULAR_PRICES[slug][basePlan.id as AgentSubscriptionPlanId];
+
+  return {
+    ...basePlan,
+    originalPriceUsd: price,
+    priceUsd: price, // By default priceUsd is the originalPriceUsd. The frontend will apply coupons.
+  };
+}
+
+export function getAgentSubscriptionPlans(slug: string): AgentSubscriptionPlan[] {
+  if (!isSubscriptionAgentSlug(slug)) return [];
+  return baseAgentSubscriptionPlans.map(plan => getSubscriptionAgentPlan(slug, plan.id) as AgentSubscriptionPlan);
 }

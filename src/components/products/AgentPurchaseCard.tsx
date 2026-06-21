@@ -18,7 +18,7 @@ import {
   isSubscriptionAgentSlug,
   type AgentSubscriptionPlan,
 } from "@/data/agent-subscription-plans";
-import { formatIstDateTime } from "@/lib/time";
+
 import {
   PaymentResultDialog,
   RazorpayVerificationOverlay,
@@ -148,7 +148,6 @@ type RazorpayWindow = Window & {
 };
 
 const paymentOptions: { value: PaymentProvider; label: string }[] = [
-  { value: "razorpay", label: "Pay with Razorpay" },
   { value: "crypto", label: "Pay with Crypto" },
 ];
 
@@ -213,14 +212,7 @@ function formatUsd(value: number) {
   }).format(value);
 }
 
-function formatInr(value: number, fractionDigits = 2) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(value);
-}
+
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -238,15 +230,25 @@ function getStatusColor(tone: PurchaseState["statusTone"]) {
   return "#F59E0B";
 }
 
-function createInitialState(product: TradingAgentProduct): PurchaseState {
+function createInitialState(product: TradingAgentProduct, selectedPlan?: AgentSubscriptionPlan): PurchaseState {
+  let defaultCoupon = "";
+  let defaultDiscountUsd = 0;
+  let defaultFinalUsd = product.priceUsd;
+
+  if (selectedPlan) {
+    defaultCoupon = "EARLYACCESS";
+    defaultDiscountUsd = selectedPlan.priceUsd * 0.5;
+    defaultFinalUsd = selectedPlan.priceUsd - defaultDiscountUsd;
+  }
+
   return {
     customerName: "",
     customerEmail: "",
-    couponCode: "",
+    couponCode: defaultCoupon,
     couponMessage: "",
-    discountAmountUsd: 0,
-    finalAmountUsd: product.priceUsd,
-    paymentProvider: "razorpay",
+    discountAmountUsd: defaultDiscountUsd,
+    finalAmountUsd: defaultFinalUsd,
+    paymentProvider: "crypto",
     acceptedTerms: false,
     statusMessage: "",
     statusTone: "info",
@@ -620,9 +622,9 @@ export function CryptoPaymentPanel(props: CryptoPaymentPanelProps) {
             <dt>Discount</dt>
             <dd>{formattedDiscountAmount}</dd>
           </div>
-          <div>
+          <div className="crypto-payment-total">
             <dt>Final Payable Amount</dt>
-            <dd>{formattedFinalAmount}</dd>
+            <dd className="crypto-payable-amount">{formattedFinalAmount}</dd>
           </div>
         </dl>
       </div>
@@ -816,11 +818,7 @@ export function AgentPurchaseForm({
           : state.paymentProvider === "razorpay"
             ? "Pay with Razorpay"
             : "Continue to Crypto Payment";
-  const razorpayAmountInr =
-    state.usdToInrRate !== null
-      ? Number((state.finalAmountUsd * state.usdToInrRate).toFixed(2))
-      : null;
-  const couponDisabled = Boolean(selectedPlan);
+  const couponDisabled = false;
 
   useEffect(() => {
     if (!paymentsConfigured && cryptoConfigured && state.paymentProvider !== "crypto") {
@@ -892,9 +890,11 @@ export function AgentPurchaseForm({
         amountUsd: product.priceUsd,
         targetType: "product",
         productId: product.id,
+        selectedPlanId: selectedPlan?.id,
       }),
     });
     const result = (await response.json()) as {
+      ok?: boolean;
       message?: string;
       discountAmountUsd?: number;
       finalAmountUsd?: number;
@@ -902,7 +902,9 @@ export function AgentPurchaseForm({
 
     setState((current) => ({
       ...current,
-      couponMessage: result.message ?? "This coupon code is not valid.",
+      couponMessage: result.ok
+        ? "Coupon applied."
+        : result.message ?? "This coupon code is not valid.",
       discountAmountUsd: result.discountAmountUsd ?? 0,
       finalAmountUsd: result.finalAmountUsd ?? product.priceUsd,
     }));
@@ -1248,7 +1250,7 @@ export function AgentPurchaseForm({
       ) : null}
 
       <div className="purchase-pricing-summary">
-        <div className="purchase-pricing-row">
+        <div className="purchase-pricing-row purchase-pricing-row-payable">
           <span className="body-compact">Payable amount:</span>
           <span className="body-compact">
             {state.discountAmountUsd > 0 ? (
@@ -1263,39 +1265,7 @@ export function AgentPurchaseForm({
             )}
           </span>
         </div>
-        <div className="purchase-pricing-row">
-          <span className="body-compact">USD to INR conversion:</span>
-          <span className="body-compact">
-            {state.usdToInrRate !== null
-              ? `${formatInr(state.usdToInrRate, 4)} / USD`
-              : "Loading"}
-          </span>
-        </div>
-        {state.paymentProvider === "razorpay" &&
-        (state.exchangeRateFetchedAtIstDisplay ||
-          formatIstDateTime(state.exchangeRateFetchedAtUtc)) ? (
-          <div className="purchase-pricing-row">
-            <span className="body-compact">Exchange rate fetched:</span>
-            <span className="body-compact">
-              {state.exchangeRateFetchedAtIstDisplay ||
-                formatIstDateTime(state.exchangeRateFetchedAtUtc)}
-            </span>
-          </div>
-        ) : null}
-        {state.exchangeRateIsFallback ? (
-          <div className="purchase-pricing-row">
-            <span className="body-compact">Rate mode:</span>
-            <span className="body-compact">Using fallback USD-INR rate</span>
-          </div>
-        ) : null}
-        <div className="purchase-pricing-row purchase-pricing-row-total">
-          <span className="body-standard" style={{ fontWeight: 700 }}>
-            Razorpay payable amount:
-          </span>
-          <span className="body-standard" style={{ color: "#D8CBA6", fontWeight: 800 }}>
-            {razorpayAmountInr !== null ? formatInr(razorpayAmountInr) : "Loading"}
-          </span>
-        </div>
+
       </div>
 
       <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
@@ -1429,8 +1399,8 @@ export function AgentPurchaseForm({
   );
 }
 
-export function useAgentPurchaseState(product: TradingAgentProduct) {
-  return useState<PurchaseState>(() => createInitialState(product));
+export function useAgentPurchaseState(product: TradingAgentProduct, selectedPlan?: AgentSubscriptionPlan) {
+  return useState<PurchaseState>(() => createInitialState(product, selectedPlan));
 }
 
 function AgentSubscriptionCtaCard({ product }: { product: TradingAgentProduct }) {
@@ -1438,7 +1408,7 @@ function AgentSubscriptionCtaCard({ product }: { product: TradingAgentProduct })
     <div className="purchase-stack astro-gold-cta-stack">
       <div className="purchase-panel-header">
         <h2 className="card-title">Subscription access for {product.name}</h2>
-        <p className="product-price">From $199</p>
+        <p className="product-price">From {formatUsd(product.priceUsd)}</p>
       </div>
       <p className="body-compact">
         Choose a demo or live-evaluation subscription term before checkout.
@@ -1475,6 +1445,7 @@ export default function AgentPurchaseCard({
         product={product}
         paymentsConfigured={paymentsConfigured}
         cryptoPaymentConfig={cryptoPaymentConfig}
+
         state={state}
         setState={setState}
       />
@@ -1493,7 +1464,7 @@ export function AgentCheckoutPaymentPanel({
   cryptoPaymentConfig: CryptoPaymentConfig | null;
   selectedPlan: AgentSubscriptionPlan;
 }) {
-  const [state, setState] = useAgentPurchaseState(product);
+  const [state, setState] = useAgentPurchaseState(product, selectedPlan);
 
   return (
     <aside id="purchase" className="purchase-card">

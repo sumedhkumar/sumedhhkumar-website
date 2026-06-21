@@ -16,6 +16,8 @@ export type TradingAgentProduct = {
   fullDescription: string;
   image: string;
   screenshots: string[];
+  galleryImages?: string[];
+  galleryImageAlt?: string[];
   platform: string;
   market: string;
   keyCapabilities: string[];
