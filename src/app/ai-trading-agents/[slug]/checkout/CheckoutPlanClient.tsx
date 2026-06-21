@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  agentSubscriptionPlans,
+  getAgentSubscriptionPlans,
   getSubscriptionAgentPlan,
 } from "@/data/agent-subscription-plans";
 import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
+import { calculateFinalPrice } from "@/lib/pricing";
 
 type CheckoutPlanClientProps = {
   product: TradingAgentProduct;
@@ -16,7 +17,12 @@ type CheckoutPlanClientProps = {
 };
 
 function formatUsd(value: number) {
-  return `$${value}`;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 export default function CheckoutPlanClient({
@@ -25,9 +31,20 @@ export default function CheckoutPlanClient({
   cryptoPaymentConfig,
 }: CheckoutPlanClientProps) {
   const searchParams = useSearchParams();
+  const availablePlans = getAgentSubscriptionPlans(product.slug);
   const selectedPlan =
     getSubscriptionAgentPlan(product.slug, searchParams.get("plan") ?? "") ??
-    agentSubscriptionPlans[0];
+    availablePlans[0];
+
+  if (!selectedPlan) {
+    return null;
+  }
+
+  const defaultPrice = calculateFinalPrice(
+    product.slug,
+    selectedPlan.id,
+    "EARLYACCESS",
+  );
 
   const checkoutProduct = {
     ...product,
@@ -60,9 +77,9 @@ export default function CheckoutPlanClient({
             </dd>
           </div>
           <div>
-            <dt>Payable price</dt>
+            <dt>Default payable price</dt>
             <dd className="astro-gold-selected-payable">
-              {formatUsd(selectedPlan.priceUsd)}
+              {formatUsd(defaultPrice.finalPriceUsd || selectedPlan.priceUsd)}
             </dd>
           </div>
           <div>

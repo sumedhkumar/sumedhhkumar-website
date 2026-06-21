@@ -5,29 +5,11 @@ import { isSubscriptionAgentSlug } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
-import { calculateFinalPrice } from "@/lib/pricing";
-import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
+import CheckoutPlanClient from "./CheckoutPlanClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
-
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function readPlanParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value[0] ?? "";
-  }
-
-  return value ?? "";
-}
 
 function findProduct(slug: string) {
   return products.find((product) => product.slug === slug && product.active);
@@ -81,51 +63,9 @@ export default async function SubscriptionCheckoutPage({ params }: PageProps) {
           </p>
         </header>
 
-        <div className="astro-gold-checkout-grid">
-          <section className="astro-gold-selected-plan-card">
-            <h2 className="subsection-title">Selected plan</h2>
-            <dl className="astro-gold-selected-plan-details">
-              <div>
-                <dt>Product</dt>
-                <dd>{product.name}</dd>
-              </div>
-              <div>
-                <dt>Plan</dt>
-                <dd>{selectedPlan.name}</dd>
-              </div>
-              <div>
-                <dt>Duration</dt>
-                <dd>{selectedPlan.durationLabel}</dd>
-              </div>
-              <div>
-                <dt>Original price</dt>
-                <dd className="astro-gold-selected-original">
-                  {formatUsd(selectedPlan.originalPriceUsd)}
-                </dd>
-              </div>
-              <div>
-                <dt>Default payable price</dt>
-                <dd className="astro-gold-selected-payable">
-                  {formatUsd(calculateFinalPrice(product.slug, selectedPlan.id, "EARLYACCESS").finalPriceUsd || selectedPlan.priceUsd)}
-                </dd>
-              </div>
-              <div>
-                <dt>Note</dt>
-                <dd>{selectedPlan.note}</dd>
-              </div>
-            </dl>
-            <p className="astro-gold-checkout-risk-copy">
-              Trading involves risk. Past performance and backtest results do
-              not guarantee future results. {product.name} is software tooling,
-              not investment advice.
-            </p>
-            <Link className="astro-gold-back-link" href={`/ai-trading-agents/${product.slug}/plans`}>
-              Change selected plan
-            </Link>
-          </section>
-
-          <AgentCheckoutPaymentPanel
-            product={checkoutProduct}
+        <Suspense fallback={null}>
+          <CheckoutPlanClient
+            product={product}
             paymentsConfigured={paymentsConfigured}
             cryptoPaymentConfig={cryptoPaymentConfig}
           />
