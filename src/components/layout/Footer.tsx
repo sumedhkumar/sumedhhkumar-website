@@ -3,6 +3,7 @@ import { getPublicContactDetails } from "@/data/site";
 
 const navigationLinks = [
   { label: "AI Trading Software Agents", href: "/ai-trading-agents" },
+  { label: "Algo Trading Course", href: "/algo-trading-course" },
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "Founder", href: "/#founder" },

@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "AI Trading Software Agents", href: "/ai-trading-agents" },
+  { label: "Masterclass", href: "/algo-trading-course" },
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "Contact", href: "/#contact" },
