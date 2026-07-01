@@ -1,16 +1,13 @@
-name: Build Hostinger static output
+name: Build legacy Hostinger static output
 
 on:
-  push:
-    branches:
-      - vyntegra-v2
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   build-static:
-    if: ${{ !contains(github.event.head_commit.message, '[hostinger-static]') }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

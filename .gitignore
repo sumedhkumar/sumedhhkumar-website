@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/hostinger-node/
+/hostinger-node-deploy.zip
 
 # production
 /build

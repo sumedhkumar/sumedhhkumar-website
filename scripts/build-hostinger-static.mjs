@@ -116,6 +116,10 @@ export default nextConfig;
     'import { experts } from "@/data/experts";',
   );
   ensureStaticParams(
+    "src/app/experts/[slug]/checkout/page.tsx",
+    'import { experts } from "@/data/experts";',
+  );
+  ensureStaticParams(
     "src/app/experts/[slug]/crypto-payment/page.tsx",
     'import { experts } from "@/data/experts";',
   );

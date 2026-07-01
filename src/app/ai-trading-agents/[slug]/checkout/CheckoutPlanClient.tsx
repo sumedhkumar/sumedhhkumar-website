@@ -8,6 +8,7 @@ import {
 } from "@/data/agent-subscription-plans";
 import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
+import { calculateFinalPrice } from "@/lib/pricing";
 
 type CheckoutPlanClientProps = {
   product: TradingAgentProduct;
@@ -16,7 +17,12 @@ type CheckoutPlanClientProps = {
 };
 
 function formatUsd(value: number) {
-  return `$${value}`;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 export default function CheckoutPlanClient({
@@ -65,9 +71,9 @@ export default function CheckoutPlanClient({
             </dd>
           </div>
           <div>
-            <dt>Payable price</dt>
+            <dt>Default payable price</dt>
             <dd className="astro-gold-selected-payable">
-              {formatUsd(selectedPlan.priceUsd)}
+              {formatUsd(defaultPrice.finalPriceUsd || selectedPlan.priceUsd)}
             </dd>
           </div>
           <div>

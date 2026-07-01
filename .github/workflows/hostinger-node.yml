@@ -1,0 +1,42 @@
+name: Build Hostinger Node application
+
+on:
+  push:
+    branches:
+      - vyntegra-v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Prepare encrypted build environment
+        shell: bash
+        env:
+          HOSTINGER_ENV_FILE: ${{ secrets.HOSTINGER_ENV_FILE }}
+        run: |
+          test -n "$HOSTINGER_ENV_FILE"
+          printf '%s' "$HOSTINGER_ENV_FILE" > "$RUNNER_TEMP/hostinger.env"
+
+      - name: Build standalone Node application
+        run: node scripts/package-hostinger-node.mjs --env-file "$RUNNER_TEMP/hostinger.env" --embed-env
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hostinger-node-${{ github.sha }}
+          path: hostinger-node
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1

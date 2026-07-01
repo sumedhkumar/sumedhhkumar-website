@@ -9,30 +9,12 @@ import {
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
-import { calculateFinalPrice } from "@/lib/pricing";
-import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
+import CheckoutPlanClient from "./CheckoutPlanClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
-
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function readPlanParam(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value[0] ?? "";
-  }
-
-  return value ?? "";
-}
 
 function findProduct(slug: string) {
   return products.find((product) => product.slug === slug && product.active);
