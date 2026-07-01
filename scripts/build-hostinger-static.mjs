@@ -4,6 +4,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const originals = new Map();
+const args = process.argv.slice(2);
 const disabledPaths = [
   {
     source: "src/app/api",
@@ -18,6 +19,36 @@ const disabledPaths = [
     destination: ".hostinger-disabled-course-access",
   },
 ];
+
+function readArg(name) {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : "";
+}
+
+function parseEnv(contents) {
+  const values = {};
+
+  for (const rawLine of contents.replace(/^\uFEFF/, "").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+
+    const separator = line.indexOf("=");
+    if (separator < 1) continue;
+
+    const key = line.slice(0, separator).trim();
+    let value = line.slice(separator + 1).trim();
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      value = value.slice(1, -1);
+    }
+    values[key] = value;
+  }
+
+  return values;
+}
 
 function filePath(relativePath) {
   return path.join(root, relativePath);
@@ -134,6 +165,16 @@ ErrorDocument 404 /404.html
 }
 
 try {
+  const envFile = readArg("--env-file");
+  if (envFile) {
+    Object.assign(
+      process.env,
+      parseEnv(fs.readFileSync(path.resolve(envFile), "utf8")),
+    );
+    process.env.APP_BASE_URL = "https://vyntegra.in";
+    process.env.NODE_ENV = "production";
+  }
+
   remember("next.config.ts");
   write(
     "next.config.ts",

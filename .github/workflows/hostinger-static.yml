@@ -25,7 +25,17 @@ jobs:
 
       - run: npm ci
 
-      - run: node scripts/build-hostinger-static.mjs
+      - name: Prepare encrypted build environment
+        shell: pwsh
+        env:
+          HOSTINGER_ENV_FILE: ${{ secrets.HOSTINGER_ENV_FILE }}
+        run: |
+          if (-not $env:HOSTINGER_ENV_FILE) {
+            throw "HOSTINGER_ENV_FILE secret is not configured."
+          }
+          Set-Content -LiteralPath "$env:RUNNER_TEMP\hostinger.env" -Value $env:HOSTINGER_ENV_FILE -NoNewline
+
+      - run: node scripts/build-hostinger-static.mjs --env-file "$env:RUNNER_TEMP\hostinger.env"
 
       - name: Sync static output to repository root
         shell: pwsh
