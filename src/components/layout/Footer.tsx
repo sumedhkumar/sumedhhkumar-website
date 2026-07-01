@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { algoTradingCourse } from "@/data/algo-trading-course";
 import { getPublicContactDetails } from "@/data/site";
 
 const navigationLinks = [
   { label: "AI Trading Software Agents", href: "/ai-trading-agents" },
+  { label: "Algo Trading Course", href: algoTradingCourse.route },
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "Founder", href: "/#founder" },

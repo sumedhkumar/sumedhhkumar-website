@@ -1158,7 +1158,7 @@ textarea.form-control {
 .product-pathways {
   padding: 10px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1241,6 +1241,12 @@ textarea.form-control {
   line-height: 1.2;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+@media (max-width: 1180px) and (min-width: 1024px) {
+  .product-pathways {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .offering-grid,
@@ -6920,5 +6926,2543 @@ textarea.form-control {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 14px;
+  }
+}
+
+/* Vyntegra Trading Automation Masterclass landing page */
+.algo-course-page {
+  background:
+    radial-gradient(ellipse 80% 42% at 50% 0%, rgba(184, 145, 74, 0.10), transparent 62%),
+    linear-gradient(180deg, rgba(8, 9, 11, 0.96) 0%, rgba(10, 12, 16, 0.98) 44%, rgba(6, 7, 9, 1) 100%);
+}
+
+.algo-course-hero {
+  min-height: 620px;
+  display: flex;
+  align-items: center;
+  padding-top: 84px;
+  padding-bottom: 76px;
+}
+
+.algo-course-hero::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.032) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.020) 0 1px, transparent 1px 88px);
+  transform: perspective(960px) rotateX(58deg) translateY(220px) scale(1.5);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 30%, transparent 88%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 30%, transparent 88%);
+}
+
+.algo-course-hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(340px, 0.68fr);
+  align-items: center;
+  gap: 52px;
+}
+
+.algo-course-hero-copy {
+  display: grid;
+  gap: 14px;
+  max-width: 780px;
+}
+
+.algo-course-hero-copy .hero-title {
+  max-width: 760px;
+  font-size: clamp(40px, 5vw, 64px);
+}
+
+.algo-course-hero-copy .body-large {
+  max-width: 680px;
+}
+
+.algo-course-hero-support {
+  max-width: 640px;
+  color: #D8CBA6;
+  font-weight: 600;
+}
+
+.algo-course-actions {
+  justify-content: flex-start;
+  margin-top: 6px;
+}
+
+.algo-course-hero-offer {
+  width: min(100%, 740px);
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.algo-course-hero-offer div {
+  min-height: 76px;
+  padding: 14px 16px;
+  border: 1px solid rgba(184, 145, 74, 0.24);
+  border-radius: 8px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.050), rgba(255, 255, 255, 0.012)),
+    rgba(12, 14, 18, 0.70);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.algo-course-hero-offer span,
+.algo-course-card-kicker {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.algo-course-hero-offer strong {
+  color: #F7F3EA;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.algo-course-hero-panel {
+  padding: 28px;
+  display: grid;
+  gap: 20px;
+  border-color: rgba(184, 145, 74, 0.30);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.060), rgba(255, 255, 255, 0.018)),
+    rgba(8, 10, 13, 0.88);
+}
+
+.algo-course-panel-header {
+  display: grid;
+  gap: 9px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.algo-course-panel-header .subsection-title {
+  max-width: 460px;
+  font-size: 24px;
+  line-height: 1.22;
+}
+
+.algo-course-panel-header .body-compact {
+  color: #B7B1A3;
+}
+
+.algo-course-brief-list {
+  margin: 0;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgba(184, 145, 74, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.024);
+}
+
+.algo-course-brief-list div {
+  display: grid;
+  grid-template-columns: minmax(112px, 0.44fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.algo-course-brief-list div:last-child {
+  border-bottom: 0;
+}
+
+.algo-course-brief-list dt {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.algo-course-brief-list dd {
+  margin: 0;
+  color: #F0EADF;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.algo-course-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 0;
+}
+
+.algo-course-stat {
+  min-height: 104px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  animation: none;
+}
+
+.algo-course-stat strong {
+  color: #F7F3EA;
+  font-size: 18px;
+  line-height: 1.24;
+}
+
+.algo-course-stat span {
+  color: #9CA0A7;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.algo-course-preview-grid,
+.algo-course-curriculum-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.algo-course-preview-grid .standard-card,
+.algo-course-curriculum-grid .standard-card,
+.algo-course-faq-grid .standard-card {
+  animation: none;
+}
+
+.algo-course-preview-card,
+.algo-course-month-card,
+.algo-course-access-video-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-color: rgba(184, 145, 74, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.044), rgba(255, 255, 255, 0.014)),
+    rgba(10, 12, 16, 0.74);
+}
+
+.algo-course-preview-card::before,
+.algo-course-month-card::before,
+.algo-course-access-video-card::before {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  left: 18px;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(184, 145, 74, 0.70), transparent);
+}
+
+.algo-course-preview-card .card-title,
+.algo-course-month-card .card-title,
+.algo-course-access-video-card .card-title {
+  margin-top: 0;
+}
+
+.algo-course-card-kicker {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 6px 9px;
+  border: 1px solid rgba(184, 145, 74, 0.22);
+  border-radius: 999px;
+  background: rgba(184, 145, 74, 0.060);
+}
+
+.algo-course-video-placeholder {
+  min-height: 168px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  border: 1px solid rgba(184, 145, 74, 0.20);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(184, 145, 74, 0.12), rgba(255, 255, 255, 0.014)),
+    #0B0D11;
+  color: #D8CBA6;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(184, 145, 74, 0.16);
+}
+
+.algo-course-video-placeholder span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: #D8CBA6;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.algo-course-video-link {
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.algo-course-video-link:hover {
+  border-color: rgba(216, 203, 166, 0.50);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(184, 145, 74, 0.18),
+    0 16px 32px rgba(10, 12, 16, 0.16);
+}
+
+.algo-course-learning-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.algo-course-learning-card {
+  min-height: 138px;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 18px;
+  animation: none;
+}
+
+.algo-course-learning-card .card-title {
+  font-size: 15px;
+}
+
+.algo-course-included-grid,
+.algo-course-registration-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(360px, 0.72fr);
+  align-items: start;
+  gap: 44px;
+}
+
+.algo-course-registration-notes {
+  max-width: 640px;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.algo-course-registration-notes li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 13px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.algo-course-registration-notes span {
+  color: #B8914A;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.algo-course-registration-notes strong {
+  display: block;
+  color: #F7F3EA;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.algo-course-registration-notes p {
+  margin: 4px 0 0;
+  color: #AEB0B5;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.algo-course-included-panel {
+  padding: 26px;
+  display: grid;
+  gap: 12px;
+}
+
+.algo-course-included-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: #CAC5B8;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.algo-course-included-item:last-child {
+  border-bottom: 0;
+}
+
+.algo-course-pricing-panel {
+  padding: 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+  align-items: center;
+  gap: 34px;
+  border-color: rgba(184, 145, 74, 0.26);
+}
+
+.algo-course-price-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.algo-course-price-stack div {
+  display: grid;
+  gap: 4px;
+  padding: 15px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.050), rgba(255, 255, 255, 0.014)),
+    rgba(255, 255, 255, 0.018);
+}
+
+.algo-course-price-stack span {
+  color: #9CA0A7;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.algo-course-price-stack strong {
+  color: #E1C985;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.16;
+}
+
+.algo-course-price-stack .algo-course-price-muted {
+  color: #CAC5B8;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.algo-course-price-stack small {
+  color: #858A92;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.algo-course-form {
+  padding: 30px;
+  display: grid;
+  gap: 18px;
+}
+
+.algo-course-form-copy {
+  margin-top: 8px;
+}
+
+.algo-course-form .form-control {
+  margin-top: 8px;
+}
+
+.algo-course-form .form-control:invalid:not(:placeholder-shown) {
+  border-color: rgba(239, 111, 108, 0.48);
+}
+
+.algo-course-trust-note {
+  padding: 12px 14px;
+  border: 1px solid rgba(184, 145, 74, 0.20);
+  border-radius: 8px;
+  background: rgba(184, 145, 74, 0.045);
+}
+
+.algo-course-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.algo-course-conversion-page .section-bg-primary {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.006)),
+    rgba(7, 8, 11, 0.60);
+}
+
+.algo-course-conversion-page .section-bg-secondary {
+  background:
+    linear-gradient(180deg, rgba(184, 145, 74, 0.038), rgba(255, 255, 255, 0.008)),
+    rgba(12, 14, 18, 0.72);
+}
+
+.algo-course-hero-proof-note {
+  padding: 13px 14px;
+  border: 1px solid rgba(184, 145, 74, 0.22);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #D8CBA6;
+  background: rgba(184, 145, 74, 0.055);
+}
+
+.algo-course-hero-proof-note p {
+  color: #D8D2C5;
+  font-size: 13px;
+  line-height: 1.58;
+}
+
+.algo-course-problem-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(360px, 0.72fr);
+  align-items: start;
+  gap: 44px;
+}
+
+.algo-course-problem-list {
+  display: grid;
+  gap: 12px;
+}
+
+.algo-course-problem-item {
+  min-height: 96px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 13px;
+  align-items: start;
+  color: #E1C985;
+  border-color: rgba(184, 145, 74, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.054), rgba(255, 255, 255, 0.014)),
+    rgba(10, 12, 16, 0.76);
+}
+
+.algo-course-problem-item p {
+  color: #D8D2C5;
+  font-size: 15px;
+  line-height: 1.62;
+}
+
+.algo-course-section-cta {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+}
+
+.algo-course-results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.algo-course-result-card {
+  min-height: 220px;
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  color: #E1C985;
+  border-color: rgba(184, 145, 74, 0.20);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.056), rgba(255, 255, 255, 0.014)),
+    rgba(10, 12, 16, 0.78);
+  animation: none;
+}
+
+.algo-course-result-card .card-title {
+  margin-top: 0;
+}
+
+.algo-course-transform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.algo-course-transform-card {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  border-color: rgba(184, 145, 74, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.014)),
+    rgba(9, 11, 15, 0.82);
+}
+
+.algo-course-transform-card div {
+  min-height: 112px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.algo-course-transform-card span {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.algo-course-transform-card p {
+  color: #F0EADF;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.42;
+}
+
+.algo-course-transform-card small {
+  grid-column: 1 / -1;
+  color: #AEB0B5;
+  font-size: 13px;
+  line-height: 1.58;
+}
+
+.algo-course-testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.algo-course-testimonial-card {
+  display: grid;
+  gap: 18px;
+}
+
+.algo-course-testimonial-card strong {
+  display: block;
+  color: #F7F3EA;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.algo-course-testimonial-card span {
+  display: block;
+  margin-top: 3px;
+  color: #9CA0A7;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.algo-course-feedback-empty {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 26px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  color: #E1C985;
+  border-color: rgba(184, 145, 74, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.014)),
+    rgba(10, 12, 16, 0.80);
+}
+
+.algo-course-feedback-empty .card-title {
+  margin-top: 0;
+}
+
+.algo-course-audience-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.algo-course-audience-panel {
+  padding: 26px;
+  display: grid;
+  gap: 18px;
+  border-color: rgba(184, 145, 74, 0.24);
+}
+
+.algo-course-audience-panel-muted {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.algo-course-simple-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  list-style: none;
+}
+
+.algo-course-simple-list li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: #E1C985;
+}
+
+.algo-course-simple-list span {
+  color: #D8D2C5;
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.algo-course-final-cta {
+  padding: 34px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  color: #E1C985;
+  border-color: rgba(184, 145, 74, 0.30);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.072), rgba(255, 255, 255, 0.018)),
+    rgba(9, 11, 15, 0.86);
+}
+
+.algo-course-final-cta .section-title {
+  font-size: clamp(30px, 3vw, 42px);
+}
+
+.algo-course-final-cta .body-standard {
+  margin-top: 8px;
+}
+
+.algo-course-register-cta-panel {
+  padding: 30px;
+  display: grid;
+  gap: 18px;
+  border-color: rgba(184, 145, 74, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.060), rgba(255, 255, 255, 0.014)),
+    rgba(8, 10, 13, 0.84);
+}
+
+.algo-course-register-cta-icon {
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(184, 145, 74, 0.34);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(184, 145, 74, 0.18), rgba(184, 145, 74, 0.050)),
+    rgba(255, 255, 255, 0.026);
+  color: #E1C985;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.algo-course-register-cta-panel .subsection-title {
+  margin-top: 8px;
+  font-size: 28px;
+}
+
+.algo-course-register-cta-panel .body-standard {
+  margin-top: 10px;
+}
+
+.algo-course-register-page {
+  min-height: 100vh;
+}
+
+.vyntegra-courses-page {
+  min-height: 100vh;
+}
+
+.vyntegra-courses-shell {
+  display: grid;
+  gap: 30px;
+}
+
+.vyntegra-courses-intro {
+  margin: 0;
+  text-align: left;
+}
+
+.vyntegra-courses-intro .hero-title {
+  font-size: clamp(42px, 5vw, 64px);
+}
+
+.vyntegra-course-card {
+  width: min(100%, 720px);
+  padding: 30px;
+  display: grid;
+  gap: 18px;
+  border-color: rgba(184, 145, 74, 0.27);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.064), rgba(255, 255, 255, 0.018)),
+    rgba(8, 10, 13, 0.88);
+}
+
+.vyntegra-course-card .subsection-title {
+  margin-top: 8px;
+}
+
+.vyntegra-course-card .body-standard {
+  margin-top: 10px;
+}
+
+.algo-course-register-hero {
+  min-height: 760px;
+  display: flex;
+  align-items: center;
+  padding-top: 104px;
+  padding-bottom: 86px;
+}
+
+.algo-course-register-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(390px, 0.64fr);
+  align-items: start;
+  gap: 38px;
+}
+
+.algo-course-register-summary,
+.algo-course-auth-card {
+  border-color: rgba(184, 145, 74, 0.27);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.064), rgba(255, 255, 255, 0.018)),
+    rgba(8, 10, 13, 0.88);
+}
+
+.algo-course-register-summary {
+  position: sticky;
+  top: 96px;
+  padding: 34px;
+  display: grid;
+  gap: 22px;
+}
+
+.algo-course-register-summary .hero-title {
+  font-size: clamp(38px, 4.6vw, 58px);
+  line-height: 1.02;
+}
+
+.algo-course-register-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.algo-course-register-highlights div {
+  min-height: 100px;
+  padding: 15px;
+  border: 1px solid rgba(184, 145, 74, 0.20);
+  border-radius: 8px;
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.046), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.018);
+}
+
+.algo-course-register-highlights span {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.algo-course-register-highlights strong {
+  color: #F7F3EA;
+  font-size: 15px;
+  line-height: 1.42;
+}
+
+.algo-course-register-trust {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(184, 145, 74, 0.20);
+  border-radius: 8px;
+  color: #D8CBA6;
+  background: rgba(184, 145, 74, 0.045);
+}
+
+.algo-course-register-trust p {
+  color: #D8D2C5;
+  font-size: 13px;
+  line-height: 1.62;
+}
+
+.algo-course-auth-card {
+  padding: 30px;
+  display: grid;
+  gap: 18px;
+}
+
+.algo-course-reset-shell {
+  display: grid;
+  justify-items: center;
+}
+
+.algo-course-reset-card {
+  width: min(100%, 560px);
+  padding: 32px;
+  display: grid;
+  gap: 18px;
+  border-color: rgba(184, 145, 74, 0.27);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.064), rgba(255, 255, 255, 0.018)),
+    rgba(8, 10, 13, 0.88);
+}
+
+.algo-course-reset-icon {
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(184, 145, 74, 0.34);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(184, 145, 74, 0.18), rgba(184, 145, 74, 0.050)),
+    rgba(255, 255, 255, 0.026);
+  color: #E1C985;
+}
+
+.algo-course-blocked-card {
+  text-align: left;
+}
+
+.algo-course-blocked-icon {
+  border-color: rgba(239, 111, 108, 0.32);
+  color: #F0A09D;
+  background:
+    linear-gradient(180deg, rgba(239, 111, 108, 0.16), rgba(239, 111, 108, 0.045)),
+    rgba(255, 255, 255, 0.024);
+}
+
+.algo-course-auth-header {
+  display: grid;
+  gap: 8px;
+}
+
+.algo-course-auth-header .subsection-title {
+  font-size: 30px;
+}
+
+.algo-course-auth-tabs {
+  min-height: 48px;
+  padding: 4px;
+  border: 1px solid rgba(184, 145, 74, 0.22);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.algo-course-auth-tabs button,
+.algo-course-password-label-row button {
+  cursor: pointer;
+}
+
+.algo-course-auth-tabs button {
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #CAC5B8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.algo-course-auth-tabs button.is-active {
+  background:
+    linear-gradient(180deg, rgba(184, 145, 74, 0.25), rgba(184, 145, 74, 0.080)),
+    rgba(255, 255, 255, 0.050);
+  color: #F7F3EA;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.algo-course-google-button {
+  width: 100%;
+}
+
+.algo-course-auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.algo-course-auth-form .form-control {
+  margin-top: 8px;
+}
+
+.algo-course-password-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.algo-course-password-label-row button {
+  border: 0;
+  background: transparent;
+  color: #E1C985;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.algo-course-password-label-row button:disabled {
+  cursor: wait;
+  color: #858A92;
+}
+
+.algo-course-signed-in-note,
+.algo-course-auth-status,
+.algo-course-auth-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 8px;
+}
+
+.algo-course-signed-in-note {
+  padding: 12px 14px;
+  border: 1px solid rgba(53, 196, 134, 0.22);
+  color: #9FE2C0;
+  background: rgba(53, 196, 134, 0.055);
+}
+
+.algo-course-auth-status {
+  padding: 13px 14px;
+  border: 1px solid rgba(184, 145, 74, 0.18);
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.algo-course-auth-status p,
+.algo-course-auth-footnote p,
+.algo-course-signed-in-note span {
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.algo-course-auth-status-success {
+  color: #9FE2C0;
+  border-color: rgba(53, 196, 134, 0.24);
+  background: rgba(53, 196, 134, 0.055);
+}
+
+.algo-course-auth-status-error {
+  color: #F0A09D;
+  border-color: rgba(239, 111, 108, 0.26);
+  background: rgba(239, 111, 108, 0.055);
+}
+
+.algo-course-auth-status-info {
+  color: #D8CBA6;
+}
+
+.algo-course-auth-footnote {
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #AEB0B5;
+}
+
+.algo-course-auth-footnote span {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.algo-course-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.algo-course-faq-grid .standard-card {
+  min-height: 190px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.algo-course-disclaimer-section {
+  padding-top: 56px;
+}
+
+.algo-course-disclaimer {
+  padding: 20px 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-color: rgba(184, 145, 74, 0.30);
+}
+
+.algo-course-disclaimer p {
+  color: #D8D2C5;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 1180px) {
+  .algo-course-learning-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .algo-course-results-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .algo-course-faq-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .algo-course-hero {
+    min-height: 0;
+  }
+
+  .algo-course-hero-grid,
+  .algo-course-problem-grid,
+  .algo-course-included-grid,
+  .algo-course-registration-grid,
+  .algo-course-register-grid,
+  .algo-course-pricing-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-preview-grid,
+  .algo-course-curriculum-grid,
+  .algo-course-transform-grid,
+  .algo-course-audience-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-hero-panel {
+    max-width: 680px;
+  }
+
+  .algo-course-register-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .algo-course-hero {
+    padding-top: 76px;
+    padding-bottom: 64px;
+  }
+
+  .algo-course-hero-grid,
+  .algo-course-problem-grid,
+  .algo-course-included-grid,
+  .algo-course-registration-grid,
+  .algo-course-register-grid {
+    gap: 28px;
+  }
+
+  .algo-course-hero-copy .hero-title {
+    font-size: 42px;
+  }
+
+  .algo-course-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-hero-offer {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-actions .btn,
+  .algo-course-price-stack .btn,
+  .algo-course-form .btn {
+    width: 100%;
+  }
+
+  .algo-course-stat-grid,
+  .algo-course-learning-grid,
+  .algo-course-results-grid,
+  .algo-course-testimonial-grid,
+  .algo-course-faq-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-transform-card {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-transform-card svg {
+    transform: rotate(90deg);
+  }
+
+  .algo-course-feedback-empty {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-final-cta {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .algo-course-section-cta .btn,
+  .algo-course-final-cta .btn {
+    width: 100%;
+  }
+
+  .algo-course-hero-panel,
+  .algo-course-form,
+  .algo-course-pricing-panel,
+  .algo-course-included-panel,
+  .algo-course-audience-panel,
+  .algo-course-final-cta,
+  .algo-course-register-summary,
+  .algo-course-auth-card,
+  .algo-course-reset-card,
+  .algo-course-register-cta-panel {
+    padding: 22px;
+  }
+
+  .algo-course-register-hero {
+    padding-top: 82px;
+    padding-bottom: 64px;
+  }
+
+  .algo-course-register-highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-auth-header .subsection-title,
+  .algo-course-register-cta-panel .subsection-title {
+    font-size: 24px;
+  }
+
+  .algo-course-brief-list div {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .algo-course-panel-header .subsection-title {
+    font-size: 21px;
+  }
+
+  .algo-course-video-placeholder {
+    min-height: 140px;
+  }
+
+  .algo-course-price-stack strong {
+    font-size: 30px;
+  }
+}
+
+/* Vyntegra Trading Automation Masterclass access page */
+.algo-course-access-page {
+  background: transparent;
+}
+
+.algo-course-access-hero {
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  padding-top: 104px;
+}
+
+.algo-course-access-hero::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 38% at 50% 14%, rgba(184, 145, 74, 0.12), transparent),
+    linear-gradient(180deg, transparent 0%, rgba(184, 145, 74, 0.040) 54%, transparent 100%);
+}
+
+.algo-course-access-hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.52fr);
+  align-items: center;
+  gap: 42px;
+}
+
+.algo-course-access-greeting {
+  color: #E1C985;
+  font-weight: 700;
+}
+
+.algo-course-access-summary {
+  padding: 28px;
+}
+
+.algo-course-access-summary-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.algo-course-access-summary-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.algo-course-access-summary-grid div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.algo-course-access-summary-grid strong {
+  color: #F7F3EA;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.algo-course-access-summary-grid span {
+  color: #9CA0A7;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.algo-course-access-video-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.algo-course-access-video-grid .standard-card {
+  animation: none;
+}
+
+.algo-course-access-video-placeholder {
+  min-height: 300px;
+}
+
+.algo-course-access-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.algo-course-access-action-card {
+  min-height: 360px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.algo-course-access-action-card .btn {
+  width: fit-content;
+  margin-top: auto;
+}
+
+.algo-course-placeholder-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(184, 145, 74, 0.20);
+  border-radius: 8px;
+  background: rgba(184, 145, 74, 0.045);
+  color: #D8CBA6;
+}
+
+.algo-course-access-payment-panel .btn {
+  width: 100%;
+}
+
+.algo-course-payment-status-panel,
+.algo-course-after-payment-panel {
+  margin-top: 18px;
+  border: 1px solid rgba(184, 145, 74, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.030);
+}
+
+.algo-course-payment-status-panel {
+  padding: 14px 15px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+}
+
+.algo-course-payment-status-panel p {
+  color: #D8D2C5;
+  font-size: 14px;
+  line-height: 1.62;
+}
+
+.algo-course-payment-status-paid {
+  border-color: rgba(53, 196, 134, 0.28);
+  color: #9FE2C0;
+  background: rgba(53, 196, 134, 0.060);
+}
+
+.algo-course-payment-status-manual {
+  border-color: rgba(236, 184, 91, 0.34);
+  color: #F3D79C;
+  background: rgba(236, 184, 91, 0.060);
+}
+
+.algo-course-after-payment-panel {
+  padding: 18px;
+}
+
+.algo-course-after-payment-panel .card-title {
+  margin-top: 0;
+}
+
+.algo-course-after-payment-panel ol {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 9px;
+}
+
+.algo-course-after-payment-panel li,
+.algo-course-after-payment-panel p {
+  color: #D8D2C5;
+  font-size: 14px;
+  line-height: 1.62;
+}
+
+.algo-course-after-payment-panel p {
+  margin-top: 14px;
+  color: #D8CBA6;
+}
+
+.admin-course-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(184, 145, 74, 0.045), rgba(255, 255, 255, 0.008)),
+    #080A0D;
+}
+
+.admin-course-hero {
+  padding-top: 112px;
+}
+
+.admin-course-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-course-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  align-items: end;
+  gap: 28px;
+}
+
+.admin-course-header .section-title {
+  font-size: clamp(38px, 4vw, 58px);
+}
+
+.admin-course-summary {
+  min-height: 112px;
+  padding: 18px;
+  border: 1px solid rgba(184, 145, 74, 0.24);
+  border-radius: 8px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.054), rgba(255, 255, 255, 0.014)),
+    rgba(10, 12, 16, 0.86);
+}
+
+.admin-course-summary span {
+  color: #B8914A;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-course-summary strong {
+  color: #F7F3EA;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.admin-course-token-panel,
+.admin-course-filter-panel,
+.admin-course-results-panel {
+  border-color: rgba(184, 145, 74, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.056), rgba(255, 255, 255, 0.014)),
+    rgba(8, 10, 13, 0.88);
+}
+
+.admin-course-token-panel {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.admin-course-token-actions,
+.admin-course-filter-actions,
+.admin-course-pagination,
+.admin-course-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-course-token-actions .btn,
+.admin-course-filter-actions .btn {
+  min-height: 44px;
+}
+
+.admin-course-token-actions svg,
+.admin-course-filter-actions svg,
+.admin-course-actions svg {
+  flex: 0 0 auto;
+}
+
+.admin-course-filter-panel {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+}
+
+.admin-course-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.15fr) repeat(4, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.admin-course-search-control {
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 0 14px;
+  border: 1px solid rgba(184, 145, 74, 0.24);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  color: #B8914A;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.admin-course-search-control input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #F7F3EA;
+  font: inherit;
+}
+
+.admin-course-search-control input::placeholder {
+  color: #858A92;
+}
+
+.admin-course-alert {
+  padding: 14px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.admin-course-alert p {
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.admin-course-alert-error {
+  border: 1px solid rgba(239, 111, 108, 0.30);
+  color: #F0A09D;
+  background: rgba(239, 111, 108, 0.065);
+}
+
+.admin-course-alert-success {
+  border: 1px solid rgba(53, 196, 134, 0.26);
+  color: #9FE2C0;
+  background: rgba(53, 196, 134, 0.060);
+}
+
+.admin-course-results-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-course-results-header {
+  padding: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.admin-course-results-header .subsection-title {
+  font-size: 28px;
+}
+
+.admin-course-pagination button,
+.admin-course-actions button {
+  min-height: 38px;
+  border: 1px solid rgba(184, 145, 74, 0.24);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.044);
+  color: #F0EADF;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.admin-course-pagination button {
+  padding: 0 13px;
+}
+
+.admin-course-pagination span {
+  color: #AEB0B5;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-course-pagination button:hover,
+.admin-course-actions button:hover {
+  border-color: rgba(216, 203, 166, 0.48);
+  background: rgba(184, 145, 74, 0.11);
+}
+
+.admin-course-pagination button:disabled,
+.admin-course-actions button:disabled {
+  cursor: not-allowed;
+  color: #777D87;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.admin-course-loading,
+.admin-course-empty-state {
+  margin: 22px;
+}
+
+.admin-course-loading {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  color: #D8CBA6;
+}
+
+.admin-course-loading span {
+  color: #D8D2C5;
+  font-size: 14px;
+}
+
+.admin-course-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-course-table {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: collapse;
+}
+
+.admin-course-table th,
+.admin-course-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+  text-align: left;
+}
+
+.admin-course-table th {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.024);
+}
+
+.admin-course-table td {
+  color: #D8D2C5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-course-table td strong,
+.admin-course-table td span,
+.admin-course-table td small {
+  display: block;
+}
+
+.admin-course-table td strong {
+  color: #F7F3EA;
+  font-size: 14px;
+}
+
+.admin-course-table td span,
+.admin-course-table td small {
+  color: #AEB0B5;
+}
+
+.admin-course-status {
+  width: fit-content;
+  min-height: 28px;
+  padding: 6px 9px;
+  border: 1px solid rgba(184, 145, 74, 0.24);
+  border-radius: 999px;
+  color: #D8CBA6;
+  background: rgba(184, 145, 74, 0.070);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.admin-course-status-paid {
+  border-color: rgba(53, 196, 134, 0.30);
+  color: #9FE2C0;
+  background: rgba(53, 196, 134, 0.070);
+}
+
+.admin-course-status-blocked {
+  border-color: rgba(239, 111, 108, 0.32);
+  color: #F0A09D;
+  background: rgba(239, 111, 108, 0.070);
+}
+
+.admin-course-status-manual-verification {
+  border-color: rgba(236, 184, 91, 0.35);
+  color: #F3D79C;
+  background: rgba(236, 184, 91, 0.075);
+}
+
+.admin-course-status-unpaid,
+.admin-course-status-free-access {
+  border-color: rgba(184, 145, 74, 0.28);
+}
+
+.admin-course-actions {
+  min-width: 360px;
+}
+
+.admin-course-actions button {
+  padding: 0 10px;
+}
+
+.admin-course-card-list {
+  display: none;
+}
+
+.admin-course-mobile-card {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-course-mobile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-course-mobile-meta > span:not(.admin-course-status) {
+  min-height: 28px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  color: #AEB0B5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-course-mobile-details {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.admin-course-mobile-details div {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-course-mobile-details dt {
+  color: #B8914A;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-course-mobile-details dd {
+  margin: 0;
+  color: #D8D2C5;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .admin-course-header,
+  .admin-course-token-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-course-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-course-hero {
+    padding-top: 92px;
+  }
+
+  .admin-course-header .section-title {
+    font-size: 36px;
+  }
+
+  .admin-course-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-course-token-actions,
+  .admin-course-filter-actions,
+  .admin-course-results-header,
+  .admin-course-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-course-token-actions .btn,
+  .admin-course-filter-actions .btn,
+  .admin-course-pagination button {
+    width: 100%;
+  }
+
+  .admin-course-results-header {
+    align-items: stretch;
+  }
+
+  .admin-course-table-wrap {
+    display: none;
+  }
+
+  .admin-course-card-list {
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .admin-course-actions {
+    min-width: 0;
+  }
+
+  .admin-course-actions button {
+    flex: 1 1 148px;
+  }
+}
+
+/* Independent direct-response campaign landing page */
+.algo-campaign-page {
+  min-height: 100vh;
+  padding-bottom: 88px;
+  background: #fbf4e7;
+  color: #191611;
+}
+
+.algo-campaign-page .btn {
+  min-height: 46px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.algo-campaign-page .btn-primary {
+  border-color: #15120e;
+  background: #15120e;
+  color: #fff8e8;
+  box-shadow: 0 10px 20px rgba(21, 18, 14, 0.16);
+}
+
+.algo-campaign-page .btn-primary:hover {
+  border-color: #9f6b21;
+  background: #9f6b21;
+  color: #fff8e8;
+}
+
+.algo-campaign-page .eyebrow {
+  margin: 0;
+  color: #9f6b21;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.algo-campaign-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  min-height: 58px;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(34, 28, 20, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: rgba(251, 244, 231, 0.92);
+  backdrop-filter: blur(16px);
+}
+
+.algo-campaign-header .btn {
+  min-height: 44px;
+  padding: 0 15px;
+  font-size: 13px;
+}
+
+.algo-campaign-brand {
+  display: grid;
+  gap: 2px;
+  color: #191611;
+  text-decoration: none;
+}
+
+.algo-campaign-brand span {
+  font-size: 19px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.algo-campaign-brand small {
+  color: #9f6b21;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.algo-campaign-shell {
+  width: min(100% - 32px, 1120px);
+  margin: 0 auto;
+}
+
+.algo-campaign-hero {
+  padding: 22px 0 30px;
+}
+
+.algo-campaign-hero-grid {
+  display: grid;
+  grid-template-areas:
+    "copy"
+    "video"
+    "actions"
+    "chips";
+  gap: 16px;
+}
+
+.algo-campaign-hero-copy {
+  grid-area: copy;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+
+.algo-campaign-hero-copy h1,
+.algo-campaign-section-heading h2,
+.algo-campaign-program-card h2,
+.algo-campaign-final-card h2 {
+  margin: 0;
+  color: #191611;
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.algo-campaign-hero-copy h1 {
+  max-width: 760px;
+  font-size: 42px;
+  line-height: 0.98;
+}
+
+.algo-campaign-hero-copy p,
+.algo-campaign-actions p,
+.algo-campaign-section-heading p,
+.algo-campaign-program-card p,
+.algo-campaign-card p,
+.algo-campaign-truth-panel p,
+.algo-campaign-disclaimer p {
+  margin: 0;
+  color: #50463a;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.algo-campaign-hero-copy > p {
+  max-width: 680px;
+  font-size: 17px;
+}
+
+.algo-campaign-video-panel {
+  grid-area: video;
+  border: 1px solid rgba(34, 28, 20, 0.16);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fffaf0;
+  box-shadow: 0 18px 38px rgba(46, 34, 19, 0.12);
+}
+
+.algo-campaign-program-list span,
+.algo-campaign-lesson-grid .algo-campaign-card > span {
+  color: #9f6b21;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.algo-campaign-video-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #18140f;
+}
+
+.algo-campaign-video-card iframe,
+.algo-campaign-video-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.algo-campaign-video-card iframe {
+  border: 0;
+}
+
+.algo-campaign-video-placeholder {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  padding: 20px;
+  color: #d7b15d;
+  text-align: center;
+}
+
+.algo-campaign-video-placeholder span {
+  max-width: 280px;
+  color: #fff8e8;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.algo-campaign-actions {
+  grid-area: actions;
+  display: grid;
+  gap: 9px;
+  justify-items: center;
+  text-align: center;
+}
+
+.algo-campaign-actions .btn,
+.algo-campaign-section-cta .btn,
+.algo-campaign-program-card .btn,
+.algo-campaign-final-card .btn {
+  width: 100%;
+}
+
+.algo-campaign-actions p {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.algo-campaign-chip-grid {
+  grid-area: chips;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.algo-campaign-chip-grid span {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px solid rgba(159, 107, 33, 0.22);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  color: #4b351c;
+  background: #fffaf0;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.algo-campaign-section {
+  padding: 36px 0;
+}
+
+.algo-campaign-muted-section,
+.algo-campaign-pain-section {
+  background: #f3e7d2;
+}
+
+.algo-campaign-section-heading {
+  margin-bottom: 18px;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.algo-campaign-section-heading h2,
+.algo-campaign-program-card h2,
+.algo-campaign-final-card h2 {
+  font-size: 34px;
+  line-height: 1.06;
+}
+
+.algo-campaign-split {
+  display: grid;
+  gap: 18px;
+}
+
+.algo-campaign-pain-list,
+.algo-campaign-included-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.algo-campaign-pain-list li,
+.algo-campaign-included-list li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  color: #9f6b21;
+}
+
+.algo-campaign-pain-list span,
+.algo-campaign-included-list span {
+  color: #3b332a;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.algo-campaign-testimonial-grid,
+.algo-campaign-card-grid,
+.algo-campaign-lesson-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.algo-campaign-lesson-grid {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.algo-campaign-card,
+.algo-campaign-truth-panel,
+.algo-campaign-program-card,
+.algo-campaign-final-card,
+.algo-campaign-disclaimer {
+  border: 1px solid rgba(34, 28, 20, 0.14);
+  border-radius: 8px;
+  background: #fffaf0;
+  box-shadow: 0 12px 26px rgba(46, 34, 19, 0.08);
+}
+
+.algo-campaign-card,
+.algo-campaign-truth-panel {
+  padding: 18px;
+}
+
+.algo-campaign-card {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  color: #9f6b21;
+}
+
+.algo-campaign-card h3,
+.algo-campaign-truth-panel h3 {
+  margin: 0;
+  color: #191611;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.algo-campaign-card strong {
+  color: #191611;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.algo-campaign-card span {
+  color: #6c5c49;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.algo-campaign-truth-panel,
+.algo-campaign-disclaimer {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  color: #9f6b21;
+}
+
+.algo-campaign-section-cta {
+  margin-top: 16px;
+  display: grid;
+}
+
+.algo-campaign-program-card {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+  background: #191611;
+}
+
+.algo-campaign-program-card h2,
+.algo-campaign-program-card p {
+  color: #fff8e8;
+}
+
+.algo-campaign-program-card .eyebrow {
+  color: #d7b15d;
+}
+
+.algo-campaign-program-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.algo-campaign-program-list div {
+  min-height: 88px;
+  padding: 14px;
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  border-radius: 8px;
+  display: grid;
+  align-content: space-between;
+  gap: 8px;
+  background: rgba(255, 248, 232, 0.06);
+}
+
+.algo-campaign-program-list strong {
+  color: #fff8e8;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.algo-campaign-program-card .algo-campaign-included-list span {
+  color: #efe1c2;
+}
+
+.algo-campaign-final-section {
+  padding-bottom: 34px;
+}
+
+.algo-campaign-final-card {
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  text-align: center;
+  color: #9f6b21;
+}
+
+.algo-campaign-disclaimer {
+  margin-top: 14px;
+  padding: 15px;
+}
+
+.algo-campaign-disclaimer p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.algo-campaign-sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(34, 28, 20, 0.14);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  background: rgba(251, 244, 231, 0.96);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 -12px 28px rgba(46, 34, 19, 0.15);
+}
+
+.algo-campaign-sticky-cta span {
+  color: #191611;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.algo-campaign-sticky-cta .btn {
+  min-height: 44px;
+  padding: 0 15px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (min-width: 720px) {
+  .algo-campaign-page {
+    padding-bottom: 0;
+  }
+
+  .algo-campaign-header {
+    min-height: 62px;
+    padding: 10px 32px;
+  }
+
+  .algo-campaign-hero {
+    padding: 28px 0 38px;
+  }
+
+  .algo-campaign-hero-grid {
+    grid-template-areas:
+      "copy video"
+      "actions video"
+      "chips video";
+    grid-template-columns: minmax(0, 0.95fr) minmax(330px, 0.82fr);
+    align-items: center;
+    gap: 16px 28px;
+  }
+
+  .algo-campaign-hero-copy h1 {
+    font-size: 58px;
+  }
+
+  .algo-campaign-actions,
+  .algo-campaign-section-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .algo-campaign-actions .btn,
+  .algo-campaign-section-cta .btn,
+  .algo-campaign-program-card .btn,
+  .algo-campaign-final-card .btn {
+    width: fit-content;
+  }
+
+  .algo-campaign-section {
+    padding: 52px 0;
+  }
+
+  .algo-campaign-section-heading {
+    margin-bottom: 22px;
+  }
+
+  .algo-campaign-section-heading h2,
+  .algo-campaign-program-card h2,
+  .algo-campaign-final-card h2 {
+    font-size: 44px;
+  }
+
+  .algo-campaign-split {
+    grid-template-columns: minmax(0, 0.8fr) minmax(320px, 1fr);
+    align-items: start;
+    gap: 34px;
+  }
+
+  .algo-campaign-card-grid,
+  .algo-campaign-testimonial-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .algo-campaign-program-card {
+    grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.75fr);
+    align-items: center;
+    padding: 30px;
+  }
+
+  .algo-campaign-program-card .algo-campaign-included-list,
+  .algo-campaign-program-card .btn {
+    grid-column: 1 / -1;
+  }
+
+  .algo-campaign-included-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .algo-campaign-final-card {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 30px;
+  }
+
+  .algo-campaign-sticky-cta {
+    display: none;
+  }
+}
+
+@media (min-width: 1180px) {
+  .algo-campaign-hero-copy h1 {
+    font-size: 64px;
+  }
+}
+
+@media (max-width: 430px) {
+  .algo-campaign-shell {
+    width: min(100% - 24px, 1120px);
+  }
+
+  .algo-campaign-header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .algo-campaign-brand span {
+    font-size: 16px;
+  }
+
+  .algo-campaign-header .btn {
+    padding: 0 12px;
+  }
+
+  .algo-campaign-hero-copy h1 {
+    font-size: 38px;
+  }
+
+  .algo-campaign-program-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.algo-course-next-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.algo-course-next-steps li {
+  min-height: 172px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: none;
+}
+
+.algo-course-next-steps span {
+  color: #B8914A;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.algo-course-next-steps p {
+  color: #CAC5B8;
+  font-size: 15px;
+  line-height: 1.62;
+}
+
+@media (max-width: 1180px) {
+  .algo-course-next-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .algo-course-access-hero {
+    min-height: 0;
+  }
+
+  .algo-course-access-hero-grid,
+  .algo-course-access-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-access-video-placeholder {
+    min-height: 240px;
+  }
+}
+
+@media (max-width: 700px) {
+  .algo-course-access-hero {
+    padding-top: 76px;
+  }
+
+  .algo-course-access-hero-grid {
+    gap: 28px;
+  }
+
+  .algo-course-access-summary,
+  .algo-course-access-action-card {
+    padding: 22px;
+  }
+
+  .algo-course-access-action-card {
+    min-height: 0;
+  }
+
+  .algo-course-access-action-card .btn,
+  .algo-course-next-steps {
+    width: 100%;
+  }
+
+  .algo-course-next-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-course-next-steps li {
+    min-height: 0;
   }
 }

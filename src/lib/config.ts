@@ -67,6 +67,8 @@ export const appConfig = {
   databaseUrl: readValue("DATABASE_URL"),
   databaseSsl: readFlagDefault("DATABASE_SSL", true),
   autoMigrateDb: readFlag("AUTO_MIGRATE_DB"),
+  publicSupabaseUrl: readValue("NEXT_PUBLIC_SUPABASE_URL"),
+  publicSupabaseAnonKey: readValue("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
   supabaseUrl: readValue("SUPABASE_URL"),
   supabaseServiceRoleKey: readValue("SUPABASE_SERVICE_ROLE_KEY"),
   supabaseStorageBucket: readValue("SUPABASE_STORAGE_BUCKET"),

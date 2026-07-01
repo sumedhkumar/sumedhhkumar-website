@@ -1,4 +1,6 @@
-import { ArrowRight, Cpu, UserRoundCheck, Workflow } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Cpu, GraduationCap, UserRoundCheck, Workflow } from "lucide-react";
+import { algoTradingCourse } from "@/data/algo-trading-course";
 
 const pathways = [
   {
@@ -7,6 +9,13 @@ const pathways = [
     href: "/ai-trading-agents",
     cta: "View agents",
     icon: Cpu,
+  },
+  {
+    title: "Algo Trading Course",
+    copy: "A 3-month weekend masterclass on trading automation workflows using MT5 and TradingView.",
+    href: algoTradingCourse.route,
+    cta: "Explore course",
+    icon: GraduationCap,
   },
   {
     title: "Talk to Experts",
@@ -30,7 +39,7 @@ export default function ProductPathways() {
       <div className="container">
         <div className="product-pathways depth-panel">
           {pathways.map((pathway) => (
-            <a key={pathway.title} href={pathway.href} className="product-pathway">
+            <Link key={pathway.title} href={pathway.href} className="product-pathway">
               <span className="product-pathway-icon">
                 <pathway.icon size={20} strokeWidth={1.75} />
               </span>
@@ -42,7 +51,7 @@ export default function ProductPathways() {
                 {pathway.cta}
                 <ArrowRight size={15} strokeWidth={1.85} />
               </span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

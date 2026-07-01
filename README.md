@@ -6,8 +6,28 @@ Next.js App Router, TypeScript, React, Tailwind CSS, lucide-react, next/font/goo
 ## Local Setup
 Run `npm install`, then `npm run dev` for local development. Use `npm run lint`, `npx tsc --noEmit`, and `npm run build` before release.
 
+## Algo Trading Course Launch Setup
+See [docs/algo-trading-course-launch-setup.md](docs/algo-trading-course-launch-setup.md) for the final owner/operator setup checklist for the Vyntegra Trading Automation Masterclass funnel.
+
 ## Environment Variables
 Copy `.env.example` to a real local environment file and fill only genuine values. Do not commit real secret values.
+
+Set `APP_BASE_URL` to the deployed site origin, such as `https://your-domain.com`, so course registration emails, auth redirects, and access/reset links are generated with the correct public domain.
+
+## Supabase Auth Setup
+Course account access will use Supabase Auth. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the browser/server auth clients, and keep `SUPABASE_SERVICE_ROLE_KEY` server-only for private storage/admin operations. The anon key is safe to expose as a public browser key; the service-role key is not.
+
+In the Supabase dashboard, enable the Auth providers needed for launch. For Google OAuth, configure the Google provider externally and add redirect URLs for local and production callbacks:
+
+- `http://localhost:3000/auth/callback`
+- `https://your-domain.com/auth/callback`
+
+Email/password auth and password reset templates should also be configured in Supabase before the course login UI is enabled.
+
+## Course Content Links
+The Vyntegra Trading Automation Masterclass uses public `NEXT_PUBLIC_COURSE_*` variables for the intro video, Lecture 0, Lecture 1, WhatsApp group, WhatsApp phone, and future payment link. These values are not secrets. Leave them blank to keep the protected access page in its placeholder-safe state.
+
+Only real `https://` video/payment URLs are rendered. WhatsApp group links must use `https://chat.whatsapp.com/...`, and WhatsApp contact links are created only from a real numeric phone value.
 
 ## Supabase Postgres + Private Storage Setup
 Create a Supabase project. Set the following values manually in `.env.local` for local development and in the Vercel project environment for deployment; do not commit real values. In **Project Settings > Database**, copy the pooled or transaction-pooler connection string into `DATABASE_URL`, set `PERSISTENCE_PROVIDER=postgres` and `DATABASE_SSL=true`, and configure `ADMIN_EXPORT_TOKEN` plus a private `IP_HASH_SALT`. Production form submissions and payment records are rejected unless both `PERSISTENCE_PROVIDER=postgres` and `DATABASE_URL` are configured.
@@ -26,6 +46,15 @@ curl -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" "https://your-domain.example
 curl -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" "https://your-domain.example/api/admin/razorpay-payments?purchaseType=product"
 curl -L -H "Authorization: Bearer $ADMIN_EXPORT_TOKEN" "https://your-domain.example/api/admin/submissions/<submissionId>/attachments/<attachmentId>" -o proof-file
 ```
+
+Course registration admin is available at `/admin/course-registrations`. Enter `ADMIN_EXPORT_TOKEN` manually in the page; it is stored only in `sessionStorage` for that browser tab/session and sent to `/api/admin/course-registrations` and `/api/admin/course-registrations/<registrationId>` as a bearer token. The API returns admin-safe course registration rows and does not expose hidden bonus fields.
+
+## Course Payment V1 Process
+Set `NEXT_PUBLIC_COURSE_PAYMENT_LINK` to the external course payment page URL when it is ready. This is a public link, not a secret; do not put tokens, private keys, or sensitive provider credentials in it.
+
+The V1 course flow is manual verification: the student pays externally from `/courses/algo-trading/access`, the team verifies payment outside the site, then an admin opens `/admin/course-registrations`, searches by email or WhatsApp, and uses **Mark paid** to set `payment_status=paid` and `access_status=paid`. If the payment is unclear, use **Manual verification**. If access should be stopped, use **Block access**.
+
+This code does not automatically verify payments. Payment gateway/provider compliance, payment-page setup, and external transaction review remain operational responsibilities outside this code change.
 
 ## Real Data Insertion
 The default public state intentionally contains empty products, experts, coupons, testimonials, contact details, wallet values, and protected access mappings.
@@ -61,7 +90,7 @@ Stripe, Razorpay, and crypto payment scaffolds are disabled by default. Enable o
 Set `CRYPTO_WALLET_ADDRESS` and `CRYPTO_WALLET_NETWORK` only with genuine production values. Manual verification must persist the pending request before any confirmation is shown.
 
 ## SMTP
-The Custom Solutions form can operate when `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, and `CUSTOM_SOLUTIONS_RECIPIENT_EMAIL` are configured and tested.
+Course registration emails and the Custom Solutions form use the shared SMTP configuration. Set and test `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`; the sender is derived from `SMTP_USER`, and admin/support delivery uses the configured contact/admin mail variables.
 
 ## Crypto Proof Email Delivery
 Keep `SMTP_*` authenticated as `support@vyntegra.in`; it remains responsible for support mail and must be permitted to send as the `sales@vyntegra.in` alias. Crypto proof delivery also requires the separate `CRYPTO_PROOF_SMTP_HOST`, `CRYPTO_PROOF_SMTP_PORT`, `CRYPTO_PROOF_SMTP_SECURE`, `CRYPTO_PROOF_SMTP_USER`, and `CRYPTO_PROOF_SMTP_PASS` settings for `ai.vyntegra@gmail.com`.

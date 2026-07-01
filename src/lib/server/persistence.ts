@@ -13,6 +13,9 @@ export type SubmissionType =
   | "crypto_payment_query";
 export type PurchaseType = "product" | "expert";
 type JsonRecord = Record<string, unknown>;
+export type CourseAccessStatus = "free_access" | "paid" | "blocked";
+export type CoursePaymentStatus = "unpaid" | "paid" | "manual_verification";
+export type CourseLoginProvider = "google" | "email_password";
 
 export type AttachmentInput = {
   id: string;
@@ -148,6 +151,77 @@ export type StoredRazorpayPayment = {
   bookingErrorSummary: string | null;
 };
 
+export type CourseRegistration = {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  whatsappNumber: string;
+  courseSlug: string;
+  accessStatus: CourseAccessStatus;
+  paymentStatus: CoursePaymentStatus;
+  loginProvider: CourseLoginProvider;
+  source: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  hiddenBonusAgentAccessEligible: boolean;
+  lastLoginAt: string | null;
+  registeredAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UpsertCourseRegistrationInput = {
+  userId: string;
+  fullName: string;
+  email: string;
+  whatsappNumber: string;
+  courseSlug?: string;
+  accessStatus?: CourseAccessStatus;
+  paymentStatus?: CoursePaymentStatus;
+  loginProvider?: CourseLoginProvider;
+  source?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  hiddenBonusAgentAccessEligible?: boolean;
+};
+
+export type CourseRegistrationAdminRow = {
+  id: string;
+  fullName: string;
+  email: string;
+  whatsappNumber: string;
+  courseSlug: string;
+  accessStatus: CourseAccessStatus;
+  paymentStatus: CoursePaymentStatus;
+  loginProvider: CourseLoginProvider;
+  source: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  lastLoginAt: string | null;
+  registeredAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CourseRegistrationListFilters = {
+  search?: string;
+  accessStatus?: CourseAccessStatus;
+  paymentStatus?: CoursePaymentStatus;
+  loginProvider?: CourseLoginProvider;
+  courseSlug?: string;
+  limit: number;
+  offset: number;
+};
+
+export type UpdateCourseRegistrationAdminInput = {
+  accessStatus?: CourseAccessStatus;
+  paymentStatus?: CoursePaymentStatus;
+};
+
 type StoredPaymentRow = QueryResultRow & {
   razorpay_payment_id: string;
   razorpay_order_id: string;
@@ -166,6 +240,27 @@ type StoredPaymentRow = QueryResultRow & {
   booking_error_summary: string | null;
 };
 
+type CourseRegistrationRow = QueryResultRow & {
+  id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  whatsapp_number: string;
+  course_slug: string;
+  access_status: CourseAccessStatus;
+  payment_status: CoursePaymentStatus;
+  login_provider: CourseLoginProvider;
+  source: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  hidden_bonus_agent_access_eligible: boolean;
+  last_login_at: Date | string | null;
+  registered_at: Date | string;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
 function toIso(value: Date | string | null) {
   if (!value) {
     return null;
@@ -176,6 +271,20 @@ function toIso(value: Date | string | null) {
 
 function optional(value?: string | number | boolean | null) {
   return value === "" || value === undefined ? null : value;
+}
+
+function requiredTrimmed(value: string | undefined, label: string) {
+  const trimmed = value?.trim() ?? "";
+
+  if (!trimmed) {
+    throw new Error(`${label} is required.`);
+  }
+
+  return trimmed;
+}
+
+function normalizeEmailAddress(email: string) {
+  return requiredTrimmed(email, "Email").toLowerCase();
 }
 
 function toStoredPayment(row: StoredPaymentRow): StoredRazorpayPayment {
@@ -195,6 +304,52 @@ function toStoredPayment(row: StoredPaymentRow): StoredRazorpayPayment {
     calMeetingUrl: row.cal_meeting_url,
     supportFollowupRequired: row.support_followup_required,
     bookingErrorSummary: row.booking_error_summary,
+  };
+}
+
+function toCourseRegistration(row: CourseRegistrationRow): CourseRegistration {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    fullName: row.full_name,
+    email: row.email,
+    whatsappNumber: row.whatsapp_number,
+    courseSlug: row.course_slug,
+    accessStatus: row.access_status,
+    paymentStatus: row.payment_status,
+    loginProvider: row.login_provider,
+    source: row.source,
+    utmSource: row.utm_source,
+    utmMedium: row.utm_medium,
+    utmCampaign: row.utm_campaign,
+    hiddenBonusAgentAccessEligible: row.hidden_bonus_agent_access_eligible,
+    lastLoginAt: toIso(row.last_login_at),
+    registeredAt: toIso(row.registered_at) ?? "",
+    createdAt: toIso(row.created_at) ?? "",
+    updatedAt: toIso(row.updated_at) ?? "",
+  };
+}
+
+function toCourseRegistrationAdminRow(
+  row: CourseRegistrationRow,
+): CourseRegistrationAdminRow {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    whatsappNumber: row.whatsapp_number,
+    courseSlug: row.course_slug,
+    accessStatus: row.access_status,
+    paymentStatus: row.payment_status,
+    loginProvider: row.login_provider,
+    source: row.source,
+    utmSource: row.utm_source,
+    utmMedium: row.utm_medium,
+    utmCampaign: row.utm_campaign,
+    lastLoginAt: toIso(row.last_login_at),
+    registeredAt: toIso(row.registered_at) ?? "",
+    createdAt: toIso(row.created_at) ?? "",
+    updatedAt: toIso(row.updated_at) ?? "",
   };
 }
 
@@ -403,6 +558,226 @@ export async function updateSubmissionEmailStatus(
      WHERE id = $1`,
     [id, status, status === "failed" ? optional(error) : null],
   );
+}
+
+export async function upsertCourseRegistration(
+  input: UpsertCourseRegistrationInput,
+) {
+  const userId = requiredTrimmed(input.userId, "User ID");
+  const fullName = requiredTrimmed(input.fullName, "Full name");
+  const email = normalizeEmailAddress(input.email);
+  const whatsappNumber = requiredTrimmed(input.whatsappNumber, "WhatsApp number");
+  const courseSlug = input.courseSlug?.trim() || "algo-trading";
+
+  const result = await queryDb<CourseRegistrationRow>(
+    `INSERT INTO course_registrations (
+      user_id, full_name, email, whatsapp_number, course_slug, access_status,
+      payment_status, login_provider, source, utm_source, utm_medium,
+      utm_campaign, hidden_bonus_agent_access_eligible
+    ) VALUES (
+      $1, $2, $3, $4, $5, COALESCE($6::text, 'free_access'),
+      COALESCE($7::text, 'unpaid'), COALESCE($8::text, 'email_password'), $9,
+      $10, $11, $12, COALESCE($13::boolean, false)
+    ) ON CONFLICT (user_id, course_slug) DO UPDATE SET
+      full_name = EXCLUDED.full_name,
+      email = EXCLUDED.email,
+      whatsapp_number = EXCLUDED.whatsapp_number,
+      access_status = COALESCE($6::text, course_registrations.access_status),
+      payment_status = COALESCE($7::text, course_registrations.payment_status),
+      login_provider = COALESCE($8::text, course_registrations.login_provider),
+      source = COALESCE(EXCLUDED.source, course_registrations.source),
+      utm_source = COALESCE(EXCLUDED.utm_source, course_registrations.utm_source),
+      utm_medium = COALESCE(EXCLUDED.utm_medium, course_registrations.utm_medium),
+      utm_campaign = COALESCE(EXCLUDED.utm_campaign, course_registrations.utm_campaign),
+      hidden_bonus_agent_access_eligible = COALESCE(
+        $13::boolean,
+        course_registrations.hidden_bonus_agent_access_eligible
+      ),
+      updated_at = now()
+    RETURNING *`,
+    [
+      userId,
+      fullName,
+      email,
+      whatsappNumber,
+      courseSlug,
+      optional(input.accessStatus),
+      optional(input.paymentStatus),
+      optional(input.loginProvider),
+      optional(input.source?.trim()),
+      optional(input.utmSource?.trim()),
+      optional(input.utmMedium?.trim()),
+      optional(input.utmCampaign?.trim()),
+      input.hiddenBonusAgentAccessEligible ?? null,
+    ],
+  );
+
+  return toCourseRegistration(result.rows[0]);
+}
+
+export async function getCourseRegistrationByUserId(
+  userId: string,
+  courseSlug = "algo-trading",
+) {
+  const result = await queryDb<CourseRegistrationRow>(
+    `SELECT *
+     FROM course_registrations
+     WHERE user_id = $1 AND course_slug = $2
+     LIMIT 1`,
+    [
+      requiredTrimmed(userId, "User ID"),
+      requiredTrimmed(courseSlug, "Course slug"),
+    ],
+  );
+
+  return result.rows[0] ? toCourseRegistration(result.rows[0]) : null;
+}
+
+export async function getCourseRegistrationByEmail(
+  email: string,
+  courseSlug = "algo-trading",
+) {
+  const result = await queryDb<CourseRegistrationRow>(
+    `SELECT *
+     FROM course_registrations
+     WHERE lower(email) = $1 AND course_slug = $2
+     ORDER BY registered_at DESC
+     LIMIT 1`,
+    [
+      normalizeEmailAddress(email),
+      requiredTrimmed(courseSlug, "Course slug"),
+    ],
+  );
+
+  return result.rows[0] ? toCourseRegistration(result.rows[0]) : null;
+}
+
+export async function updateCourseRegistrationLastLogin(
+  userId: string,
+  courseSlug = "algo-trading",
+) {
+  const result = await queryDb<CourseRegistrationRow>(
+    `UPDATE course_registrations
+     SET last_login_at = now(), updated_at = now()
+     WHERE user_id = $1 AND course_slug = $2
+     RETURNING *`,
+    [
+      requiredTrimmed(userId, "User ID"),
+      requiredTrimmed(courseSlug, "Course slug"),
+    ],
+  );
+
+  return result.rows[0] ? toCourseRegistration(result.rows[0]) : null;
+}
+
+function buildCourseRegistrationAdminFilters(
+  filters: Omit<CourseRegistrationListFilters, "limit" | "offset">,
+) {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+  const addClause = (sql: string, value: unknown) => {
+    params.push(value);
+    clauses.push(sql.replace("?", `$${params.length}`));
+  };
+
+  if (filters.search) {
+    params.push(`%${filters.search}%`);
+    const placeholder = `$${params.length}`;
+    clauses.push(
+      `(full_name ILIKE ${placeholder} OR email ILIKE ${placeholder} OR whatsapp_number ILIKE ${placeholder})`,
+    );
+  }
+
+  if (filters.accessStatus) {
+    addClause("access_status = ?", filters.accessStatus);
+  }
+
+  if (filters.paymentStatus) {
+    addClause("payment_status = ?", filters.paymentStatus);
+  }
+
+  if (filters.loginProvider) {
+    addClause("login_provider = ?", filters.loginProvider);
+  }
+
+  if (filters.courseSlug) {
+    addClause("course_slug = ?", filters.courseSlug);
+  }
+
+  return {
+    whereSql: clauses.length ? `WHERE ${clauses.join(" AND ")}` : "",
+    params,
+  };
+}
+
+export async function listCourseRegistrations(
+  filters: CourseRegistrationListFilters,
+) {
+  const sanitizedFilters = {
+    search: filters.search?.trim() || undefined,
+    accessStatus: filters.accessStatus,
+    paymentStatus: filters.paymentStatus,
+    loginProvider: filters.loginProvider,
+    courseSlug: filters.courseSlug?.trim() || undefined,
+  };
+  const { whereSql, params } = buildCourseRegistrationAdminFilters(
+    sanitizedFilters,
+  );
+  const countResult = await queryDb<QueryResultRow & { total: string }>(
+    `SELECT COUNT(*)::text AS total
+     FROM course_registrations
+     ${whereSql}`,
+    params,
+  );
+  const rowParams = [...params, filters.limit, filters.offset];
+  const rowsResult = await queryDb<CourseRegistrationRow>(
+    `SELECT *
+     FROM course_registrations
+     ${whereSql}
+     ORDER BY registered_at DESC
+     LIMIT $${rowParams.length - 1} OFFSET $${rowParams.length}`,
+    rowParams,
+  );
+
+  return {
+    registrations: rowsResult.rows.map(toCourseRegistrationAdminRow),
+    total: Number(countResult.rows[0]?.total ?? 0),
+  };
+}
+
+export async function updateCourseRegistrationAdminStatus(
+  id: string,
+  input: UpdateCourseRegistrationAdminInput,
+) {
+  const updates: string[] = [];
+  const params: unknown[] = [];
+  const addUpdate = (sql: string, value: unknown) => {
+    params.push(value);
+    updates.push(sql.replace("?", `$${params.length}`));
+  };
+
+  if (input.accessStatus) {
+    addUpdate("access_status = ?", input.accessStatus);
+  }
+
+  if (input.paymentStatus) {
+    addUpdate("payment_status = ?", input.paymentStatus);
+  }
+
+  if (updates.length === 0) {
+    throw new Error("No course registration admin status updates provided.");
+  }
+
+  params.push(requiredTrimmed(id, "Registration ID"));
+  const result = await queryDb<CourseRegistrationRow>(
+    `UPDATE course_registrations
+     SET ${updates.join(", ")}, updated_at = now()
+     WHERE id = $${params.length}
+     RETURNING *`,
+    params,
+  );
+
+  return result.rows[0] ? toCourseRegistrationAdminRow(result.rows[0]) : null;
 }
 
 export async function saveRazorpayOrder(input: RazorpayOrderInput) {

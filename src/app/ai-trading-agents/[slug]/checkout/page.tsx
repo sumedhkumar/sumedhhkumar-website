@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isSubscriptionAgentSlug } from "@/data/agent-subscription-plans";
+import {
+  getAgentSubscriptionPlans,
+  getSubscriptionAgentPlan,
+  isSubscriptionAgentSlug,
+} from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -9,6 +13,7 @@ import CheckoutPlanClient from "./CheckoutPlanClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 function findProduct(slug: string) {
@@ -37,8 +42,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function SubscriptionCheckoutPage({ params }: PageProps) {
+export default async function SubscriptionCheckoutPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
+  const query = await searchParams;
   const product = findProduct(slug);
 
   if (!product) {
@@ -51,6 +60,28 @@ export default async function SubscriptionCheckoutPage({ params }: PageProps) {
 
   const paymentsConfigured = hasProductRazorpayCheckoutConfiguration();
   const cryptoPaymentConfig = getCryptoPaymentConfig();
+  const selectedPlanId = readPlanParam(query.plan);
+  const selectedPlan =
+    getSubscriptionAgentPlan(product.slug, selectedPlanId) ??
+    getAgentSubscriptionPlans(product.slug)[0];
+
+  if (!selectedPlan) {
+    notFound();
+  }
+
+  const defaultPricing = calculateFinalPrice(
+    product.slug,
+    selectedPlan.id,
+    "EARLYACCESS",
+  );
+  const defaultPayablePrice = defaultPricing.ok
+    ? defaultPricing.finalPriceUsd
+    : selectedPlan.priceUsd;
+  const checkoutProduct = {
+    ...product,
+    priceUsd: selectedPlan.priceUsd,
+    fullDescription: `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
+  };
 
   return (
     <main className="section-bg-primary astro-gold-checkout-page">
@@ -63,13 +94,56 @@ export default async function SubscriptionCheckoutPage({ params }: PageProps) {
           </p>
         </header>
 
-        <Suspense fallback={null}>
-          <CheckoutPlanClient
-            product={product}
+        <div className="astro-gold-checkout-grid">
+          <section className="astro-gold-selected-plan-card">
+            <h2 className="subsection-title">Selected plan</h2>
+            <dl className="astro-gold-selected-plan-details">
+              <div>
+                <dt>Product</dt>
+                <dd>{product.name}</dd>
+              </div>
+              <div>
+                <dt>Plan</dt>
+                <dd>{selectedPlan.name}</dd>
+              </div>
+              <div>
+                <dt>Duration</dt>
+                <dd>{selectedPlan.durationLabel}</dd>
+              </div>
+              <div>
+                <dt>Original price</dt>
+                <dd className="astro-gold-selected-original">
+                  {formatUsd(selectedPlan.originalPriceUsd)}
+                </dd>
+              </div>
+              <div>
+                <dt>Default payable price</dt>
+                <dd className="astro-gold-selected-payable">
+                  {formatUsd(defaultPayablePrice)}
+                </dd>
+              </div>
+              <div>
+                <dt>Note</dt>
+                <dd>{selectedPlan.note}</dd>
+              </div>
+            </dl>
+            <p className="astro-gold-checkout-risk-copy">
+              Trading involves risk. Past performance and backtest results do
+              not guarantee future results. {product.name} is software tooling,
+              not investment advice.
+            </p>
+            <Link className="astro-gold-back-link" href={`/ai-trading-agents/${product.slug}/plans`}>
+              Change selected plan
+            </Link>
+          </section>
+
+          <AgentCheckoutPaymentPanel
+            product={checkoutProduct}
             paymentsConfigured={paymentsConfigured}
             cryptoPaymentConfig={cryptoPaymentConfig}
+            selectedPlan={selectedPlan}
           />
-        </Suspense>
+        </div>
       </div>
     </main>
   );

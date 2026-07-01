@@ -110,6 +110,22 @@ export type RazorpayPaymentSuccessEmailInput = {
   bookingErrorSummary?: string;
 };
 
+export type CourseRegistrationEmailInput = {
+  fullName: string;
+  email: string;
+  whatsappNumber: string;
+  courseName: string;
+  courseSlug: string;
+  loginProvider: "google" | "email_password";
+  registeredAt: string;
+  accessUrl: string;
+  source?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  accessStatus: string;
+  paymentStatus: string;
+};
 
 
 type EmailDetail = {
@@ -237,6 +253,102 @@ function buildContactAdminBody(input: ContactEmailInput) {
   if (input.subject) lines.push(`Subject: ${input.subject}`);
   lines.push("Message:", input.message, `Submitted At: ${input.timestamp}`);
   return lines.join("\n\n");
+}
+
+function buildCourseRegistrationUserBody(input: CourseRegistrationEmailInput) {
+  return [
+    input.fullName ? `Hi ${input.fullName},` : "Hi,",
+    `Your free access for ${input.courseName} is active.`,
+    "You can now watch:",
+    "- Intro Video",
+    "- Lecture 0 - Course Roadmap & What You Get",
+    "- Lecture 1 - First Teaching Session",
+    `Access link: ${input.accessUrl}`,
+    "The full 3-month program includes weekend live sessions, recordings, WhatsApp support, and MT5 and TradingView focused training.",
+    "Course Value: \u20B945,000",
+    "Launch Batch Offer: \u20B928,999",
+    "This is an educational course. It does not provide investment advice, profit guarantees, or assured returns. Trading involves financial risk.",
+    `For support, contact ${appConfig.supportEmail}.`,
+    "Regards,",
+    "Vyntegra",
+  ].join("\n\n");
+}
+
+function buildCourseRegistrationUserHtml(input: CourseRegistrationEmailInput) {
+  return buildEmailHtml({
+    title: "Your free masterclass access is active",
+    intro: input.fullName
+      ? `Hi ${input.fullName}, your free access for ${input.courseName} is active.`
+      : `Your free access for ${input.courseName} is active.`,
+    details: [
+      { label: "Course", value: input.courseName },
+      { label: "Access Link", value: input.accessUrl },
+      { label: "Course Value", value: "\u20B945,000" },
+      { label: "Launch Batch Offer", value: "\u20B928,999" },
+    ],
+    blocks: [
+      {
+        heading: "Free access includes",
+        body:
+          "Intro Video\nLecture 0 - Course Roadmap & What You Get\nLecture 1 - First Teaching Session",
+      },
+      {
+        heading: "Full program includes",
+        body:
+          "Weekend live sessions, recordings, WhatsApp support, and MT5 and TradingView focused training.",
+      },
+      {
+        heading: "Support",
+        body: `For support, contact ${appConfig.supportEmail}.`,
+      },
+    ],
+    note:
+      "This is an educational course. It does not provide investment advice, profit guarantees, or assured returns. Trading involves financial risk.",
+  });
+}
+
+function buildCourseRegistrationAdminBody(input: CourseRegistrationEmailInput) {
+  return [
+    `Course Name: ${input.courseName}`,
+    `Registration Time: ${input.registeredAt}`,
+    `Full Name: ${input.fullName}`,
+    `Email: ${input.email}`,
+    `WhatsApp Number: ${input.whatsappNumber}`,
+    `Login Provider: ${input.loginProvider}`,
+    `Course Slug: ${input.courseSlug}`,
+    `Source: ${input.source || ""}`,
+    `UTM Source: ${input.utmSource || ""}`,
+    `UTM Medium: ${input.utmMedium || ""}`,
+    `UTM Campaign: ${input.utmCampaign || ""}`,
+    `Access Status: ${input.accessStatus}`,
+    `Payment Status: ${input.paymentStatus}`,
+    `Access URL: ${input.accessUrl}`,
+    "Free access registration. Payment not completed yet.",
+  ].join("\n\n");
+}
+
+function buildCourseRegistrationAdminHtml(input: CourseRegistrationEmailInput) {
+  return buildEmailHtml({
+    title: `New course registration - ${input.courseName}`,
+    intro: "A new free access course registration has been saved.",
+    details: [
+      { label: "Course Name", value: input.courseName },
+      { label: "Registration Time", value: input.registeredAt },
+      { label: "Full Name", value: input.fullName },
+      { label: "Email", value: input.email },
+      { label: "WhatsApp Number", value: input.whatsappNumber },
+      { label: "Login Provider", value: input.loginProvider },
+      { label: "Course Slug", value: input.courseSlug },
+      { label: "Source", value: input.source || "" },
+      { label: "UTM Source", value: input.utmSource || "" },
+      { label: "UTM Medium", value: input.utmMedium || "" },
+      { label: "UTM Campaign", value: input.utmCampaign || "" },
+      { label: "Access Status", value: input.accessStatus },
+      { label: "Payment Status", value: input.paymentStatus },
+      { label: "Access URL", value: input.accessUrl },
+    ],
+    note: "Free access registration. Payment not completed yet.",
+  });
 }
 
 function buildContactAdminHtml(input: ContactEmailInput) {
@@ -852,6 +964,40 @@ export async function sendContactEmails(input: ContactEmailInput) {
     subject: "Vyntegra enquiry received",
     text: buildContactCustomerBody(input),
     html: buildContactCustomerHtml(input),
+  });
+}
+
+export async function sendCourseRegistrationUserEmail(
+  input: CourseRegistrationEmailInput,
+) {
+  assertSmtpConfiguration();
+
+  const transporter = createEmailTransporter();
+
+  await transporter.sendMail({
+    from: appConfig.smtpFromEmail,
+    to: input.email,
+    replyTo: appConfig.supportEmail,
+    subject: "Your Free Access: Vyntegra Trading Automation Masterclass",
+    text: buildCourseRegistrationUserBody(input),
+    html: buildCourseRegistrationUserHtml(input),
+  });
+}
+
+export async function sendCourseRegistrationAdminEmail(
+  input: CourseRegistrationEmailInput,
+) {
+  assertSmtpConfiguration();
+
+  const transporter = createEmailTransporter();
+
+  await transporter.sendMail({
+    from: appConfig.smtpFromEmail,
+    to: appConfig.supportEmail,
+    replyTo: appConfig.supportEmail,
+    subject: "New Course Registration: Vyntegra Trading Automation Masterclass",
+    text: buildCourseRegistrationAdminBody(input),
+    html: buildCourseRegistrationAdminHtml(input),
   });
 }
 

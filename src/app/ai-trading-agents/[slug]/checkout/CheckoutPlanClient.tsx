@@ -31,20 +31,14 @@ export default function CheckoutPlanClient({
   cryptoPaymentConfig,
 }: CheckoutPlanClientProps) {
   const searchParams = useSearchParams();
-  const availablePlans = getAgentSubscriptionPlans(product.slug);
+  const plans = getAgentSubscriptionPlans(product.slug);
   const selectedPlan =
     getSubscriptionAgentPlan(product.slug, searchParams.get("plan") ?? "") ??
-    availablePlans[0];
+    plans[0];
 
   if (!selectedPlan) {
     return null;
   }
-
-  const defaultPrice = calculateFinalPrice(
-    product.slug,
-    selectedPlan.id,
-    "EARLYACCESS",
-  );
 
   const checkoutProduct = {
     ...product,

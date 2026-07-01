@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { algoTradingCourse } from "@/data/algo-trading-course";
 
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "AI Trading Software Agents", href: "/ai-trading-agents" },
+  { label: "Masterclass", href: algoTradingCourse.route },
   { label: "Talk to Experts", href: "/experts" },
   { label: "Custom Solutions", href: "/custom-solutions" },
   { label: "Contact", href: "/#contact" },
