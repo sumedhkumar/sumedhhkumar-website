@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  agentSubscriptionPlans,
+  getAgentSubscriptionPlans,
   getSubscriptionAgentPlan,
 } from "@/data/agent-subscription-plans";
 import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
@@ -25,9 +25,14 @@ export default function CheckoutPlanClient({
   cryptoPaymentConfig,
 }: CheckoutPlanClientProps) {
   const searchParams = useSearchParams();
+  const plans = getAgentSubscriptionPlans(product.slug);
   const selectedPlan =
     getSubscriptionAgentPlan(product.slug, searchParams.get("plan") ?? "") ??
-    agentSubscriptionPlans[0];
+    plans[0];
+
+  if (!selectedPlan) {
+    return null;
+  }
 
   const checkoutProduct = {
     ...product,

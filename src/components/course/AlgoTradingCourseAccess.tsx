@@ -1,19 +1,27 @@
 import {
   CheckCircle2,
+  CircleAlert,
   MessageCircle,
   PlayCircle,
   ShieldCheck,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { algoTradingCourse } from "@/data/algo-trading-course";
+import {
+  algoTradingCourse,
+  getSafeCoursePaymentUrl,
+  getSafeCourseVideoUrl,
+  getSafeCourseWhatsappContactUrl,
+  getSafeCourseWhatsappGroupUrl,
+} from "@/data/algo-trading-course";
 import Button from "@/components/ui/Button";
 import AlgoTradingCourseLeadGreeting from "@/components/course/AlgoTradingCourseLeadGreeting";
 
-const WHATSAPP_GROUP_LINK_PLACEHOLDER = "";
-const WHATSAPP_PHONE_NUMBER_PLACEHOLDER = "";
-const PAYMENT_LINK_PLACEHOLDER = "";
-const TALK_WHATSAPP_PREFILLED_MESSAGE =
-  "Hi, I watched the Vyntegra Trading Automation Masterclass free lectures. I want to discuss the \u20B928,999 launch offer and course joining process.";
+type AlgoTradingCourseAccessProps = {
+  registrationEmail?: string;
+  registrationFullName?: string;
+  registrationAccessStatus?: "free_access" | "paid";
+  registrationPaymentStatus?: "unpaid" | "paid" | "manual_verification";
+};
 
 function PlaceholderButton({
   children,
@@ -29,11 +37,55 @@ function PlaceholderButton({
   );
 }
 
-export default function AlgoTradingCourseAccess() {
-  void WHATSAPP_GROUP_LINK_PLACEHOLDER;
-  void WHATSAPP_PHONE_NUMBER_PLACEHOLDER;
-  void PAYMENT_LINK_PLACEHOLDER;
-  void TALK_WHATSAPP_PREFILLED_MESSAGE;
+export function AlgoTradingCourseAccessBlocked() {
+  return (
+    <main className="algo-course-page algo-course-access-page">
+      <section className="section algo-course-access-hero">
+        <div className="container algo-course-reset-shell">
+          <div className="depth-panel algo-course-reset-card algo-course-blocked-card">
+            <div className="algo-course-reset-icon algo-course-blocked-icon">
+              <CircleAlert size={24} strokeWidth={1.75} aria-hidden="true" />
+            </div>
+            <div className="algo-course-auth-header">
+              <p className="eyebrow">Access Support</p>
+              <h1 className="section-title">Course access needs review</h1>
+              <p className="body-standard">
+                Your course access is currently unavailable. Please contact
+                Vyntegra support so the team can review your registration.
+              </p>
+            </div>
+            <div className="algo-course-register-trust">
+              <ShieldCheck size={19} strokeWidth={1.75} aria-hidden="true" />
+              <p>{algoTradingCourse.disclaimer}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+export default function AlgoTradingCourseAccess({
+  registrationEmail = "",
+  registrationFullName = "",
+  registrationAccessStatus = "free_access",
+  registrationPaymentStatus = "unpaid",
+}: AlgoTradingCourseAccessProps) {
+  const safeWhatsappGroupUrl = getSafeCourseWhatsappGroupUrl(
+    algoTradingCourse.links.whatsappGroupUrl,
+  );
+  const safeWhatsappContactUrl = getSafeCourseWhatsappContactUrl(
+    algoTradingCourse.links.whatsappPhone,
+    algoTradingCourse.links.whatsappPrefilledMessage,
+  );
+  const safePaymentUrl = getSafeCoursePaymentUrl(
+    algoTradingCourse.links.paymentLink,
+  );
+  const isPaidRegistration =
+    registrationPaymentStatus === "paid" || registrationAccessStatus === "paid";
+  const isManualVerification =
+    registrationPaymentStatus === "manual_verification" && !isPaidRegistration;
+  const showPaymentCta = !isPaidRegistration && !isManualVerification;
 
   return (
     <main className="algo-course-page algo-course-access-page">
@@ -46,7 +98,10 @@ export default function AlgoTradingCourseAccess() {
               Watch the intro, Lecture 0 and Lecture 1. Then join the WhatsApp
               group or speak with us before joining the full 3-month program.
             </p>
-            <AlgoTradingCourseLeadGreeting />
+            <AlgoTradingCourseLeadGreeting
+              email={registrationEmail}
+              fullName={registrationFullName}
+            />
           </div>
 
           <div className="depth-panel algo-course-access-summary">
@@ -82,19 +137,35 @@ export default function AlgoTradingCourseAccess() {
           </div>
 
           <div className="algo-course-access-video-grid">
-            {algoTradingCourse.accessLessons.map((lesson, index) => (
-              <article key={lesson.title} className="standard-card algo-course-access-video-card">
-                <span className="algo-course-card-kicker">
-                  Watch {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="algo-course-video-placeholder algo-course-access-video-placeholder">
-                  <PlayCircle size={34} strokeWidth={1.65} aria-hidden="true" />
-                  <span>{lesson.placeholder}</span>
-                </div>
-                <h3 className="card-title">{lesson.title}</h3>
-                <p className="body-compact">{lesson.copy}</p>
-              </article>
-            ))}
+            {algoTradingCourse.accessLessons.map((lesson, index) => {
+              const safeVideoUrl = getSafeCourseVideoUrl(lesson.videoUrl);
+
+              return (
+                <article key={lesson.title} className="standard-card algo-course-access-video-card">
+                  <span className="algo-course-card-kicker">
+                    Watch {String(index + 1).padStart(2, "0")}
+                  </span>
+                  {safeVideoUrl ? (
+                    <a
+                      className="algo-course-video-placeholder algo-course-video-link algo-course-access-video-placeholder"
+                      href={safeVideoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <PlayCircle size={34} strokeWidth={1.65} aria-hidden="true" />
+                      <span>Open lesson video</span>
+                    </a>
+                  ) : (
+                    <div className="algo-course-video-placeholder algo-course-access-video-placeholder">
+                      <PlayCircle size={34} strokeWidth={1.65} aria-hidden="true" />
+                      <span>{lesson.placeholder}</span>
+                    </div>
+                  )}
+                  <h3 className="card-title">{lesson.title}</h3>
+                  <p className="body-compact">{lesson.copy}</p>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -116,10 +187,23 @@ export default function AlgoTradingCourseAccess() {
                 WhatsApp group.
               </p>
               <p className="body-compact algo-course-placeholder-note">
-                WhatsApp group link will be added here.
+                {safeWhatsappGroupUrl
+                  ? "The configured WhatsApp group opens in a new tab."
+                  : "WhatsApp group link will be added here."}
               </p>
             </div>
-            <PlaceholderButton>Join WhatsApp Group</PlaceholderButton>
+            {safeWhatsappGroupUrl ? (
+              <Button
+                href={safeWhatsappGroupUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+              >
+                Join WhatsApp Group
+              </Button>
+            ) : (
+              <PlaceholderButton>Join WhatsApp Group</PlaceholderButton>
+            )}
           </article>
 
           <article className="depth-panel algo-course-access-action-card">
@@ -137,10 +221,23 @@ export default function AlgoTradingCourseAccess() {
                 whether the course is right for you.
               </p>
               <p className="body-compact algo-course-placeholder-note">
-                WhatsApp contact number will be added here.
+                {safeWhatsappContactUrl
+                  ? "WhatsApp opens with the approved joining message."
+                  : "WhatsApp contact number will be added here."}
               </p>
             </div>
-            <PlaceholderButton>Talk to Us on WhatsApp</PlaceholderButton>
+            {safeWhatsappContactUrl ? (
+              <Button
+                href={safeWhatsappContactUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+              >
+                Talk to Us on WhatsApp
+              </Button>
+            ) : (
+              <PlaceholderButton>Talk to Us on WhatsApp</PlaceholderButton>
+            )}
           </article>
         </div>
       </section>
@@ -152,9 +249,31 @@ export default function AlgoTradingCourseAccess() {
               <p className="eyebrow">Full Program</p>
               <h2 className="section-title">Join the Full 3-Month Program</h2>
               <p className="body-standard">
-                Payment link will be added here. For now, use the WhatsApp
-                option to discuss joining the launch batch.
+                {safePaymentUrl
+                  ? algoTradingCourse.paymentInstructions.activeCopy
+                  : algoTradingCourse.paymentInstructions.placeholderCopy}
               </p>
+              {isPaidRegistration ? (
+                <div className="algo-course-payment-status-panel algo-course-payment-status-paid">
+                  <CheckCircle2 size={20} strokeWidth={1.75} aria-hidden="true" />
+                  <p>{algoTradingCourse.paidStatusCopy}</p>
+                </div>
+              ) : null}
+              {isManualVerification ? (
+                <div className="algo-course-payment-status-panel algo-course-payment-status-manual">
+                  <CircleAlert size={20} strokeWidth={1.75} aria-hidden="true" />
+                  <p>{algoTradingCourse.manualVerificationStatusCopy}</p>
+                </div>
+              ) : null}
+              <div className="algo-course-after-payment-panel">
+                <h3 className="card-title">After payment</h3>
+                <ol>
+                  {algoTradingCourse.afterPaymentSteps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+                <p>{algoTradingCourse.manualVerificationNote}</p>
+              </div>
             </div>
             <div className="algo-course-price-stack">
               <div>
@@ -167,11 +286,30 @@ export default function AlgoTradingCourseAccess() {
               <div>
                 <span>Launch Batch Offer</span>
                 <strong>{algoTradingCourse.pricing.launchOfferLabel}</strong>
-                <small>Payment link will be added after final setup</small>
+                <small>
+                  {safePaymentUrl
+                    ? algoTradingCourse.paymentInstructions.configuredLabel
+                    : algoTradingCourse.paymentInstructions.pendingLabel}
+                </small>
               </div>
-              <PlaceholderButton variant="primary">
-                Pay {algoTradingCourse.pricing.launchOfferLabel} and Join Full Course
-              </PlaceholderButton>
+              {showPaymentCta && safePaymentUrl ? (
+                <Button
+                  href={safePaymentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="primary"
+                >
+                  Pay {algoTradingCourse.pricing.launchOfferLabel} and Join Full Course
+                </Button>
+              ) : showPaymentCta ? (
+                <PlaceholderButton variant="primary">
+                  Pay {algoTradingCourse.pricing.launchOfferLabel} and Join Full Course
+                </PlaceholderButton>
+              ) : (
+                <PlaceholderButton variant="primary">
+                  Payment review in progress
+                </PlaceholderButton>
+              )}
             </div>
           </div>
         </div>

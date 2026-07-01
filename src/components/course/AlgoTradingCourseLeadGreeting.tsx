@@ -6,6 +6,11 @@ type StoredLead = {
   fullName?: unknown;
 };
 
+type AlgoTradingCourseLeadGreetingProps = {
+  email?: string;
+  fullName?: string;
+};
+
 const storageKey = "vyntegra_algo_course_lead";
 
 function subscribeToLeadStorage(onStoreChange: () => void) {
@@ -36,16 +41,24 @@ function readServerLeadName() {
   return "";
 }
 
-export default function AlgoTradingCourseLeadGreeting() {
-  const fullName = useSyncExternalStore(
+export default function AlgoTradingCourseLeadGreeting({
+  email = "",
+  fullName = "",
+}: AlgoTradingCourseLeadGreetingProps) {
+  const storedFullName = useSyncExternalStore(
     subscribeToLeadStorage,
     readStoredLeadName,
     readServerLeadName,
   );
+  const displayName = fullName.trim() || storedFullName;
 
   return (
     <p className="body-large algo-course-access-greeting">
-      {fullName ? `Welcome, ${fullName}.` : "Welcome to the free access area."}
+      {displayName
+        ? `Welcome, ${displayName}.`
+        : email
+          ? `Welcome, ${email}.`
+          : "Welcome to the free access area."}
     </p>
   );
 }

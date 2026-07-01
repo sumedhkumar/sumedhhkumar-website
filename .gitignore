@@ -29,6 +29,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+route-smoke.*
+
+# local exports / generated snapshots
+/_next/
+/__next.*.txt
+/*.zip
+/*prompt*.txt
 
 # env files (can opt-in for committing if needed)
 .env*

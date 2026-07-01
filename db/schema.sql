@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS form_submissions (
   id TEXT PRIMARY KEY,
   submission_type TEXT NOT NULL CHECK (submission_type IN ('contact', 'custom_solution', 'crypto_payment_proof', 'crypto_payment_query')),
@@ -140,3 +142,30 @@ CREATE TABLE IF NOT EXISTS razorpay_payments (
 CREATE INDEX IF NOT EXISTS razorpay_payments_order_id_idx ON razorpay_payments (razorpay_order_id);
 CREATE INDEX IF NOT EXISTS razorpay_payments_type_verified_idx ON razorpay_payments (purchase_type, verified_at DESC);
 CREATE INDEX IF NOT EXISTS razorpay_payments_created_at_idx ON razorpay_payments (created_at DESC);
+
+CREATE TABLE IF NOT EXISTS course_registrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  whatsapp_number TEXT NOT NULL,
+  course_slug TEXT NOT NULL DEFAULT 'algo-trading',
+  access_status TEXT NOT NULL DEFAULT 'free_access' CHECK (access_status IN ('free_access', 'paid', 'blocked')),
+  payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid', 'manual_verification')),
+  login_provider TEXT NOT NULL DEFAULT 'email_password' CHECK (login_provider IN ('google', 'email_password')),
+  source TEXT,
+  utm_source TEXT,
+  utm_medium TEXT,
+  utm_campaign TEXT,
+  hidden_bonus_agent_access_eligible BOOLEAN NOT NULL DEFAULT false,
+  last_login_at TIMESTAMPTZ,
+  registered_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, course_slug)
+);
+
+CREATE INDEX IF NOT EXISTS course_registrations_user_id_idx ON course_registrations (user_id);
+CREATE INDEX IF NOT EXISTS course_registrations_email_lower_idx ON course_registrations (lower(email));
+CREATE INDEX IF NOT EXISTS course_registrations_course_slug_idx ON course_registrations (course_slug);
+CREATE INDEX IF NOT EXISTS course_registrations_registered_at_idx ON course_registrations (registered_at DESC);

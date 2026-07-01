@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { isSubscriptionAgentSlug } from "@/data/agent-subscription-plans";
+import {
+  getAgentSubscriptionPlans,
+  getSubscriptionAgentPlan,
+  isSubscriptionAgentSlug,
+} from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
@@ -10,6 +14,7 @@ import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCa
 
 type PageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 function formatUsd(value: number) {
@@ -55,8 +60,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function SubscriptionCheckoutPage({ params }: PageProps) {
+export default async function SubscriptionCheckoutPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
+  const query = await searchParams;
   const product = findProduct(slug);
 
   if (!product) {
@@ -69,6 +78,28 @@ export default async function SubscriptionCheckoutPage({ params }: PageProps) {
 
   const paymentsConfigured = hasProductRazorpayCheckoutConfiguration();
   const cryptoPaymentConfig = getCryptoPaymentConfig();
+  const selectedPlanId = readPlanParam(query.plan);
+  const selectedPlan =
+    getSubscriptionAgentPlan(product.slug, selectedPlanId) ??
+    getAgentSubscriptionPlans(product.slug)[0];
+
+  if (!selectedPlan) {
+    notFound();
+  }
+
+  const defaultPricing = calculateFinalPrice(
+    product.slug,
+    selectedPlan.id,
+    "EARLYACCESS",
+  );
+  const defaultPayablePrice = defaultPricing.ok
+    ? defaultPricing.finalPriceUsd
+    : selectedPlan.priceUsd;
+  const checkoutProduct = {
+    ...product,
+    priceUsd: selectedPlan.priceUsd,
+    fullDescription: `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
+  };
 
   return (
     <main className="section-bg-primary astro-gold-checkout-page">
@@ -106,7 +137,7 @@ export default async function SubscriptionCheckoutPage({ params }: PageProps) {
               <div>
                 <dt>Default payable price</dt>
                 <dd className="astro-gold-selected-payable">
-                  {formatUsd(calculateFinalPrice(product.slug, selectedPlan.id, "EARLYACCESS").finalPriceUsd || selectedPlan.priceUsd)}
+                  {formatUsd(defaultPayablePrice)}
                 </dd>
               </div>
               <div>
@@ -128,8 +159,9 @@ export default async function SubscriptionCheckoutPage({ params }: PageProps) {
             product={checkoutProduct}
             paymentsConfigured={paymentsConfigured}
             cryptoPaymentConfig={cryptoPaymentConfig}
+            selectedPlan={selectedPlan}
           />
-        </Suspense>
+        </div>
       </div>
     </main>
   );

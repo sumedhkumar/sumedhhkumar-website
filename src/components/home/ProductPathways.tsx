@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Cpu, GraduationCap, UserRoundCheck, Workflow } from "lucide-react";
+import { algoTradingCourse } from "@/data/algo-trading-course";
 
 const pathways = [
   {
@@ -12,7 +13,7 @@ const pathways = [
   {
     title: "Algo Trading Course",
     copy: "A 3-month weekend masterclass on trading automation workflows using MT5 and TradingView.",
-    href: "/algo-trading-course",
+    href: algoTradingCourse.route,
     cta: "Explore course",
     icon: GraduationCap,
   },
