@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
-import AnnouncementBanner from "@/components/layout/AnnouncementBanner";
-import Footer from "@/components/layout/Footer";
-import Navbar from "@/components/layout/Navbar";
+import SiteChrome from "@/components/layout/SiteChrome";
 import "./globals.css";
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -45,10 +43,7 @@ export default function RootLayout({
       className={`${cormorantGaramond.variable} ${manrope.variable}`}
     >
       <body className={`${cormorantGaramond.variable} ${manrope.variable}`}>
-        <AnnouncementBanner />
-        <Navbar />
-        {children}
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

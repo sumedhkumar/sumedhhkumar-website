@@ -70,6 +70,49 @@ export function getSafeCourseVideoUrl(value: string) {
   return getSafeCourseExternalUrl(value);
 }
 
+function getSafeYoutubeVideoId(value: string) {
+  const safeUrl = getSafeCourseExternalUrl(value);
+
+  if (!safeUrl) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(safeUrl);
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    const firstPathSegment = parsed.pathname.split("/").filter(Boolean)[0] ?? "";
+
+    if (host === "youtu.be") {
+      return firstPathSegment;
+    }
+
+    if (host === "youtube.com" && parsed.pathname === "/watch") {
+      return parsed.searchParams.get("v") ?? "";
+    }
+
+    if (
+      (host === "youtube.com" || host === "youtube-nocookie.com") &&
+      firstPathSegment === "embed"
+    ) {
+      return parsed.pathname.split("/").filter(Boolean)[1] ?? "";
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+export function getSafeCourseIntroEmbedUrl(value: string) {
+  const videoId = getSafeYoutubeVideoId(value).trim();
+
+  if (!/^[A-Za-z0-9_-]{6,64}$/.test(videoId)) {
+    return "";
+  }
+
+  return `https://www.youtube-nocookie.com/embed/${videoId}`;
+}
+
 export function getSafeCoursePaymentUrl(value: string) {
   return getSafeCourseExternalUrl(value);
 }

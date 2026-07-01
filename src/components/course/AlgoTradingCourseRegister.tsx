@@ -330,7 +330,7 @@ export default function AlgoTradingCourseRegister() {
         setStatus({
           type: "info",
           message:
-            "Complete your course registration details to unlock the free lectures.",
+            "Complete your course registration details to continue to the free course preview.",
         });
       } catch (error) {
         setStatus({
@@ -451,7 +451,7 @@ export default function AlgoTradingCourseRegister() {
     setStatus({
       type: "success",
       message:
-        "Check your email to confirm your account, then log in to access the free lectures.",
+        "Check your email to confirm your account, then log in to continue to the free course preview.",
     });
     setLoadingAction(null);
   }
@@ -599,26 +599,21 @@ export default function AlgoTradingCourseRegister() {
             <p className="eyebrow">Free Course Account</p>
             <h1 className="hero-title">{algoTradingCourse.name}</h1>
             <p className="body-standard">
-              Create your account to access the intro video, Lecture 0, and
-              Lecture 1 before payment.
+              Create your account to continue to the free course preview.
             </p>
 
             <div className="algo-course-register-highlights">
-              <div>
-                <span>Free access includes</span>
-                <strong>Intro Video, Lecture 0, Lecture 1</strong>
-              </div>
-              <div>
-                <span>Program format</span>
-                <strong>3 months, 2 hours every weekend</strong>
-              </div>
               <div>
                 <span>Platforms</span>
                 <strong>MT5 + TradingView</strong>
               </div>
               <div>
-                <span>Launch offer after preview</span>
-                <strong>{algoTradingCourse.pricing.launchOfferLabel}</strong>
+                <span>Program format</span>
+                <strong>3-month weekend program</strong>
+              </div>
+              <div>
+                <span>Next step</span>
+                <strong>Free preview access</strong>
               </div>
             </div>
 

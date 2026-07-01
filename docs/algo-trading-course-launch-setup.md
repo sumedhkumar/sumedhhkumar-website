@@ -66,7 +66,7 @@ Payment-mail and crypto-proof SMTP variables exist for other site flows, but the
 
 These are public values, not secrets. Leave them blank to keep safe placeholders visible.
 
-- `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`: HTTPS intro video URL.
+- `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`: HTTPS intro video URL. The direct-share campaign landing page can safely convert supported YouTube watch, share, or embed URLs to a privacy-enhanced embed. Unlisted YouTube is acceptable for promotional/free intro content, but it is not private paid-course protection.
 - `NEXT_PUBLIC_COURSE_LECTURE_0_VIDEO_URL`: HTTPS Lecture 0 video URL.
 - `NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL`: HTTPS Lecture 1 video URL.
 - `NEXT_PUBLIC_COURSE_WHATSAPP_GROUP_URL`: must be a valid `https://chat.whatsapp.com/...` group URL.
@@ -158,6 +158,7 @@ This is manual verification, not automatic payment verification. Do not claim in
 - Add Lecture 1 to `NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL`.
 - Leave any value blank until it is ready; the UI will show safe placeholders.
 - Video URLs must be HTTPS.
+- The independent direct-share landing page at `/lp/trading-automation-masterclass` embeds the intro video on-page when this URL is a supported YouTube URL.
 - Do not paste private or unapproved links unless they are intended for logged-in course students.
 - `/courses/algo-trading/access` still requires login and course registration.
 
