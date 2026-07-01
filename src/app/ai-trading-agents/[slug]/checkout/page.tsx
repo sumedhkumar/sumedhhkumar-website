@@ -7,14 +7,32 @@ import {
   isSubscriptionAgentSlug,
 } from "@/data/agent-subscription-plans";
 import { products } from "@/data/products";
+import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
-import CheckoutPlanClient from "./CheckoutPlanClient";
+import { calculateFinalPrice } from "@/lib/pricing";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
+
+function formatUsd(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function readPlanParam(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+
+  return value ?? "";
+}
 
 function findProduct(slug: string) {
   return products.find((product) => product.slug === slug && product.active);
