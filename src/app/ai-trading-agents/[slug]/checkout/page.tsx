@@ -9,7 +9,8 @@ import {
 import { products } from "@/data/products";
 import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
-import CheckoutPlanClient from "./CheckoutPlanClient";
+import { calculateFinalPrice } from "@/lib/pricing";
+import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -18,6 +19,19 @@ type PageProps = {
 
 function findProduct(slug: string) {
   return products.find((product) => product.slug === slug && product.active);
+}
+
+function readPlanParam(value: string | string[] | undefined) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function formatUsd(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 export function generateStaticParams() {

@@ -1,0 +1,30 @@
+<svg width="720" height="420" viewBox="0 0 720 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Lecture 1 roadmap preview</title>
+  <desc id="desc">A clean educational roadmap slide for Lecture 1 showing course path and review checkpoints.</desc>
+  <rect width="720" height="420" rx="28" fill="#F8FBFF"/>
+  <rect x="30" y="30" width="660" height="360" rx="24" fill="#FFFFFF" stroke="#D9E7F5" stroke-width="2"/>
+  <text x="62" y="82" fill="#059669" font-family="Arial, sans-serif" font-size="16" font-weight="900">LECTURE 1</text>
+  <text x="62" y="118" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="32" font-weight="900">Course Roadmap</text>
+  <text x="62" y="148" fill="#475569" font-family="Arial, sans-serif" font-size="16" font-weight="600">Understand the learning path before tools.</text>
+  <path d="M102 252H598" stroke="#BFDBFE" stroke-width="8" stroke-linecap="round"/>
+  <g>
+    <circle cx="126" cy="252" r="24" fill="#2563EB"/>
+    <text x="119" y="261" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="900">1</text>
+    <text x="82" y="306" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="17" font-weight="800">Overview</text>
+  </g>
+  <g>
+    <circle cx="292" cy="252" r="24" fill="#2563EB"/>
+    <text x="285" y="261" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="900">2</text>
+    <text x="238" y="306" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="17" font-weight="800">Workflow</text>
+  </g>
+  <g>
+    <circle cx="458" cy="252" r="24" fill="#2563EB"/>
+    <text x="451" y="261" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="900">3</text>
+    <text x="414" y="306" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="17" font-weight="800">Review</text>
+  </g>
+  <g>
+    <circle cx="594" cy="252" r="24" fill="#059669"/>
+    <path d="M583 252L591 260L606 244" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="538" y="306" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="17" font-weight="800">Next step</text>
+  </g>
+</svg>

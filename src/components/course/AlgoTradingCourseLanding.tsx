@@ -41,7 +41,7 @@ export default function AlgoTradingCourseLanding() {
               structured 3-month weekend program.
             </p>
             <p className="body-standard algo-course-hero-support">
-              Start with the free Intro Video, Lecture 0, and Lecture 1 before
+              Start with free Lecture 1 + Lecture 2 before
               deciding whether to join the full launch batch.
             </p>
             <div className="hero-actions algo-course-actions">
@@ -55,7 +55,7 @@ export default function AlgoTradingCourseLanding() {
             <div className="algo-course-hero-offer" aria-label="Course summary">
               <div>
                 <span>Free before payment</span>
-                <strong>Intro + Lecture 0 + Lecture 1</strong>
+                <strong>Lecture 1 + Lecture 2</strong>
               </div>
               <div>
                 <span>Launch batch offer</span>
@@ -141,10 +141,10 @@ export default function AlgoTradingCourseLanding() {
           <div className="section-intro">
             <p className="eyebrow">Free Access</p>
             <h2 className="section-title">
-              Watch the free intro, Lecture 0 and Lecture 1 first
+              Watch Lecture 1 + Lecture 2 first
             </h2>
             <p className="body-standard">
-              Review the program orientation, course roadmap, and first teaching
+              Review the course roadmap and first teaching
               session before any payment decision.
             </p>
           </div>
@@ -375,7 +375,7 @@ export default function AlgoTradingCourseLanding() {
               <p className="eyebrow">Launch Batch</p>
               <h2 className="section-title">Create your free account first</h2>
               <p className="body-standard">
-                Watch the free intro, Lecture 0 and Lecture 1 before deciding
+                Watch Lecture 1 + Lecture 2 before deciding
                 whether to join the full program.
               </p>
             </div>
@@ -427,8 +427,7 @@ export default function AlgoTradingCourseLanding() {
                 Ready to start with the free lessons?
               </h2>
               <p className="body-standard">
-                Create your free account and watch the intro, Lecture 0 and
-                Lecture 1.
+                Create your free account and watch Lecture 1 + Lecture 2.
               </p>
             </div>
             <Button href={algoTradingCourse.registerRoute} variant="primary">

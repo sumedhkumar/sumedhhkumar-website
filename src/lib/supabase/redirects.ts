@@ -5,7 +5,7 @@ export const courseAuthErrorFallbackPath = `${algoTradingCourse.route}?auth=erro
 
 export function getSafeInternalRedirectPath(
   value: string | null,
-  fallbackPath = courseAuthSuccessFallbackPath,
+  fallbackPath: string = courseAuthSuccessFallbackPath,
 ) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return fallbackPath;

@@ -1,18 +1,19 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
   CircleAlert,
   KeyRound,
-  Mail,
   ShieldCheck,
 } from "lucide-react";
 import { algoTradingCourse } from "@/data/algo-trading-course";
+import { getPublicContactDetails } from "@/data/site";
 import Button from "@/components/ui/Button";
 import FieldError from "@/components/ui/FieldError";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { supabaseAuthConfigurationMessage } from "@/lib/supabase/env";
 
 type AuthMode = "signup" | "login";
 
@@ -34,14 +35,58 @@ type RegistrationResponse = {
   } | null;
 };
 
+type AlgoTradingCourseRegisterProps = {
+  embedded?: boolean;
+  className?: string;
+  attributionSource?: string;
+  defaultNext?: string;
+  heading?: string;
+  subheading?: string;
+};
+
 const courseSlug = "algo-trading";
 const pendingRegistrationKey = "vyntegra_algo_course_pending_registration";
+const manualCountryCodeValue = "manual";
+const courseLogoutHref = `/auth/logout?next=${encodeURIComponent(algoTradingCourse.registerRoute)}`;
+const courseAccessLinkIssueCopy =
+  "You are signed in, but your course registration was not found. Please log out and register again, or contact support.";
+
+type PendingRegistration = {
+  fullName: string;
+  email: string;
+  whatsappNumber: string;
+  courseSlug: string;
+  source: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  intendedNext: string;
+};
+
+const whatsappCountryOptions = [
+  { label: "India +91", value: "+91" },
+  { label: "Pakistan +92", value: "+92" },
+  { label: "UAE +971", value: "+971" },
+  { label: "United States/Canada +1", value: "+1" },
+  { label: "United Kingdom +44", value: "+44" },
+  { label: "Singapore +65", value: "+65" },
+  { label: "Australia +61", value: "+61" },
+  { label: "Other / manual country code", value: manualCountryCodeValue },
+];
+
+type WhatsappInputValues = {
+  whatsappCountryCode: string;
+  whatsappManualCountryCode: string;
+  whatsappLocalNumber: string;
+};
 
 const initialSignupValues = {
   fullName: "",
   email: "",
   password: "",
-  whatsappNumber: "",
+  whatsappCountryCode: "+91",
+  whatsappManualCountryCode: "",
+  whatsappLocalNumber: "",
 };
 
 const initialLoginValues = {
@@ -53,9 +98,78 @@ function sanitizeClientText(value: string) {
   return value.replace(/[<>]/g, "").trim();
 }
 
+function normalizeCountryCode(value: string) {
+  const trimmedValue = value.trim();
+  const withPlus = trimmedValue.startsWith("+")
+    ? trimmedValue
+    : `+${trimmedValue}`;
+
+  return `+${withPlus.replace(/\D/g, "")}`;
+}
+
+function normalizePhoneDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function buildWhatsappNumber(values: WhatsappInputValues) {
+  const selectedCountryCode =
+    values.whatsappCountryCode === manualCountryCodeValue
+      ? values.whatsappManualCountryCode
+      : values.whatsappCountryCode;
+  const countryCode = normalizeCountryCode(selectedCountryCode);
+  const localNumber = normalizePhoneDigits(values.whatsappLocalNumber);
+
+  if (!countryCode || countryCode === "+") {
+    return {
+      value: "",
+      error: "Enter a country code.",
+    };
+  }
+
+  if (!/^\+\d{1,4}$/.test(countryCode)) {
+    return {
+      value: "",
+      error: "Enter a valid country code starting with +.",
+    };
+  }
+
+  if (!localNumber) {
+    return {
+      value: "",
+      error: "Enter your WhatsApp number.",
+    };
+  }
+
+  if (localNumber.length < 6 || localNumber.length > 15) {
+    return {
+      value: "",
+      error: "Enter a reasonable WhatsApp number.",
+    };
+  }
+
+  return {
+    value: `${countryCode}${localNumber}`,
+    error: "",
+  };
+}
+
+function getAuthErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (
+    !message ||
+    message.includes("Invalid path specified in request URL") ||
+    message.includes("Supabase Auth is not configured")
+  ) {
+    return supabaseAuthConfigurationMessage;
+  }
+
+  return message;
+}
+
 function validateProfile(fullName: string, whatsappNumber: string) {
   const errors: FormErrors = {};
-  const normalizedWhatsapp = whatsappNumber.replace(/\s/g, "");
+  const whatsappDigits = normalizePhoneDigits(whatsappNumber);
 
   if (sanitizeClientText(fullName).length < 2) {
     errors.fullName = "Enter your full name.";
@@ -63,8 +177,26 @@ function validateProfile(fullName: string, whatsappNumber: string) {
 
   if (!sanitizeClientText(whatsappNumber)) {
     errors.whatsappNumber = "Enter your WhatsApp number.";
-  } else if (normalizedWhatsapp.length < 8 || normalizedWhatsapp.length > 20) {
+  } else if (!whatsappNumber.startsWith("+")) {
+    errors.whatsappNumber = "Enter a WhatsApp number with country code.";
+  } else if (whatsappDigits.length < 8 || whatsappDigits.length > 18) {
     errors.whatsappNumber = "Enter a reasonable WhatsApp number.";
+  }
+
+  return errors;
+}
+
+function validateSignupEmailPassword(
+  email: string,
+  password: string,
+  confirmPassword: string,
+) {
+  const errors = validateEmailPassword(email, password);
+
+  if (!confirmPassword) {
+    errors.confirmPassword = "Confirm your password.";
+  } else if (password && confirmPassword && password !== confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
   }
 
   return errors;
@@ -96,15 +228,15 @@ function validateEmailOnly(email: string) {
   return errors;
 }
 
-function getAttributionPayload() {
+function getAttributionPayload(defaultSource = "course_register_page") {
   if (typeof window === "undefined") {
-    return { source: "course_register_page" };
+    return { source: defaultSource };
   }
 
   const searchParams = new URLSearchParams(window.location.search);
 
   return {
-    source: sanitizeClientText(searchParams.get("source") ?? "") || "course_register_page",
+    source: sanitizeClientText(searchParams.get("source") ?? "") || defaultSource,
     utmSource: sanitizeClientText(searchParams.get("utm_source") ?? ""),
     utmMedium: sanitizeClientText(searchParams.get("utm_medium") ?? ""),
     utmCampaign: sanitizeClientText(searchParams.get("utm_campaign") ?? ""),
@@ -129,16 +261,16 @@ function getSafeClientPath(value: string | null, fallbackPath: string) {
   }
 }
 
-function getPostAuthTarget() {
+function getPostAuthTarget(fallbackPath: string = algoTradingCourse.accessRoute) {
   if (typeof window === "undefined") {
-    return algoTradingCourse.accessRoute;
+    return fallbackPath;
   }
 
   const searchParams = new URLSearchParams(window.location.search);
 
   return getSafeClientPath(
     searchParams.get("next"),
-    algoTradingCourse.accessRoute,
+    fallbackPath,
   );
 }
 
@@ -154,29 +286,77 @@ function getPendingRegistration() {
       return null;
     }
 
-    const parsed = JSON.parse(storedValue) as {
-      fullName?: unknown;
-      whatsappNumber?: unknown;
-    };
+    const parsed = JSON.parse(storedValue) as Partial<Record<keyof PendingRegistration, unknown>>;
 
     return {
       fullName: typeof parsed.fullName === "string" ? parsed.fullName : "",
+      email: typeof parsed.email === "string" ? parsed.email : "",
       whatsappNumber:
         typeof parsed.whatsappNumber === "string" ? parsed.whatsappNumber : "",
+      courseSlug: typeof parsed.courseSlug === "string" ? parsed.courseSlug : "",
+      source: typeof parsed.source === "string" ? parsed.source : "",
+      utmSource: typeof parsed.utmSource === "string" ? parsed.utmSource : "",
+      utmMedium: typeof parsed.utmMedium === "string" ? parsed.utmMedium : "",
+      utmCampaign: typeof parsed.utmCampaign === "string" ? parsed.utmCampaign : "",
+      intendedNext: typeof parsed.intendedNext === "string" ? parsed.intendedNext : "",
     };
   } catch {
     return null;
   }
 }
 
-function setPendingRegistration(fullName: string, whatsappNumber: string) {
+function getPendingAttributionPayload(pendingRegistration: PendingRegistration) {
+  return {
+    source: sanitizeClientText(pendingRegistration.source),
+    utmSource: sanitizeClientText(pendingRegistration.utmSource),
+    utmMedium: sanitizeClientText(pendingRegistration.utmMedium),
+    utmCampaign: sanitizeClientText(pendingRegistration.utmCampaign),
+  };
+}
+
+function hasUsablePendingRegistration(
+  pendingRegistration: PendingRegistration | null,
+): pendingRegistration is PendingRegistration {
+  return Boolean(
+    pendingRegistration?.courseSlug === courseSlug &&
+      pendingRegistration.fullName &&
+      pendingRegistration.whatsappNumber,
+  );
+}
+
+function hasCompleteCourseRegistration(
+  registration: RegistrationResponse["registration"],
+) {
+  return Boolean(
+    registration?.fullName?.trim() && registration.whatsappNumber?.trim(),
+  );
+}
+
+function setPendingRegistration(
+  fullName: string,
+  whatsappNumber: string,
+  {
+    email = "",
+    source,
+    defaultNext = algoTradingCourse.accessRoute,
+  }: {
+    email?: string;
+    source: string;
+    defaultNext?: string;
+  },
+) {
   if (typeof window === "undefined") {
     return;
   }
 
+  const attribution = getAttributionPayload(source);
   const payload = {
     fullName: sanitizeClientText(fullName),
+    email: sanitizeClientText(email),
     whatsappNumber: sanitizeClientText(whatsappNumber),
+    courseSlug,
+    ...attribution,
+    intendedNext: getPostAuthTarget(defaultNext),
   };
 
   if (!payload.fullName && !payload.whatsappNumber) {
@@ -197,30 +377,141 @@ function clearPendingRegistration() {
   window.sessionStorage.removeItem(pendingRegistrationKey);
 }
 
-export default function AlgoTradingCourseRegister() {
+function WhatsappNumberFields({
+  idPrefix,
+  values,
+  errorMessage,
+  onChange,
+}: {
+  idPrefix: string;
+  values: WhatsappInputValues;
+  errorMessage?: string;
+  onChange: (values: WhatsappInputValues) => void;
+}) {
+  const isManualCountryCode =
+    values.whatsappCountryCode === manualCountryCodeValue;
+  const errorId = `${idPrefix}Whatsapp-error`;
+
+  return (
+    <div>
+      <label className="form-label" htmlFor={`${idPrefix}WhatsappLocal`}>
+        WhatsApp number *
+      </label>
+      <div style={{ display: "grid", gap: 8 }}>
+        <select
+          className="form-control"
+          value={values.whatsappCountryCode}
+          onChange={(event) =>
+            onChange({
+              ...values,
+              whatsappCountryCode: event.target.value,
+            })
+          }
+          aria-label="WhatsApp country code"
+        >
+          {whatsappCountryOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        {isManualCountryCode ? (
+          <input
+            className="form-control"
+            value={values.whatsappManualCountryCode}
+            onChange={(event) =>
+              onChange({
+                ...values,
+                whatsappManualCountryCode: event.target.value,
+              })
+            }
+            autoComplete="tel-country-code"
+            inputMode="tel"
+            placeholder="+1"
+            type="tel"
+            aria-label="Manual WhatsApp country code"
+          />
+        ) : null}
+
+        <input
+          id={`${idPrefix}WhatsappLocal`}
+          className="form-control"
+          value={values.whatsappLocalNumber}
+          onChange={(event) =>
+            onChange({
+              ...values,
+              whatsappLocalNumber: event.target.value,
+            })
+          }
+          autoComplete="tel-national"
+          inputMode="tel"
+          placeholder="Phone number"
+          type="tel"
+          aria-describedby={errorId}
+        />
+      </div>
+      <FieldError id={errorId} message={errorMessage} />
+    </div>
+  );
+}
+
+export default function AlgoTradingCourseRegister({
+  embedded = false,
+  className = "",
+  attributionSource = "course_register_page",
+  defaultNext = algoTradingCourse.accessRoute,
+  heading = "Register or log in to continue",
+  subheading = "Your email comes from Supabase Auth. WhatsApp is collected only for course updates and support.",
+}: AlgoTradingCourseRegisterProps = {}) {
   const [activeMode, setActiveMode] = useState<AuthMode>("signup");
   const [signupValues, setSignupValues] = useState(initialSignupValues);
   const [loginValues, setLoginValues] = useState(initialLoginValues);
-  const [profileValues, setProfileValues] = useState({
-    fullName: "",
-    whatsappNumber: "",
-  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<StatusMessage | null>(null);
   const [loadingAction, setLoadingAction] = useState<
-    "google" | "signup" | "login" | "profile" | "reset" | null
+    "signup" | "login" | "reset" | "retry" | null
   >(null);
-  const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
+  const [hasCourseRegistration, setHasCourseRegistration] = useState(false);
+  const [courseAccessLinkIssue, setCourseAccessLinkIssue] = useState(false);
   const [signedInEmail, setSignedInEmail] = useState("");
+  const supportEmail = getPublicContactDetails().email;
+  const fieldIdPrefix = embedded ? "campaignCourse" : "course";
+  const authCardClassName = [
+    embedded ? "" : "depth-panel",
+    "algo-course-auth-card",
+    embedded ? "algo-course-auth-card-embedded" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  function getAuthCallbackReturnPath() {
+    if (typeof window === "undefined") {
+      return algoTradingCourse.registerRoute;
+    }
+
+    const search = window.location.search || "";
+    const hash = embedded ? "#register" : window.location.hash || "";
+
+    return `${window.location.pathname}${search}${hash}`;
+  }
+
+  const redirectToPostAuthTarget = useCallback(function redirectToPostAuthTarget() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.location.assign(getPostAuthTarget(defaultNext));
+  }, [defaultNext]);
 
   function getSupabaseClientOrWarn() {
     try {
       return createSupabaseBrowserClient();
-    } catch {
+    } catch (error) {
       setStatus({
         type: "error",
-        message:
-          "Course account access is not configured yet. Add the public Supabase Auth environment variables.",
+        message: getAuthErrorMessage(error),
       });
       return null;
     }
@@ -241,9 +532,10 @@ export default function AlgoTradingCourseRegister() {
     return payload.registration ?? null;
   }
 
-  async function saveCourseRegistration(
+  const saveCourseRegistration = useCallback(async function saveCourseRegistration(
     fullName: string,
     whatsappNumber: string,
+    attributionPayload?: ReturnType<typeof getAttributionPayload>,
   ) {
     const nextErrors = validateProfile(fullName, whatsappNumber);
     setErrors(nextErrors);
@@ -261,7 +553,7 @@ export default function AlgoTradingCourseRegister() {
         courseSlug,
         fullName: sanitizeClientText(fullName),
         whatsappNumber: sanitizeClientText(whatsappNumber),
-        ...getAttributionPayload(),
+        ...(attributionPayload ?? getAttributionPayload(attributionSource)),
       }),
     });
     const payload = (await response.json().catch(() => ({}))) as RegistrationResponse;
@@ -274,8 +566,8 @@ export default function AlgoTradingCourseRegister() {
     }
 
     clearPendingRegistration();
-    window.location.assign(getPostAuthTarget());
-  }
+    redirectToPostAuthTarget();
+  }, [attributionSource, redirectToPostAuthTarget]);
 
   useEffect(() => {
     let isMounted = true;
@@ -296,42 +588,32 @@ export default function AlgoTradingCourseRegister() {
       }
 
       const pendingRegistration = getPendingRegistration();
-      const metadataFullName =
-        typeof user.user_metadata?.full_name === "string"
-          ? user.user_metadata.full_name
-          : "";
       setSignedInEmail(user.email ?? "");
 
       try {
         const existingRegistration = await loadCourseRegistration();
 
-        if (existingRegistration) {
+        if (hasCompleteCourseRegistration(existingRegistration)) {
           clearPendingRegistration();
-          window.location.assign(getPostAuthTarget());
+          setHasCourseRegistration(true);
+          setCourseAccessLinkIssue(false);
+          setStatus(null);
+          redirectToPostAuthTarget();
           return;
         }
 
-        if (
-          pendingRegistration?.fullName &&
-          pendingRegistration.whatsappNumber
-        ) {
+        if (hasUsablePendingRegistration(pendingRegistration)) {
           await saveCourseRegistration(
             pendingRegistration.fullName,
             pendingRegistration.whatsappNumber,
+            getPendingAttributionPayload(pendingRegistration),
           );
           return;
         }
 
-        setProfileValues({
-          fullName: pendingRegistration?.fullName || metadataFullName,
-          whatsappNumber: pendingRegistration?.whatsappNumber || "",
-        });
-        setNeedsProfileCompletion(true);
-        setStatus({
-          type: "info",
-          message:
-            "Complete your course registration details to continue to the free course preview.",
-        });
+        setHasCourseRegistration(false);
+        setCourseAccessLinkIssue(true);
+        setStatus(null);
       } catch (error) {
         setStatus({
           type: "error",
@@ -348,52 +630,34 @@ export default function AlgoTradingCourseRegister() {
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  async function handleGoogleAuth() {
-    setStatus(null);
-    setErrors({});
-    setLoadingAction("google");
-    setPendingRegistration(signupValues.fullName, signupValues.whatsappNumber);
-
-    const supabase = getSupabaseClientOrWarn();
-
-    if (!supabase) {
-      setLoadingAction(null);
-      return;
-    }
-
-    const nextPath = `${window.location.pathname}${window.location.search || ""}`;
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-      },
-    });
-
-    if (error) {
-      setStatus({
-        type: "error",
-        message: error.message,
-      });
-      setLoadingAction(null);
-    }
-  }
+  }, [redirectToPostAuthTarget, saveCourseRegistration]);
 
   async function handleSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus(null);
 
+    const confirmPassword = sanitizeClientText(
+      event.currentTarget.querySelector<HTMLInputElement>(
+        `#${fieldIdPrefix}SignupConfirmPassword`,
+      )?.value ?? "",
+    );
+    const whatsappResult = buildWhatsappNumber(signupValues);
     const profileErrors = validateProfile(
       signupValues.fullName,
-      signupValues.whatsappNumber,
+      whatsappResult.value,
     );
-    const authErrors = validateEmailPassword(
+    const authErrors = validateSignupEmailPassword(
       signupValues.email,
       signupValues.password,
+      confirmPassword,
     );
-    const nextErrors = { ...profileErrors, ...authErrors };
+    const nextErrors = {
+      ...profileErrors,
+      ...authErrors,
+      ...(whatsappResult.error
+        ? { whatsappNumber: whatsappResult.error }
+        : {}),
+    };
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -407,7 +671,11 @@ export default function AlgoTradingCourseRegister() {
     }
 
     setLoadingAction("signup");
-    setPendingRegistration(signupValues.fullName, signupValues.whatsappNumber);
+    setPendingRegistration(signupValues.fullName, whatsappResult.value, {
+      email: signupValues.email,
+      source: attributionSource,
+      defaultNext,
+    });
 
     const { data, error } = await supabase.auth.signUp({
       email: sanitizeClientText(signupValues.email),
@@ -416,14 +684,14 @@ export default function AlgoTradingCourseRegister() {
         data: {
           full_name: sanitizeClientText(signupValues.fullName),
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`${window.location.pathname}${window.location.search || ""}`)}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(getAuthCallbackReturnPath())}`,
       },
     });
 
     if (error) {
       setStatus({
         type: "error",
-        message: error.message,
+        message: getAuthErrorMessage(error),
       });
       setLoadingAction(null);
       return;
@@ -433,7 +701,7 @@ export default function AlgoTradingCourseRegister() {
       try {
         await saveCourseRegistration(
           signupValues.fullName,
-          signupValues.whatsappNumber,
+          whatsappResult.value,
         );
       } catch (saveError) {
         setStatus({
@@ -451,7 +719,7 @@ export default function AlgoTradingCourseRegister() {
     setStatus({
       type: "success",
       message:
-        "Check your email to confirm your account, then log in to continue to the free course preview.",
+        "Check your email to confirm your account, then log in to continue to Lecture 1 + Lecture 2.",
     });
     setLoadingAction(null);
   }
@@ -485,7 +753,7 @@ export default function AlgoTradingCourseRegister() {
     if (error) {
       setStatus({
         type: "error",
-        message: error.message,
+        message: getAuthErrorMessage(error),
       });
       setLoadingAction(null);
       return;
@@ -496,18 +764,30 @@ export default function AlgoTradingCourseRegister() {
     try {
       const existingRegistration = await loadCourseRegistration();
 
-      if (existingRegistration) {
-        window.location.assign(getPostAuthTarget());
+      if (hasCompleteCourseRegistration(existingRegistration)) {
+        clearPendingRegistration();
+        setHasCourseRegistration(true);
+        setCourseAccessLinkIssue(false);
+        setStatus(null);
+        setLoadingAction(null);
+        redirectToPostAuthTarget();
         return;
       }
 
-      setNeedsProfileCompletion(true);
-      setActiveMode("signup");
-      setStatus({
-        type: "info",
-        message:
-          "Your account is active. Add your name and WhatsApp number to finish course registration.",
-      });
+      const pendingRegistration = getPendingRegistration();
+
+      if (hasUsablePendingRegistration(pendingRegistration)) {
+        await saveCourseRegistration(
+          pendingRegistration.fullName,
+          pendingRegistration.whatsappNumber,
+          getPendingAttributionPayload(pendingRegistration),
+        );
+        return;
+      }
+
+      setHasCourseRegistration(false);
+      setCourseAccessLinkIssue(true);
+      setStatus(null);
     } catch (loadError) {
       setStatus({
         type: "error",
@@ -521,16 +801,40 @@ export default function AlgoTradingCourseRegister() {
     }
   }
 
-  async function handleProfileCompletion(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleRetryAccessCheck() {
     setStatus(null);
-    setLoadingAction("profile");
+    setErrors({});
+    setLoadingAction("retry");
 
     try {
-      await saveCourseRegistration(
-        profileValues.fullName,
-        profileValues.whatsappNumber,
-      );
+      const existingRegistration = await loadCourseRegistration();
+
+      if (hasCompleteCourseRegistration(existingRegistration)) {
+        clearPendingRegistration();
+        setHasCourseRegistration(true);
+        setCourseAccessLinkIssue(false);
+        setStatus(null);
+        setLoadingAction(null);
+        redirectToPostAuthTarget();
+        return;
+      }
+
+      const pendingRegistration = getPendingRegistration();
+
+      if (hasUsablePendingRegistration(pendingRegistration)) {
+        await saveCourseRegistration(
+          pendingRegistration.fullName,
+          pendingRegistration.whatsappNumber,
+          getPendingAttributionPayload(pendingRegistration),
+        );
+        return;
+      }
+
+      setCourseAccessLinkIssue(true);
+      setStatus({
+        type: "error",
+        message: "Course registration could not be linked from this session.",
+      });
     } catch (error) {
       setStatus({
         type: "error",
@@ -539,6 +843,7 @@ export default function AlgoTradingCourseRegister() {
             ? error.message
             : "Course registration could not be saved.",
       });
+    } finally {
       setLoadingAction(null);
     }
   }
@@ -576,8 +881,7 @@ export default function AlgoTradingCourseRegister() {
     if (error) {
       setStatus({
         type: "error",
-        message:
-          "Password reset could not be started. Please check the auth configuration and try again.",
+        message: getAuthErrorMessage(error),
       });
       setLoadingAction(null);
       return;
@@ -591,121 +895,76 @@ export default function AlgoTradingCourseRegister() {
     setLoadingAction(null);
   }
 
-  return (
-    <main className="algo-course-page algo-course-register-page">
-      <section className="section algo-course-register-hero">
-        <div className="container algo-course-register-grid">
-          <aside className="depth-panel algo-course-register-summary">
-            <p className="eyebrow">Free Course Account</p>
-            <h1 className="hero-title">{algoTradingCourse.name}</h1>
-            <p className="body-standard">
-              Create your account to continue to the free course preview.
-            </p>
+  function handleLogoutLinkClick() {
+    clearPendingRegistration();
+  }
 
-            <div className="algo-course-register-highlights">
-              <div>
-                <span>Platforms</span>
-                <strong>MT5 + TradingView</strong>
-              </div>
-              <div>
-                <span>Program format</span>
-                <strong>3-month weekend program</strong>
-              </div>
-              <div>
-                <span>Next step</span>
-                <strong>Free preview access</strong>
-              </div>
-            </div>
-
-            <div className="algo-course-register-trust">
-              <ShieldCheck size={19} strokeWidth={1.75} aria-hidden="true" />
-              <p>{algoTradingCourse.disclaimer}</p>
-            </div>
-          </aside>
-
-          <div className="depth-panel algo-course-auth-card">
+  const authCard = (
+    <div className={authCardClassName}>
             <div className="algo-course-auth-header">
               <p className="eyebrow">Account Access</p>
-              <h2 className="subsection-title">
-                Register or log in to continue
-              </h2>
-              <p className="body-compact">
-                Your email comes from Supabase Auth. WhatsApp is collected only
-                for course updates and support.
-              </p>
+              <h2 className="subsection-title">{heading}</h2>
+              <p className="body-compact">{subheading}</p>
             </div>
 
-            {needsProfileCompletion ? (
-              <form className="algo-course-auth-form" onSubmit={handleProfileCompletion}>
+            {hasCourseRegistration ? (
+              <div className="algo-course-logged-in-panel">
+                <div className="algo-course-auth-state-copy">
+                  <h3>You are logged in</h3>
+                </div>
                 <div className="algo-course-signed-in-note">
                   <CheckCircle2 size={19} strokeWidth={1.75} aria-hidden="true" />
                   <span>
-                    Signed in{signedInEmail ? ` as ${signedInEmail}` : ""}.
+                    You are logged in{signedInEmail ? ` as ${signedInEmail}` : ""}.
                   </span>
                 </div>
 
-                <div>
-                  <label className="form-label" htmlFor="courseProfileFullName">
-                    Full name *
-                  </label>
-                  <input
-                    id="courseProfileFullName"
-                    className="form-control"
-                    value={profileValues.fullName}
-                    onChange={(event) =>
-                      setProfileValues((current) => ({
-                        ...current,
-                        fullName: event.target.value,
-                      }))
-                    }
-                    autoComplete="name"
-                    placeholder="Enter your full name"
-                    aria-describedby="courseProfileFullName-error"
-                  />
-                  <FieldError
-                    id="courseProfileFullName-error"
-                    message={errors.fullName}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="form-label"
-                    htmlFor="courseProfileWhatsapp"
+                <div className="algo-course-auth-action-row">
+                  <Button href={algoTradingCourse.accessRoute} variant="primary">
+                    Continue to lessons
+                  </Button>
+                  <Button
+                    href={courseLogoutHref}
+                    variant="secondary"
+                    onClick={handleLogoutLinkClick}
                   >
-                    WhatsApp number *
-                  </label>
-                  <input
-                    id="courseProfileWhatsapp"
-                    className="form-control"
-                    value={profileValues.whatsappNumber}
-                    onChange={(event) =>
-                      setProfileValues((current) => ({
-                        ...current,
-                        whatsappNumber: event.target.value,
-                      }))
-                    }
-                    autoComplete="tel"
-                    placeholder="Enter your WhatsApp number"
-                    type="tel"
-                    aria-describedby="courseProfileWhatsapp-error"
-                  />
-                  <FieldError
-                    id="courseProfileWhatsapp-error"
-                    message={errors.whatsappNumber}
-                  />
+                    Log out
+                  </Button>
+                </div>
+              </div>
+            ) : courseAccessLinkIssue ? (
+              <div className="algo-course-auth-issue-panel">
+                <div className="algo-course-auth-state-copy">
+                  <h3>Course access could not be linked</h3>
+                  <p>{courseAccessLinkIssueCopy}</p>
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={loadingAction === "profile"}
-                >
-                  {loadingAction === "profile"
-                    ? "Saving Registration..."
-                    : "Finish Registration"}
-                </Button>
-              </form>
+                <div className="algo-course-auth-action-row algo-course-auth-action-row-issue">
+                  <Button
+                    href={courseLogoutHref}
+                    variant="secondary"
+                    onClick={handleLogoutLinkClick}
+                  >
+                    Log out
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleRetryAccessCheck}
+                    disabled={loadingAction === "retry"}
+                  >
+                    {loadingAction === "retry" ? "Retrying..." : "Retry"}
+                  </Button>
+                  {supportEmail ? (
+                    <Button
+                      href={`mailto:${supportEmail}`}
+                      variant="secondary"
+                    >
+                      Contact support
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
             ) : (
               <>
                 <div className="algo-course-auth-tabs" role="tablist" aria-label="Course auth options">
@@ -731,27 +990,14 @@ export default function AlgoTradingCourseRegister() {
                   </button>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="algo-course-google-button"
-                  onClick={handleGoogleAuth}
-                  disabled={loadingAction === "google"}
-                >
-                  <Mail size={18} strokeWidth={1.75} aria-hidden="true" />
-                  {loadingAction === "google"
-                    ? "Opening Google..."
-                    : "Continue with Google"}
-                </Button>
-
                 {activeMode === "signup" ? (
                   <form className="algo-course-auth-form" onSubmit={handleSignup}>
                     <div>
-                      <label className="form-label" htmlFor="courseSignupName">
+                      <label className="form-label" htmlFor={`${fieldIdPrefix}SignupName`}>
                         Full name *
                       </label>
                       <input
-                        id="courseSignupName"
+                        id={`${fieldIdPrefix}SignupName`}
                         className="form-control"
                         value={signupValues.fullName}
                         onChange={(event) =>
@@ -762,20 +1008,20 @@ export default function AlgoTradingCourseRegister() {
                         }
                         autoComplete="name"
                         placeholder="Enter your full name"
-                        aria-describedby="courseSignupName-error"
+                        aria-describedby={`${fieldIdPrefix}SignupName-error`}
                       />
                       <FieldError
-                        id="courseSignupName-error"
+                        id={`${fieldIdPrefix}SignupName-error`}
                         message={errors.fullName}
                       />
                     </div>
 
                     <div>
-                      <label className="form-label" htmlFor="courseSignupEmail">
+                      <label className="form-label" htmlFor={`${fieldIdPrefix}SignupEmail`}>
                         Email address *
                       </label>
                       <input
-                        id="courseSignupEmail"
+                        id={`${fieldIdPrefix}SignupEmail`}
                         className="form-control"
                         value={signupValues.email}
                         onChange={(event) =>
@@ -787,10 +1033,10 @@ export default function AlgoTradingCourseRegister() {
                         autoComplete="email"
                         placeholder="you@example.com"
                         type="email"
-                        aria-describedby="courseSignupEmail-error"
+                        aria-describedby={`${fieldIdPrefix}SignupEmail-error`}
                       />
                       <FieldError
-                        id="courseSignupEmail-error"
+                        id={`${fieldIdPrefix}SignupEmail-error`}
                         message={errors.email}
                       />
                     </div>
@@ -798,12 +1044,12 @@ export default function AlgoTradingCourseRegister() {
                     <div>
                       <label
                         className="form-label"
-                        htmlFor="courseSignupPassword"
+                        htmlFor={`${fieldIdPrefix}SignupPassword`}
                       >
                         Password *
                       </label>
                       <input
-                        id="courseSignupPassword"
+                        id={`${fieldIdPrefix}SignupPassword`}
                         className="form-control"
                         value={signupValues.password}
                         onChange={(event) =>
@@ -815,10 +1061,10 @@ export default function AlgoTradingCourseRegister() {
                         autoComplete="new-password"
                         placeholder="Create a password"
                         type="password"
-                        aria-describedby="courseSignupPassword-error"
+                        aria-describedby={`${fieldIdPrefix}SignupPassword-error`}
                       />
                       <FieldError
-                        id="courseSignupPassword-error"
+                        id={`${fieldIdPrefix}SignupPassword-error`}
                         message={errors.password}
                       />
                     </div>
@@ -826,30 +1072,35 @@ export default function AlgoTradingCourseRegister() {
                     <div>
                       <label
                         className="form-label"
-                        htmlFor="courseSignupWhatsapp"
+                        htmlFor={`${fieldIdPrefix}SignupConfirmPassword`}
                       >
-                        WhatsApp number *
+                        Confirm password *
                       </label>
                       <input
-                        id="courseSignupWhatsapp"
+                        id={`${fieldIdPrefix}SignupConfirmPassword`}
                         className="form-control"
-                        value={signupValues.whatsappNumber}
-                        onChange={(event) =>
-                          setSignupValues((current) => ({
-                            ...current,
-                            whatsappNumber: event.target.value,
-                          }))
-                        }
-                        autoComplete="tel"
-                        placeholder="Enter your WhatsApp number"
-                        type="tel"
-                        aria-describedby="courseSignupWhatsapp-error"
+                        autoComplete="new-password"
+                        placeholder="Confirm your password"
+                        type="password"
+                        aria-describedby={`${fieldIdPrefix}SignupConfirmPassword-error`}
                       />
                       <FieldError
-                        id="courseSignupWhatsapp-error"
-                        message={errors.whatsappNumber}
+                        id={`${fieldIdPrefix}SignupConfirmPassword-error`}
+                        message={errors.confirmPassword}
                       />
                     </div>
+
+                    <WhatsappNumberFields
+                      idPrefix={`${fieldIdPrefix}Signup`}
+                      values={signupValues}
+                      onChange={(nextValues) =>
+                        setSignupValues((current) => ({
+                          ...current,
+                          ...nextValues,
+                        }))
+                      }
+                      errorMessage={errors.whatsappNumber}
+                    />
 
                     <Button
                       type="submit"
@@ -864,11 +1115,11 @@ export default function AlgoTradingCourseRegister() {
                 ) : (
                   <form className="algo-course-auth-form" onSubmit={handleLogin}>
                     <div>
-                      <label className="form-label" htmlFor="courseLoginEmail">
+                      <label className="form-label" htmlFor={`${fieldIdPrefix}LoginEmail`}>
                         Email address *
                       </label>
                       <input
-                        id="courseLoginEmail"
+                        id={`${fieldIdPrefix}LoginEmail`}
                         className="form-control"
                         value={loginValues.email}
                         onChange={(event) =>
@@ -880,10 +1131,10 @@ export default function AlgoTradingCourseRegister() {
                         autoComplete="email"
                         placeholder="you@example.com"
                         type="email"
-                        aria-describedby="courseLoginEmail-error"
+                        aria-describedby={`${fieldIdPrefix}LoginEmail-error`}
                       />
                       <FieldError
-                        id="courseLoginEmail-error"
+                        id={`${fieldIdPrefix}LoginEmail-error`}
                         message={errors.email}
                       />
                     </div>
@@ -892,7 +1143,7 @@ export default function AlgoTradingCourseRegister() {
                       <div className="algo-course-password-label-row">
                         <label
                           className="form-label"
-                          htmlFor="courseLoginPassword"
+                          htmlFor={`${fieldIdPrefix}LoginPassword`}
                         >
                           Password *
                         </label>
@@ -907,7 +1158,7 @@ export default function AlgoTradingCourseRegister() {
                         </button>
                       </div>
                       <input
-                        id="courseLoginPassword"
+                        id={`${fieldIdPrefix}LoginPassword`}
                         className="form-control"
                         value={loginValues.password}
                         onChange={(event) =>
@@ -919,10 +1170,10 @@ export default function AlgoTradingCourseRegister() {
                         autoComplete="current-password"
                         placeholder="Enter your password"
                         type="password"
-                        aria-describedby="courseLoginPassword-error"
+                        aria-describedby={`${fieldIdPrefix}LoginPassword-error`}
                       />
                       <FieldError
-                        id="courseLoginPassword-error"
+                        id={`${fieldIdPrefix}LoginPassword-error`}
                         message={errors.password}
                       />
                     </div>
@@ -965,7 +1216,46 @@ export default function AlgoTradingCourseRegister() {
               </p>
               <ArrowRight size={17} strokeWidth={1.75} aria-hidden="true" />
             </div>
-          </div>
+    </div>
+  );
+
+  if (embedded) {
+    return authCard;
+  }
+
+  return (
+    <main className="algo-course-page algo-course-register-page">
+      <section className="section algo-course-register-hero">
+        <div className="container algo-course-register-grid">
+          <aside className="depth-panel algo-course-register-summary">
+            <p className="eyebrow">Free Course Account</p>
+            <h1 className="hero-title">{algoTradingCourse.name}</h1>
+            <p className="body-standard">
+              Create your account to unlock Lecture 1 + Lecture 2.
+            </p>
+
+            <div className="algo-course-register-highlights">
+              <div>
+                <span>Platforms</span>
+                <strong>MT5 + TradingView</strong>
+              </div>
+              <div>
+                <span>Program format</span>
+                <strong>3-month weekend program</strong>
+              </div>
+              <div>
+                <span>Next step</span>
+                <strong>Free preview access</strong>
+              </div>
+            </div>
+
+            <div className="algo-course-register-trust">
+              <ShieldCheck size={19} strokeWidth={1.75} aria-hidden="true" />
+              <p>{algoTradingCourse.disclaimer}</p>
+            </div>
+          </aside>
+
+          {authCard}
         </div>
       </section>
     </main>

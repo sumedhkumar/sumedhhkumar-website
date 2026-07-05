@@ -14,7 +14,7 @@ import { getSupabaseAuthUser } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "Free Masterclass Access | Vyntegra",
   description:
-    "Watch the free intro, Lecture 0 and Lecture 1 for the Vyntegra Trading Automation Masterclass.",
+    "Watch Lecture 1 and Lecture 2 for the Vyntegra Trading Automation Masterclass.",
   robots: {
     index: false,
     follow: false,
@@ -65,8 +65,6 @@ export default async function AlgoTradingCourseProtectedAccessPage() {
     <AlgoTradingCourseAccess
       registrationEmail={registration.email}
       registrationFullName={registration.fullName}
-      registrationAccessStatus={registration.accessStatus}
-      registrationPaymentStatus={registration.paymentStatus}
     />
   );
 }

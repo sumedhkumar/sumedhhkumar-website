@@ -15,19 +15,39 @@ Copy `.env.example` to a real local environment file and fill only genuine value
 Set `APP_BASE_URL` to the deployed site origin, such as `https://your-domain.com`, so course registration emails, auth redirects, and access/reset links are generated with the correct public domain.
 
 ## Supabase Auth Setup
-Course account access will use Supabase Auth. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the browser/server auth clients, and keep `SUPABASE_SERVICE_ROLE_KEY` server-only for private storage/admin operations. The anon key is safe to expose as a public browser key; the service-role key is not.
+Course account access uses Supabase Auth with email/password in the current funnel. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the browser/server auth clients, and keep `SUPABASE_SERVICE_ROLE_KEY` server-only for private storage/admin operations. The anon key is safe to expose as a public browser key; the service-role key is not.
 
-In the Supabase dashboard, enable the Auth providers needed for launch. For Google OAuth, configure the Google provider externally and add redirect URLs for local and production callbacks:
+Add redirect URLs for local and production callbacks:
 
 - `http://localhost:3000/auth/callback`
 - `https://your-domain.com/auth/callback`
 
-Email/password auth and password reset templates should also be configured in Supabase before the course login UI is enabled.
+Email/password auth and password reset templates should be configured in Supabase before the course login UI is enabled. The course UI does not show a Google login button.
 
 ## Course Content Links
-The Vyntegra Trading Automation Masterclass uses public `NEXT_PUBLIC_COURSE_*` variables for the intro video, Lecture 0, Lecture 1, WhatsApp group, WhatsApp phone, and future payment link. These values are not secrets. Leave them blank to keep the protected access page in its placeholder-safe state.
+The Vyntegra Trading Automation Masterclass uses public `NEXT_PUBLIC_COURSE_*` variables for the intro video, Lecture 1, Lecture 2, WhatsApp group, WhatsApp phone, and future payment link. These values are not secrets. Leave them blank to keep the protected access page in its placeholder-safe state.
 
 Only real `https://` video/payment URLs are rendered. WhatsApp group links must use `https://chat.whatsapp.com/...`, and WhatsApp contact links are created only from a real numeric phone value.
+
+Before launch, set:
+
+- `NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL`: Lecture 1 - Course Roadmap.
+- `NEXT_PUBLIC_COURSE_LECTURE_2_VIDEO_URL`: Lecture 2 - First Teaching Session.
+- `NEXT_PUBLIC_COURSE_WHATSAPP_GROUP_URL`: optional WhatsApp group/community URL.
+- `CONTACT_MAIL` and `NEXT_PUBLIC_VYNTEGRA_CONTACT_EMAIL`: support email used by server email and public support links.
+- `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`: optional landing-page hero video.
+
+Preview assets live under `public/images/course/`, and the course-facing references are centralized in `src/data/algo-trading-course.ts`.
+
+## Trading Automation Masterclass Launch Checklist
+- Confirm the LP CTA scrolls to the registration section.
+- Confirm registration and login work with email/password.
+- Confirm the Google login button is not visible.
+- Confirm the protected access page renders for an approved user.
+- Confirm Lecture 1 and Lecture 2 video states with missing, YouTube, Vimeo, and external URLs.
+- Confirm WhatsApp CTAs or email support fallbacks.
+- Confirm email copy says Lecture 1 + Lecture 2.
+- Confirm no banned claims or old lesson labels are visible.
 
 ## Supabase Postgres + Private Storage Setup
 Create a Supabase project. Set the following values manually in `.env.local` for local development and in the Vercel project environment for deployment; do not commit real values. In **Project Settings > Database**, copy the pooled or transaction-pooler connection string into `DATABASE_URL`, set `PERSISTENCE_PROVIDER=postgres` and `DATABASE_SSL=true`, and configure `ADMIN_EXPORT_TOKEN` plus a private `IP_HASH_SALT`. Production form submissions and payment records are rejected unless both `PERSISTENCE_PROVIDER=postgres` and `DATABASE_URL` are configured.
@@ -72,7 +92,7 @@ Add genuine coupon records in `src/data/coupons.ts`. Production coupon usage enf
 Add only genuine customer testimonials in `src/data/testimonials.ts`. The testimonials section is hidden while the array is empty.
 
 ## Founder Photograph
-Add a genuine founder photograph before launch. Until then, the site renders the required founder photograph pending fallback.
+Add a genuine founder photograph before launch. The course funnel founder portrait is configured in `src/data/algo-trading-course.ts`.
 
 ## Founder Social URLs
 The founder social URLs are locked in `src/data/site.ts` and render only in the Founder section.

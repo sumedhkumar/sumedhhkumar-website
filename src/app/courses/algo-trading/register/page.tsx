@@ -4,7 +4,7 @@ import AlgoTradingCourseRegister from "@/components/course/AlgoTradingCourseRegi
 export const metadata: Metadata = {
   title: "Register | Vyntegra Trading Automation Masterclass",
   description:
-    "Create a Vyntegra course account to continue to the free course preview for the Trading Automation Masterclass.",
+    "Create a Vyntegra course account to unlock Lecture 1 and Lecture 2 of the Trading Automation Masterclass.",
   robots: {
     index: false,
     follow: false,
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Register | Vyntegra Trading Automation Masterclass",
     description:
-      "Create a Vyntegra course account to continue to the free course preview.",
+      "Create a Vyntegra course account to unlock Lecture 1 and Lecture 2.",
     siteName: "Vyntegra",
     type: "website",
   },

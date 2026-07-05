@@ -8,7 +8,6 @@ This guide is for the website owner/operator preparing the Vyntegra Trading Auto
 - Register/login page: `/courses/algo-trading/register`
 - Protected access page: `/courses/algo-trading/access`
 - Internal admin registrations page: `/admin/course-registrations`
-- Google login through Supabase Auth
 - Email/password signup and login through Supabase Auth
 - Password reset through Supabase Auth
 - `course_registrations` database table and persistence
@@ -66,12 +65,13 @@ Payment-mail and crypto-proof SMTP variables exist for other site flows, but the
 
 These are public values, not secrets. Leave them blank to keep safe placeholders visible.
 
-- `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`: HTTPS intro video URL. The direct-share campaign landing page can safely convert supported YouTube watch, share, or embed URLs to a privacy-enhanced embed. Unlisted YouTube is acceptable for promotional/free intro content, but it is not private paid-course protection.
-- `NEXT_PUBLIC_COURSE_LECTURE_0_VIDEO_URL`: HTTPS Lecture 0 video URL.
-- `NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL`: HTTPS Lecture 1 video URL.
+- `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`: optional HTTPS hero video URL. The direct-share campaign landing page can safely convert supported YouTube watch, share, or embed URLs to a privacy-enhanced embed. Unlisted YouTube is acceptable for promotional/free intro content, but it is not private paid-course protection.
+- `NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL`: HTTPS URL for Lecture 1 - Course Roadmap.
+- `NEXT_PUBLIC_COURSE_LECTURE_2_VIDEO_URL`: HTTPS URL for Lecture 2 - First Teaching Session.
 - `NEXT_PUBLIC_COURSE_WHATSAPP_GROUP_URL`: must be a valid `https://chat.whatsapp.com/...` group URL.
 - `NEXT_PUBLIC_COURSE_WHATSAPP_PHONE`: numeric country-code WhatsApp phone value, for example `919999999999`.
 - `NEXT_PUBLIC_COURSE_PAYMENT_LINK`: valid HTTPS external payment page URL.
+- `NEXT_PUBLIC_VYNTEGRA_CONTACT_EMAIL`: public support email used by support and full-course inquiry links.
 
 Invalid, blank, non-HTTPS, or placeholder values do not become clickable course links.
 
@@ -79,15 +79,13 @@ Invalid, blank, non-HTTPS, or placeholder values do not become clickable course 
 
 1. Create or open the Supabase project for the website.
 2. Enable email/password auth.
-3. Enable the Google provider.
-4. Add the Google OAuth client ID and client secret in Supabase.
-5. Add redirect/callback URLs:
+3. Add redirect/callback URLs:
    - Local: `http://localhost:3000/auth/callback`
    - Production: `https://YOUR-DOMAIN/auth/callback`
-6. Configure password recovery so links return through the same callback route. The app requests:
+4. Configure password recovery so links return through the same callback route. The app requests:
    - `https://YOUR-DOMAIN/auth/callback?next=%2Fauth%2Freset-password`
-7. Confirm the project database contains Supabase `auth.users`.
-8. Confirm `DATABASE_URL` points to the same Supabase Postgres project, because `course_registrations.user_id` references `auth.users(id)`.
+5. Confirm the project database contains Supabase `auth.users`.
+6. Confirm `DATABASE_URL` points to the same Supabase Postgres project, because `course_registrations.user_id` references `auth.users(id)`.
 
 ## Database Setup
 
@@ -138,7 +136,7 @@ Admin actions:
 - **Block access**: sets `access_status=blocked`.
 - **Restore free access**: sets `access_status=free_access` and does not downgrade paid payment status.
 
-The hidden future bot/agent bonus is not shown in the admin UI. There is no full admin identity, role, or audit-log system yet; this is token-based admin access.
+Future bonus eligibility is not shown in the admin UI. There is no full admin identity, role, or audit-log system yet; this is token-based admin access.
 
 ## Payment V1 Operations
 
@@ -153,14 +151,15 @@ This is manual verification, not automatic payment verification. Do not claim in
 
 ## Course Content Link Setup
 
-- Add the intro video URL to `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`.
-- Add Lecture 0 to `NEXT_PUBLIC_COURSE_LECTURE_0_VIDEO_URL`.
+- Add the optional hero video URL to `NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL`.
 - Add Lecture 1 to `NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL`.
+- Add Lecture 2 to `NEXT_PUBLIC_COURSE_LECTURE_2_VIDEO_URL`.
 - Leave any value blank until it is ready; the UI will show safe placeholders.
 - Video URLs must be HTTPS.
 - The independent direct-share landing page at `/lp/trading-automation-masterclass` embeds the intro video on-page when this URL is a supported YouTube URL.
 - Do not paste private or unapproved links unless they are intended for logged-in course students.
 - `/courses/algo-trading/access` still requires login and course registration.
+- Preview images and placeholder assets live in `public/images/course/`; their course-facing references are configured in `src/data/algo-trading-course.ts`.
 
 ## Required Manual Test Checklist
 
@@ -169,27 +168,28 @@ Run this before launch:
 1. `npm run lint`
 2. `npm run build`
 3. Open `/courses/algo-trading`.
-4. Test Google signup.
+4. Confirm the LP CTA scrolls to the registration section.
 5. Test email/password signup.
-6. Test login for an existing user.
-7. Test forgot password and reset password.
-8. Confirm first-registration user email.
-9. Confirm first-registration admin email.
-10. Confirm duplicate login does not resend registration email.
-11. Confirm protected access redirects unauthenticated users.
-12. Confirm a registered user can access free lessons.
-13. Confirm a blocked user cannot access lessons.
-14. Confirm invalid/missing payment, video, and WhatsApp links stay safe.
-15. Confirm real video links activate when configured.
-16. Confirm real WhatsApp group and phone links activate when configured.
-17. Confirm the real payment link activates when configured.
-18. Confirm admin can search for a user.
-19. Confirm admin can mark manual verification.
-20. Confirm admin can mark paid.
-21. Confirm paid, manual, free, and blocked access page behavior.
-22. Confirm `/algo-trading-course` redirects to `/courses/algo-trading`.
-23. Confirm `/algo-trading-course/access` redirects to `/courses/algo-trading/access`.
-24. Check mobile views for `/courses`, `/courses/algo-trading`, `/courses/algo-trading/register`, `/courses/algo-trading/access`, `/admin/course-registrations`, and `/auth/reset-password`.
+6. Confirm the Google login button is not visible.
+7. Test login for an existing user.
+8. Test forgot password and reset password.
+9. Confirm first-registration user email says Lecture 1 + Lecture 2.
+10. Confirm first-registration admin email.
+11. Confirm duplicate login does not resend registration email.
+12. Confirm protected access redirects unauthenticated users.
+13. Confirm a registered user can access free lessons.
+14. Confirm Lecture 1 and Lecture 2 video states for missing, YouTube, Vimeo, and external URLs.
+15. Confirm a blocked user cannot access lessons.
+16. Confirm invalid/missing payment, video, and WhatsApp links stay safe.
+17. Confirm real WhatsApp group and phone links activate when configured, or email fallback appears when they are blank.
+18. Confirm the real payment link activates when configured.
+19. Confirm admin can search for a user.
+20. Confirm admin can mark manual verification.
+21. Confirm admin can mark paid.
+22. Confirm paid, manual, free, and blocked access page behavior.
+23. Confirm `/algo-trading-course` redirects to `/courses/algo-trading`.
+24. Confirm `/algo-trading-course/access` redirects to `/courses/algo-trading/access`.
+25. Check mobile views for `/lp/trading-automation-masterclass`, `/courses/algo-trading/register`, `/courses/algo-trading/access`, `/admin/course-registrations`, and `/auth/reset-password`.
 
 ## Known Limitations and Future Work
 
@@ -201,13 +201,13 @@ Run this before launch:
 - There is no email retry queue or outbox.
 - Admin access is token-based, not a full admin identity and audit system.
 - The Next.js middleware-to-proxy deprecation warning may still appear during build until that migration is handled.
-- The hidden future bot/agent bonus remains intentionally hidden.
+- Future bonus access remains intentionally hidden.
 
 ## Safety and Compliance Notes
 
 - Do not promise profits.
-- Do not promise guaranteed returns.
-- Keep the disclaimer visible: "This is an educational course. It does not provide investment advice, profit guarantees, or assured returns. Trading involves financial risk."
+- Do not promise returns.
+- Keep the disclaimer visible: "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk."
 - Treat the course as educational, not investment advice.
 - Do not publish fake testimonials.
 - Do not publish fake P&L or profit screenshots.

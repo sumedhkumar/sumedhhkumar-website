@@ -126,9 +126,9 @@ export default function AlgoTradingCourseLeadForm() {
 
       <div>
         <p className="eyebrow">Free Access</p>
-        <h2 className="subsection-title">Register for the free preview</h2>
+        <h2 className="subsection-title">Register for Lecture 1 + Lecture 2</h2>
         <p className="body-standard algo-course-form-copy">
-          Intro Video, Lecture 0, and Lecture 1 are available before payment.
+          Lecture 1 + Lecture 2 are available before payment.
         </p>
       </div>
 

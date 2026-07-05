@@ -46,6 +46,14 @@ export default function CheckoutPlanClient({
     fullDescription:
       `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
   };
+  const defaultPrice = calculateFinalPrice(
+    product.slug,
+    selectedPlan.id,
+    "EARLYACCESS",
+  );
+  const defaultPayablePrice = defaultPrice.ok
+    ? defaultPrice.finalPriceUsd
+    : selectedPlan.priceUsd;
 
   return (
     <div className="astro-gold-checkout-grid">
@@ -73,7 +81,7 @@ export default function CheckoutPlanClient({
           <div>
             <dt>Default payable price</dt>
             <dd className="astro-gold-selected-payable">
-              {formatUsd(defaultPrice.finalPriceUsd || selectedPlan.priceUsd)}
+              {formatUsd(defaultPayablePrice)}
             </dd>
           </div>
           <div>

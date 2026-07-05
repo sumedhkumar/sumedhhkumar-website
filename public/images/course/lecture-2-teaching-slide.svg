@@ -1,0 +1,23 @@
+<svg width="720" height="420" viewBox="0 0 720 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Lecture 2 teaching session preview</title>
+  <desc id="desc">A clean educational slide for Lecture 2 showing a workflow breakdown with idea, rules, setup, and review notes.</desc>
+  <rect width="720" height="420" rx="28" fill="#F8FBFF"/>
+  <rect x="30" y="30" width="660" height="360" rx="24" fill="#FFFFFF" stroke="#D9E7F5" stroke-width="2"/>
+  <text x="62" y="82" fill="#059669" font-family="Arial, sans-serif" font-size="16" font-weight="900">LECTURE 2</text>
+  <text x="62" y="118" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="32" font-weight="900">First Teaching Session</text>
+  <text x="62" y="148" fill="#475569" font-family="Arial, sans-serif" font-size="16" font-weight="600">Break down one workflow without outcome claims.</text>
+  <rect x="62" y="194" width="196" height="134" rx="18" fill="#EEF6FF" stroke="#BFDBFE" stroke-width="2"/>
+  <text x="88" y="232" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="20" font-weight="900">Idea</text>
+  <rect x="88" y="254" width="132" height="12" rx="6" fill="#93C5FD"/>
+  <rect x="88" y="278" width="98" height="12" rx="6" fill="#BFDBFE"/>
+  <rect x="282" y="194" width="176" height="134" rx="18" fill="#F1F8F5" stroke="#CDEADF" stroke-width="2"/>
+  <text x="308" y="232" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="20" font-weight="900">Rules</text>
+  <rect x="308" y="254" width="112" height="12" rx="6" fill="#86EFAC"/>
+  <rect x="308" y="278" width="86" height="12" rx="6" fill="#BBF7D0"/>
+  <rect x="482" y="194" width="176" height="134" rx="18" fill="#F8FBFF" stroke="#D9E7F5" stroke-width="2"/>
+  <text x="508" y="232" fill="#0B1F3A" font-family="Arial, sans-serif" font-size="20" font-weight="900">Review</text>
+  <rect x="508" y="254" width="108" height="12" rx="6" fill="#CBD5E1"/>
+  <rect x="508" y="278" width="74" height="12" rx="6" fill="#E2E8F0"/>
+  <path d="M258 261H282" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M458 261H482" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+</svg>

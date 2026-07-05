@@ -1,41 +1,27 @@
 import {
-  CheckCircle2,
+  ArrowRight,
+  BookOpenCheck,
   CircleAlert,
   MessageCircle,
-  PlayCircle,
   ShieldCheck,
 } from "lucide-react";
-import type { ReactNode } from "react";
 import {
   algoTradingCourse,
-  getSafeCoursePaymentUrl,
+  getSafeCourseVideoEmbedUrl,
   getSafeCourseVideoUrl,
   getSafeCourseWhatsappContactUrl,
   getSafeCourseWhatsappGroupUrl,
 } from "@/data/algo-trading-course";
+import { getPublicContactDetails } from "@/data/site";
 import Button from "@/components/ui/Button";
 import AlgoTradingCourseLeadGreeting from "@/components/course/AlgoTradingCourseLeadGreeting";
+import AlgoTradingCourseAccessLogout from "@/components/course/AlgoTradingCourseAccessLogout";
+import AlgoTradingCourseAccessLessonPortal from "@/components/course/AlgoTradingCourseAccessLessonPortal";
 
 type AlgoTradingCourseAccessProps = {
   registrationEmail?: string;
   registrationFullName?: string;
-  registrationAccessStatus?: "free_access" | "paid";
-  registrationPaymentStatus?: "unpaid" | "paid" | "manual_verification";
 };
-
-function PlaceholderButton({
-  children,
-  variant = "secondary",
-}: {
-  children: ReactNode;
-  variant?: "primary" | "secondary";
-}) {
-  return (
-    <Button type="button" variant={variant} disabled>
-      {children}
-    </Button>
-  );
-}
 
 export function AlgoTradingCourseAccessBlocked() {
   return (
@@ -68,303 +54,226 @@ export function AlgoTradingCourseAccessBlocked() {
 export default function AlgoTradingCourseAccess({
   registrationEmail = "",
   registrationFullName = "",
-  registrationAccessStatus = "free_access",
-  registrationPaymentStatus = "unpaid",
 }: AlgoTradingCourseAccessProps) {
+  const accessLessons = algoTradingCourse.accessLessons.slice(0, 2);
+  const portalLessons = accessLessons.map((lesson, index) => ({
+    title: lesson.title,
+    copy: lesson.copy,
+    videoUrl: getSafeCourseVideoUrl(lesson.videoUrl),
+    embedUrl: getSafeCourseVideoEmbedUrl(lesson.videoUrl),
+    thumbnail:
+      algoTradingCourse.visuals.lessonPreviews[index] ??
+      algoTradingCourse.visuals.lessonPreviews[0],
+  }));
   const safeWhatsappGroupUrl = getSafeCourseWhatsappGroupUrl(
     algoTradingCourse.links.whatsappGroupUrl,
   );
   const safeWhatsappContactUrl = getSafeCourseWhatsappContactUrl(
     algoTradingCourse.links.whatsappPhone,
-    algoTradingCourse.links.whatsappPrefilledMessage,
+    algoTradingCourse.support.accessWhatsappPrefilledMessage,
   );
-  const safePaymentUrl = getSafeCoursePaymentUrl(
-    algoTradingCourse.links.paymentLink,
+  const supportEmail = getPublicContactDetails().email;
+  const supportHref = supportEmail
+    ? `mailto:${supportEmail}?subject=${encodeURIComponent(algoTradingCourse.support.accessEmailSubject)}`
+    : "/contact";
+  const fullCourseHref = supportEmail
+    ? `mailto:${supportEmail}?subject=${encodeURIComponent(algoTradingCourse.support.fullCourseInquirySubject)}`
+    : "/contact";
+  const hasWhatsappSupport = Boolean(
+    safeWhatsappGroupUrl || safeWhatsappContactUrl,
   );
-  const isPaidRegistration =
-    registrationPaymentStatus === "paid" || registrationAccessStatus === "paid";
-  const isManualVerification =
-    registrationPaymentStatus === "manual_verification" && !isPaidRegistration;
-  const showPaymentCta = !isPaidRegistration && !isManualVerification;
 
   return (
     <main className="algo-course-page algo-course-access-page">
       <section className="section algo-course-access-hero">
-        <div className="container algo-course-access-hero-grid">
+        <div className="container algo-course-access-hero-stack">
           <div className="algo-course-hero-copy">
             <p className="eyebrow">{algoTradingCourse.name}</p>
-            <h1 className="hero-title">Your Free Masterclass Access</h1>
+            <h1 className="hero-title">Your free lesson portal is ready.</h1>
             <p className="body-large">
-              Watch the intro, Lecture 0 and Lecture 1. Then join the WhatsApp
-              group or speak with us before joining the full 3-month program.
+              Start with the roadmap, continue to the first teaching session,
+              and mark each lesson complete as you go.
             </p>
             <AlgoTradingCourseLeadGreeting
               email={registrationEmail}
               fullName={registrationFullName}
             />
+            <div className="algo-course-access-hero-actions">
+              <Button href="#course-lessons" variant="primary">
+                Start Lecture 1
+                <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
+              </Button>
+            </div>
+            <AlgoTradingCourseAccessLogout email={registrationEmail} />
           </div>
 
-          <div className="depth-panel algo-course-access-summary">
-            <div className="algo-course-panel-header">
-              <p className="eyebrow">Access Brief</p>
-              <h2 className="subsection-title">Free preview unlocked</h2>
-              <p className="body-compact">
-                Use this page to review the preview lessons and continue to
-                the full course only after the learning style is clear.
-              </p>
-            </div>
-            <div className="algo-course-access-summary-grid">
-              {algoTradingCourse.stats.map(([label, copy]) => (
-                <div key={label}>
-                  <strong>{label}</strong>
-                  <span>{copy}</span>
-                </div>
-              ))}
-            </div>
+          <div className="algo-course-access-summary" aria-label="Student access summary">
+            <span>Student Access</span>
+            <strong>Lecture 1 - Course Roadmap</strong>
+            <strong>Lecture 2 - First Teaching Session</strong>
+            <span>Free lessons unlocked</span>
           </div>
         </div>
       </section>
 
-      <section className="section section-bg-secondary">
+      <section id="course-lessons" className="section algo-course-access-lessons-section">
         <div className="container">
           <div className="section-intro">
-            <p className="eyebrow">Free Lessons</p>
-            <h2 className="section-title">Watch the free masterclass preview</h2>
+            <p className="eyebrow">Lesson Watch Area</p>
+            <h2 className="section-title">Watch Lecture 1 and Lecture 2</h2>
             <p className="body-standard">
-              These placeholders are reserved for the intro video, Lecture 0,
-              and Lecture 1. Real video links will be added later.
+              Follow the compact path, open the lessons, and save your progress
+              on this device.
             </p>
           </div>
 
-          <div className="algo-course-access-video-grid">
-            {algoTradingCourse.accessLessons.map((lesson, index) => {
-              const safeVideoUrl = getSafeCourseVideoUrl(lesson.videoUrl);
-
-              return (
-                <article key={lesson.title} className="standard-card algo-course-access-video-card">
-                  <span className="algo-course-card-kicker">
-                    Watch {String(index + 1).padStart(2, "0")}
-                  </span>
-                  {safeVideoUrl ? (
-                    <a
-                      className="algo-course-video-placeholder algo-course-video-link algo-course-access-video-placeholder"
-                      href={safeVideoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <PlayCircle size={34} strokeWidth={1.65} aria-hidden="true" />
-                      <span>Open lesson video</span>
-                    </a>
-                  ) : (
-                    <div className="algo-course-video-placeholder algo-course-access-video-placeholder">
-                      <PlayCircle size={34} strokeWidth={1.65} aria-hidden="true" />
-                      <span>{lesson.placeholder}</span>
-                    </div>
-                  )}
-                  <h3 className="card-title">{lesson.title}</h3>
-                  <p className="body-compact">{lesson.copy}</p>
-                </article>
-              );
-            })}
-          </div>
+          <AlgoTradingCourseAccessLessonPortal lessons={portalLessons} />
         </div>
       </section>
 
-      <section className="section section-bg-primary">
-        <div className="container algo-course-access-action-grid">
-          <article className="depth-panel algo-course-access-action-card">
-            <MessageCircle
-              size={24}
-              color="#B8914A"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
-            <div>
-              <p className="eyebrow">Updates</p>
-              <h2 className="subsection-title">Join the Free WhatsApp Group</h2>
-              <p className="body-standard">
-                Get course updates, reminders, and joining instructions in the
-                WhatsApp group.
-              </p>
-              <p className="body-compact algo-course-placeholder-note">
-                {safeWhatsappGroupUrl
-                  ? "The configured WhatsApp group opens in a new tab."
-                  : "WhatsApp group link will be added here."}
-              </p>
-            </div>
-            {safeWhatsappGroupUrl ? (
-              <Button
-                href={safeWhatsappGroupUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="secondary"
-              >
-                Join WhatsApp Group
-              </Button>
-            ) : (
-              <PlaceholderButton>Join WhatsApp Group</PlaceholderButton>
-            )}
-          </article>
-
-          <article className="depth-panel algo-course-access-action-card">
-            <MessageCircle
-              size={24}
-              color="#B8914A"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
-            <div>
-              <p className="eyebrow">Conversation</p>
-              <h2 className="subsection-title">Want to discuss before joining?</h2>
-              <p className="body-standard">
-                Speak with the team about the launch offer, batch details, and
-                whether the course is right for you.
-              </p>
-              <p className="body-compact algo-course-placeholder-note">
-                {safeWhatsappContactUrl
-                  ? "WhatsApp opens with the approved joining message."
-                  : "WhatsApp contact number will be added here."}
-              </p>
-            </div>
-            {safeWhatsappContactUrl ? (
-              <Button
-                href={safeWhatsappContactUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="secondary"
-              >
-                Talk to Us on WhatsApp
-              </Button>
-            ) : (
-              <PlaceholderButton>Talk to Us on WhatsApp</PlaceholderButton>
-            )}
-          </article>
-        </div>
-      </section>
-
-      <section className="section section-bg-secondary">
+      <section className="section algo-course-access-next-section">
         <div className="container">
-          <div className="depth-panel algo-course-pricing-panel algo-course-access-payment-panel">
+          <div className="algo-course-access-next-band">
+            <div className="algo-course-access-section-heading">
+              <BookOpenCheck size={22} strokeWidth={1.75} aria-hidden="true" />
+              <div>
+                <p className="eyebrow">After Watching</p>
+                <h2 className="subsection-title">After both lessons, choose your next step</h2>
+              </div>
+            </div>
+            <ul className="algo-course-access-next-list">
+              <li>
+                Mark both lessons complete when you finish watching them.
+              </li>
+              <li>
+                Join updates or contact support if you need help with access.
+              </li>
+              <li>
+                Ask about the full course only if you want the longer weekend
+                learning structure.
+              </li>
+            </ul>
+          </div>
+
+          <div className="algo-course-access-full-course-cta">
             <div>
               <p className="eyebrow">Full Program</p>
-              <h2 className="section-title">Join the Full 3-Month Program</h2>
-              <p className="body-standard">
-                {safePaymentUrl
-                  ? algoTradingCourse.paymentInstructions.activeCopy
-                  : algoTradingCourse.paymentInstructions.placeholderCopy}
-              </p>
-              {isPaidRegistration ? (
-                <div className="algo-course-payment-status-panel algo-course-payment-status-paid">
-                  <CheckCircle2 size={20} strokeWidth={1.75} aria-hidden="true" />
-                  <p>{algoTradingCourse.paidStatusCopy}</p>
-                </div>
-              ) : null}
-              {isManualVerification ? (
-                <div className="algo-course-payment-status-panel algo-course-payment-status-manual">
-                  <CircleAlert size={20} strokeWidth={1.75} aria-hidden="true" />
-                  <p>{algoTradingCourse.manualVerificationStatusCopy}</p>
-                </div>
-              ) : null}
-              <div className="algo-course-after-payment-panel">
-                <h3 className="card-title">After payment</h3>
-                <ol>
-                  {algoTradingCourse.afterPaymentSteps.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-                <p>{algoTradingCourse.manualVerificationNote}</p>
-              </div>
+              <h2 className="subsection-title">
+                Want to continue with the full 3-month weekend program?
+              </h2>
+              <ul>
+                <li>3-month weekend learning structure</li>
+                <li>2-hour sessions</li>
+                <li>Recordings and updates</li>
+                <li>TradingView / MT5 workflow education</li>
+                {safeWhatsappGroupUrl || safeWhatsappContactUrl ? (
+                  <li>WhatsApp support and course community updates</li>
+                ) : null}
+              </ul>
             </div>
-            <div className="algo-course-price-stack">
-              <div>
-                <span>Course Value</span>
-                <strong className="algo-course-price-muted">
-                  {algoTradingCourse.pricing.valueLabel}
-                </strong>
-                <small>Standard program value</small>
-              </div>
-              <div>
-                <span>Launch Batch Offer</span>
-                <strong>{algoTradingCourse.pricing.launchOfferLabel}</strong>
-                <small>
-                  {safePaymentUrl
-                    ? algoTradingCourse.paymentInstructions.configuredLabel
-                    : algoTradingCourse.paymentInstructions.pendingLabel}
-                </small>
-              </div>
-              {showPaymentCta && safePaymentUrl ? (
-                <Button
-                  href={safePaymentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="primary"
-                >
-                  Pay {algoTradingCourse.pricing.launchOfferLabel} and Join Full Course
-                </Button>
-              ) : showPaymentCta ? (
-                <PlaceholderButton variant="primary">
-                  Pay {algoTradingCourse.pricing.launchOfferLabel} and Join Full Course
-                </PlaceholderButton>
-              ) : (
-                <PlaceholderButton variant="primary">
-                  Payment review in progress
-                </PlaceholderButton>
-              )}
-            </div>
+            <Button href={fullCourseHref} variant="primary">
+              Ask about full course access
+              <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
+            </Button>
           </div>
         </div>
       </section>
 
-      <section className="section section-bg-primary">
-        <div className="container algo-course-included-grid">
-          <div>
-            <p className="eyebrow">Paid Program</p>
-            <h2 className="section-title">Included in the full program</h2>
-            <p className="body-standard">
-              The paid program focuses on weekend training, recordings, support,
-              and practical platform-oriented learning.
-            </p>
-          </div>
-
-          <div className="depth-panel algo-course-included-panel">
-            {algoTradingCourse.paidProgramIncluded.map((item) => (
-              <div key={item} className="algo-course-included-item">
-                <CheckCircle2
-                  size={18}
-                  color="#B8914A"
+      <section className="section algo-course-access-support-section">
+        <div className="container">
+          <div
+            className={`algo-course-access-support-band${
+              hasWhatsappSupport ? "" : " is-email-only"
+            }`}
+          >
+            {safeWhatsappGroupUrl ? (
+              <div className="algo-course-access-support-item">
+                <MessageCircle
+                  size={24}
                   strokeWidth={1.75}
                   aria-hidden="true"
                 />
-                <span>{item}</span>
+                <div>
+                  <p className="eyebrow">Updates</p>
+                  <h2 className="subsection-title">Join lesson updates</h2>
+                  <p className="body-standard">
+                    Get lesson reminders and course announcements in the
+                    student WhatsApp group.
+                  </p>
+                </div>
+                <Button
+                  href={safeWhatsappGroupUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="secondary"
+                >
+                  Join WhatsApp group
+                </Button>
               </div>
-            ))}
+            ) : null}
+
+            {safeWhatsappContactUrl ? (
+              <div className="algo-course-access-support-item">
+                <MessageCircle
+                  size={24}
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="eyebrow">Help</p>
+                  <h2 className="subsection-title">Message support</h2>
+                  <p className="body-standard">
+                    Ask for help if you are unable to open lessons or need
+                    guidance on the next step.
+                  </p>
+                </div>
+                <Button
+                  href={safeWhatsappContactUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="secondary"
+                >
+                  Message support
+                </Button>
+              </div>
+            ) : null}
+
+            <div className="algo-course-access-support-item">
+              <MessageCircle
+                size={24}
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+              <div>
+                <p className="eyebrow">Email Support</p>
+                <h2 className="subsection-title">
+                  {hasWhatsappSupport
+                    ? "Prefer email?"
+                    : "Need help with lesson access?"}
+                </h2>
+                <p className="body-standard">
+                  Email Vyntegra support for access help, lesson updates, or
+                  questions about the course path.
+                </p>
+                {supportEmail ? (
+                  <p className="body-compact algo-course-support-email">
+                    {supportEmail}
+                  </p>
+                ) : null}
+              </div>
+                <Button href={supportHref} variant="secondary">
+                  Email support
+                </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="section section-bg-secondary">
+      <section className="section algo-course-disclaimer-section">
         <div className="container">
-          <div className="section-intro">
-            <p className="eyebrow">Next Steps</p>
-            <h2 className="section-title">How to continue</h2>
-          </div>
-          <ol className="algo-course-next-steps">
-            {algoTradingCourse.accessNextSteps.map((step, index) => (
-              <li key={step} className="standard-card">
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <p>{step}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section className="section section-bg-primary algo-course-disclaimer-section">
-        <div className="container">
-          <div className="algo-course-disclaimer depth-panel">
+          <div className="algo-course-disclaimer">
             <ShieldCheck
               size={22}
-              color="#B8914A"
               strokeWidth={1.75}
               aria-hidden="true"
             />

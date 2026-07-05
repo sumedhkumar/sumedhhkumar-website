@@ -1,5 +1,5 @@
+import Image from "next/image";
 import {
-  AlertTriangle,
   ArrowRight,
   BookOpenCheck,
   BrainCircuit,
@@ -9,86 +9,115 @@ import {
   MonitorCog,
   PlayCircle,
   ShieldCheck,
-  Video,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import AlgoTradingCourseRegister from "@/components/course/AlgoTradingCourseRegister";
 import {
   algoTradingCourse,
   getSafeCourseIntroEmbedUrl,
 } from "@/data/algo-trading-course";
+import { site } from "@/data/site";
 
-const approvedTestimonials = algoTradingCourse.testimonials.filter(
-  (testimonial) => testimonial.displayApproved,
-);
-
-const painPoints = [
-  "They keep collecting tutorials instead of building a workflow.",
-  "They know indicators, but not rule structure.",
-  "They cannot connect TradingView alerts with execution thinking.",
-  "They jump into tools before understanding risk controls.",
-  "They do not have a practice path.",
+const heroBenefits = [
+  "Lecture 1: Course Roadmap",
+  "Lecture 2: First Teaching Session",
+  "Free registration. No payment required.",
 ];
 
-const freeLessonCards = [
-  {
-    title: "Continue with Lecture 1 + Lecture 2",
-    copy: "Create your free account to unlock the next two preview lessons.",
-    label: "After registration",
-  },
-];
+const registerSectionHref = "#register";
+const lessonPreviewHref = "#what-you-unlock";
+const campaignRiskDisclaimer =
+  "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk.";
 
 const understandingCards = [
   {
-    title: "Strategy rules",
-    copy: "Turn scattered ideas into clearer rules, conditions, review points, and operating steps.",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Alerts and workflows",
-    copy: "Understand how TradingView alerts can fit into a practical decision and execution process.",
-    icon: Gauge,
-  },
-  {
-    title: "MT5 basics",
-    copy: "See the role MT5 plays before trying to connect tools or automate a workflow.",
-    icon: MonitorCog,
-  },
-  {
-    title: "TradingView automation thinking",
-    copy: "Learn how alert logic, signal flow, and operating steps connect in a structured workflow.",
-    icon: PlayCircle,
-  },
-  {
-    title: "AI-assisted planning/debugging",
-    copy: "Use AI-assisted thinking for documentation, debugging, and setup review without treating it as a trading promise.",
+    title: "Idea to rules",
+    copy: "See how a trading idea becomes conditions, inputs, and review points.",
     icon: BrainCircuit,
   },
   {
-    title: "Risk-control thinking",
-    copy: "Build a risk-aware operating mindset before execution, monitoring, or deployment decisions.",
+    title: "Platform workflow",
+    copy: "Understand where TradingView, MT5, Dhan, or Kite fit into an automation flow.",
+    icon: MonitorCog,
+  },
+  {
+    title: "Checks before action",
+    copy: "Learn where AI can help, where it needs review, and what to verify first.",
+    icon: Gauge,
+  },
+  {
+    title: "Risk review",
+    copy: "Keep risk, monitoring, and responsible review visible before real capital.",
     icon: ShieldCheck,
+  },
+];
+
+const freeAccessSteps = [
+  {
+    title: "Register free",
+    copy: "Create your course account with email and password.",
+    icon: ClipboardCheck,
+  },
+  {
+    title: "Unlock Lecture 1 + Lecture 2",
+    copy: "Both free lessons open immediately after registration.",
+    icon: BookOpenCheck,
+  },
+  {
+    title: "Continue from access page",
+    copy: "Use the protected page to watch lessons and get support details.",
+    icon: PlayCircle,
+  },
+];
+
+const faqItems = [
+  {
+    question: "Is this free?",
+    answer: "Yes. Registration is free for the two unlocked lessons.",
+  },
+  {
+    question: "What unlocks after registration?",
+    answer: "Lecture 1 and Lecture 2 unlock on the protected access page.",
+  },
+  {
+    question: "Is this financial advice?",
+    answer: "No. This is educational content, not investment advice.",
+  },
+  {
+    question: "Do I need coding experience?",
+    answer: "No. The preview explains workflow thinking in plain language.",
+  },
+  {
+    question: "What happens after registration?",
+    answer: "You log in, open the access page, and watch Lecture 1 + Lecture 2.",
   },
 ];
 
 function IntroVideoCard({ introEmbedUrl }: { introEmbedUrl: string }) {
   return (
-    <article className="algo-campaign-video-panel" aria-label="Intro video">
-      <div className="algo-campaign-video-card">
-        {introEmbedUrl ? (
+    <article className="algo-campaign-video-panel" aria-label="Masterclass video">
+      {introEmbedUrl ? (
+        <div className="algo-campaign-video-card">
           <iframe
             src={introEmbedUrl}
-            title="Vyntegra Trading Automation Masterclass intro video"
+            title="Vyntegra Trading Automation Masterclass video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             loading="lazy"
           />
-        ) : (
-          <div className="algo-campaign-video-placeholder">
-            <Video size={34} strokeWidth={1.65} aria-hidden="true" />
-            <span>Video will be available here soon.</span>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="algo-campaign-video-card algo-campaign-video-card-preview">
+          <Image
+            src={algoTradingCourse.visuals.heroWorkflowSlide.src}
+            alt={algoTradingCourse.visuals.heroWorkflowSlide.alt}
+            width={960}
+            height={540}
+            priority
+            unoptimized
+          />
+        </div>
+      )}
     </article>
   );
 }
@@ -105,7 +134,8 @@ export default function AlgoTradingCourseCampaignLanding() {
           <span>Vyntegra</span>
           <small>Masterclass</small>
         </a>
-        <Button href={algoTradingCourse.registerRoute} variant="primary">
+        <p className="algo-campaign-header-trust">Educational content only</p>
+        <Button href={registerSectionHref} variant="primary">
           Register Free
         </Button>
       </header>
@@ -113,70 +143,114 @@ export default function AlgoTradingCourseCampaignLanding() {
       <section id="top" className="algo-campaign-hero">
         <div className="algo-campaign-shell algo-campaign-hero-grid">
           <div className="algo-campaign-hero-copy">
-            <h1>Still stuck watching random trading tutorials?</h1>
+            <h1>Learn the workflow behind AI-assisted trading automation — free.</h1>
             <p>
-              Start with a free preview of how trading automation workflows are
-              actually structured for MT5 and TradingView.
+              Register free to unlock Lecture 1 + Lecture 2. The lessons show
+              how trading ideas move into rules, checks, platform workflow, and
+              risk review without hype.
             </p>
           </div>
 
           <IntroVideoCard introEmbedUrl={introEmbedUrl} />
 
           <div className="algo-campaign-actions">
-            <Button href={algoTradingCourse.registerRoute} variant="primary">
-              Register Free
+            <Button href={registerSectionHref} variant="primary">
+              Get Free Access
               <ArrowRight size={16} strokeWidth={1.85} aria-hidden="true" />
             </Button>
-            <p>Register free to continue with Lecture 1 + Lecture 2.</p>
+            <Button href={lessonPreviewHref} variant="secondary">
+              See What You&apos;ll Learn
+            </Button>
+            <p>Educational content only. No profit guarantees.</p>
           </div>
 
-          <div className="algo-campaign-chip-grid" aria-label="Course highlights">
-            <span>3-month weekend program</span>
-            <span>MT5 + TradingView</span>
-            <span>Live sessions</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="algo-campaign-section algo-campaign-pain-section">
-        <div className="algo-campaign-shell algo-campaign-split">
-          <div className="algo-campaign-section-heading">
-            <p className="eyebrow">The Problem</p>
-            <h2>Why most traders never reach automation</h2>
-          </div>
-
-          <ul className="algo-campaign-pain-list">
-            {painPoints.map((point) => (
-              <li key={point}>
-                <AlertTriangle size={17} strokeWidth={1.75} aria-hidden="true" />
-                <span>{point}</span>
-              </li>
+          <div className="algo-campaign-chip-grid" aria-label="Free masterclass benefits">
+            {heroBenefits.map((benefit) => (
+              <span key={benefit}>{benefit}</span>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
-      <section className="algo-campaign-section">
-        <div className="algo-campaign-shell">
+      <section id="what-you-unlock" className="algo-campaign-section">
+        <div className="algo-campaign-shell algo-campaign-learning-layout">
           <div className="algo-campaign-section-heading">
-            <p className="eyebrow">Free Access</p>
-            <h2>Continue with Lecture 1 + Lecture 2</h2>
-            <p>Create your free account to unlock the next two preview lessons.</p>
+            <p className="eyebrow">What You Unlock</p>
+            <h2>Two free lessons before any payment step</h2>
+            <p>Start with the roadmap, then watch the first teaching session.</p>
           </div>
 
           <div className="algo-campaign-lesson-grid">
-            {freeLessonCards.map((lesson) => (
-              <article key={lesson.title} className="algo-campaign-card">
-                <span>{lesson.label}</span>
-                <h3>{lesson.title}</h3>
-                <p>{lesson.copy}</p>
-              </article>
-            ))}
+            {algoTradingCourse.accessLessons.map((lesson, index) => {
+              const visual = algoTradingCourse.visuals.lessonPreviews[index];
+              const previewLabel =
+                index === 0 ? "Lecture 1 preview" : "Lecture 2 preview";
+
+              return (
+                <article key={lesson.title} className="algo-campaign-card algo-campaign-lesson-card">
+                  {visual ? (
+                    <div className="algo-campaign-lecture-image">
+                      <span>{previewLabel}</span>
+                      <Image
+                        src={visual.src}
+                        alt={visual.alt}
+                        width={720}
+                        height={420}
+                        loading="eager"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <span>{previewLabel}</span>
+                  )}
+                  <h3>{lesson.title}</h3>
+                  <p>{lesson.copy}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="algo-campaign-section algo-campaign-muted-section">
+        <div className="algo-campaign-shell algo-campaign-learning-layout">
+          <div className="algo-campaign-section-heading">
+            <p className="eyebrow">What You Will Understand</p>
+            <h2>How the trading automation workflow fits together</h2>
+            <p>Idea - Rules - Check - Execute - Review.</p>
           </div>
 
-          <div className="algo-campaign-section-cta">
-            <Button href={algoTradingCourse.registerRoute} variant="primary">
-              Register Free
+          <div className="algo-campaign-learning-list">
+            {understandingCards.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div key={item.title} className="algo-campaign-learning-item">
+                  <span>
+                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.copy}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="algo-campaign-section algo-campaign-cta-band-section">
+        <div className="algo-campaign-shell">
+          <div className="algo-campaign-mid-cta">
+            <div>
+              <p className="eyebrow">Free Access</p>
+              <h2>Ready to unlock Lecture 1 + Lecture 2?</h2>
+              <p>Register free. No payment required.</p>
+            </div>
+            <Button href={registerSectionHref} variant="primary">
+              Unlock Free Lessons
+              <ArrowRight size={16} strokeWidth={1.85} aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -185,104 +259,96 @@ export default function AlgoTradingCourseCampaignLanding() {
       <section className="algo-campaign-section algo-campaign-muted-section">
         <div className="algo-campaign-shell">
           <div className="algo-campaign-section-heading">
-            <p className="eyebrow">Proof</p>
-            <h2>Learn from the preview before the full program begins</h2>
+            <p className="eyebrow">How Free Access Works</p>
+            <h2>Three simple steps</h2>
           </div>
 
-          {approvedTestimonials.length > 0 ? (
-            <div className="algo-campaign-testimonial-grid">
-              {approvedTestimonials.map((testimonial) => (
-                <article key={testimonial.quote} className="algo-campaign-card">
-                  <p>{testimonial.quote}</p>
-                  <strong>{testimonial.name}</strong>
-                  <span>{testimonial.roleOrContext}</span>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="algo-campaign-truth-panel">
-              <ShieldCheck size={22} strokeWidth={1.75} aria-hidden="true" />
-              <div>
-                <h3>Verified participant feedback will be added after the first cohort.</h3>
-                <p>
-                  For now, use the free preview lessons to understand the
-                  teaching style and workflow structure.
-                </p>
+          <div className="algo-campaign-free-flow" aria-label="Free access flow">
+            {freeAccessSteps.map((step, index) => (
+              <div key={step.title} className="algo-campaign-free-flow-item">
+                <span>{index + 1}</span>
+                <div>
+                  <strong>{step.title}</strong>
+                  <p>{step.copy}</p>
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="algo-campaign-section algo-campaign-muted-section">
+        <div className="algo-campaign-shell">
+          <div className="algo-campaign-truth-panel algo-campaign-founder-panel">
+            <div className="algo-campaign-founder-image">
+              <Image
+                src={algoTradingCourse.visuals.founderPortrait}
+                alt={`Founder portrait of ${site.founderName}`}
+                width={900}
+                height={1089}
+                loading="eager"
+                sizes="(max-width: 719px) 160px, 220px"
+                unoptimized
+              />
             </div>
-          )}
+            <div className="algo-campaign-founder-copy">
+              <ShieldCheck size={22} strokeWidth={1.75} aria-hidden="true" />
+              <p className="eyebrow">Founder / Expert Context</p>
+              <h2 className="subsection-title">{site.founderName}</h2>
+              <h3>{site.founderSubtitle}</h3>
+              <p>{algoTradingCourse.founderContext.copy}</p>
+              <ul className="algo-campaign-credibility-list">
+                {algoTradingCourse.founderContext.credibilityPoints.map((point) => (
+                  <li key={point}>
+                    <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="algo-campaign-section">
         <div className="algo-campaign-shell">
           <div className="algo-campaign-section-heading">
-            <p className="eyebrow">What You Will Understand</p>
-            <h2>Build the workflow thinking before the tools</h2>
+            <p className="eyebrow">FAQ</p>
+            <h2>Before you register</h2>
           </div>
 
-          <div className="algo-campaign-card-grid">
-            {understandingCards.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <article key={item.title} className="algo-campaign-card">
-                  <Icon size={21} strokeWidth={1.75} aria-hidden="true" />
-                  <h3>{item.title}</h3>
-                  <p>{item.copy}</p>
-                </article>
-              );
-            })}
+          <div className="algo-campaign-faq-list">
+            {faqItems.map((item) => (
+              <article key={item.question} className="algo-campaign-faq-row">
+                <h3>{item.question}</h3>
+                <p>{item.answer}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="algo-campaign-section">
-        <div className="algo-campaign-shell">
-          <div className="algo-campaign-program-card">
-            <div>
-              <p className="eyebrow">Program Context</p>
-              <h2>{algoTradingCourse.name}</h2>
-              <p>
-                A focused weekend program for understanding practical MT5 and
-                TradingView automation workflows.
-              </p>
-            </div>
-
-            <div className="algo-campaign-program-list">
-              <div>
-                <span>Duration</span>
-                <strong>3 months</strong>
-              </div>
-              <div>
-                <span>Schedule</span>
-                <strong>2 hours every weekend</strong>
-              </div>
-            </div>
-
-            <ul className="algo-campaign-included-list">
-              <li>
-                <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
-                <span>Live sessions</span>
-              </li>
-              <li>
-                <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
-                <span>Recordings</span>
-              </li>
-              <li>
-                <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
-                <span>WhatsApp support</span>
-              </li>
-              <li>
-                <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
-                <span>MT5 + TradingView workflows</span>
-              </li>
-            </ul>
-
-            <Button href={algoTradingCourse.registerRoute} variant="primary">
-              Register Free
-            </Button>
+      <section id="register" className="algo-campaign-section algo-campaign-register-section">
+        <div className="algo-campaign-shell algo-campaign-register-shell">
+          <div className="algo-campaign-section-heading">
+            <p className="eyebrow">Free Account Access</p>
+            <h2>Register free to unlock Lecture 1 + Lecture 2</h2>
+            <p>Create your account or log in to continue to the protected access page. No payment required.</p>
           </div>
+
+          <AlgoTradingCourseRegister
+            embedded
+            className="algo-campaign-register-card"
+            attributionSource="lp-trading-automation-masterclass"
+            defaultNext={algoTradingCourse.accessRoute}
+            heading="Create account or log in"
+            subheading="Use the same course account flow. WhatsApp is collected only for course updates and support."
+          />
+
+          <p className="algo-campaign-register-fallback">
+            Prefer the full registration page?{" "}
+            <a href={algoTradingCourse.registerRoute}>Open registration page.</a>
+          </p>
         </div>
       </section>
 
@@ -290,22 +356,24 @@ export default function AlgoTradingCourseCampaignLanding() {
         <div className="algo-campaign-shell">
           <div className="algo-campaign-final-card">
             <BookOpenCheck size={26} strokeWidth={1.75} aria-hidden="true" />
-            <h2>Create your free account to continue.</h2>
-            <Button href={algoTradingCourse.registerRoute} variant="primary">
-              Register Free
+            <h2>Register free and unlock Lecture 1 + Lecture 2.</h2>
+            <p>Educational content only. No profit guarantees.</p>
+            <Button href={registerSectionHref} variant="primary">
+              Get Free Access
             </Button>
           </div>
+
           <div className="algo-campaign-disclaimer">
             <ShieldCheck size={20} strokeWidth={1.75} aria-hidden="true" />
-            <p>{algoTradingCourse.disclaimer}</p>
+            <p>{campaignRiskDisclaimer}</p>
           </div>
         </div>
       </section>
 
       <div className="algo-campaign-sticky-cta">
-        <span>Preview access</span>
-        <Button href={algoTradingCourse.registerRoute} variant="primary">
-          Register Free
+        <span>Unlock Lecture 1 + Lecture 2</span>
+        <Button href={registerSectionHref} variant="primary">
+          Get Free Access
         </Button>
       </div>
     </main>

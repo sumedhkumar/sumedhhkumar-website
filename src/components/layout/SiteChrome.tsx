@@ -9,6 +9,9 @@ import Navbar from "@/components/layout/Navbar";
 export default function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isLandingPage = pathname.startsWith("/lp/");
+  const hideFooter =
+    pathname === "/courses/algo-trading/register" ||
+    pathname === "/courses/algo-trading/access";
 
   if (isLandingPage) {
     return <>{children}</>;
@@ -19,7 +22,7 @@ export default function SiteChrome({ children }: { children: ReactNode }) {
       <AnnouncementBanner />
       <Navbar />
       {children}
-      <Footer />
+      {hideFooter ? null : <Footer />}
     </>
   );
 }

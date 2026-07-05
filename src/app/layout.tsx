@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Cormorant_Garamond, Manrope, Sora } from "next/font/google";
 import SiteChrome from "@/components/layout/SiteChrome";
 import "./globals.css";
 
@@ -14,6 +14,13 @@ const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "600", "700", "800"],
   variable: "--font-body",
+  display: "swap",
+});
+
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-course-display",
   display: "swap",
 });
 
@@ -40,9 +47,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorantGaramond.variable} ${manrope.variable}`}
+      className={`${cormorantGaramond.variable} ${manrope.variable} ${sora.variable}`}
     >
-      <body className={`${cormorantGaramond.variable} ${manrope.variable}`}>
+      <body
+        className={`${cormorantGaramond.variable} ${manrope.variable} ${sora.variable}`}
+      >
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>

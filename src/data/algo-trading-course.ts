@@ -15,9 +15,8 @@ export const algoTradingCourseRoutes = {
 } as const;
 
 export const algoTradingCourseLinkPlaceholders = {
-  introVideo: "VIDEO_PLACEHOLDER_INTRO",
-  lecture0Video: "VIDEO_PLACEHOLDER_LECTURE_0",
   lecture1Video: "VIDEO_PLACEHOLDER_LECTURE_1",
+  lecture2Video: "VIDEO_PLACEHOLDER_LECTURE_2",
   whatsappGroupUrl: "WHATSAPP_GROUP_LINK_PLACEHOLDER",
   whatsappPhone: "WHATSAPP_PHONE_NUMBER_PLACEHOLDER",
   paymentLink: "PAYMENT_LINK_PLACEHOLDER",
@@ -25,11 +24,11 @@ export const algoTradingCourseLinkPlaceholders = {
 
 const configuredCourseLinks = {
   introVideoUrl: (process.env.NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL ?? "").trim(),
-  lecture0VideoUrl: (
-    process.env.NEXT_PUBLIC_COURSE_LECTURE_0_VIDEO_URL ?? ""
-  ).trim(),
   lecture1VideoUrl: (
     process.env.NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL ?? ""
+  ).trim(),
+  lecture2VideoUrl: (
+    process.env.NEXT_PUBLIC_COURSE_LECTURE_2_VIDEO_URL ?? ""
   ).trim(),
   whatsappGroupUrl: (
     process.env.NEXT_PUBLIC_COURSE_WHATSAPP_GROUP_URL ?? ""
@@ -103,14 +102,50 @@ function getSafeYoutubeVideoId(value: string) {
   return "";
 }
 
-export function getSafeCourseIntroEmbedUrl(value: string) {
-  const videoId = getSafeYoutubeVideoId(value).trim();
+function getSafeVimeoVideoId(value: string) {
+  const safeUrl = getSafeCourseExternalUrl(value);
 
-  if (!/^[A-Za-z0-9_-]{6,64}$/.test(videoId)) {
+  if (!safeUrl) {
     return "";
   }
 
-  return `https://www.youtube-nocookie.com/embed/${videoId}`;
+  try {
+    const parsed = new URL(safeUrl);
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    const pathSegments = parsed.pathname.split("/").filter(Boolean);
+
+    if (host === "vimeo.com") {
+      return pathSegments[0] ?? "";
+    }
+
+    if (host === "player.vimeo.com" && pathSegments[0] === "video") {
+      return pathSegments[1] ?? "";
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+export function getSafeCourseVideoEmbedUrl(value: string) {
+  const videoId = getSafeYoutubeVideoId(value).trim();
+
+  if (/^[A-Za-z0-9_-]{6,64}$/.test(videoId)) {
+    return `https://www.youtube-nocookie.com/embed/${videoId}`;
+  }
+
+  const vimeoVideoId = getSafeVimeoVideoId(value).trim();
+
+  if (/^\d{6,16}$/.test(vimeoVideoId)) {
+    return `https://player.vimeo.com/video/${vimeoVideoId}`;
+  }
+
+  return "";
+}
+
+export function getSafeCourseIntroEmbedUrl(value: string) {
+  return getSafeCourseVideoEmbedUrl(value);
 }
 
 export function getSafeCoursePaymentUrl(value: string) {
@@ -167,7 +202,39 @@ export const algoTradingCourse = {
     whatsappPrefilledMessage:
       "Hi, I watched the Vyntegra Trading Automation Masterclass free lectures. I want to discuss the \u20B928,999 launch offer and course joining process.",
   },
-  primaryCta: "Get Free Access to Lecture 0 & Lecture 1",
+  support: {
+    accessWhatsappPrefilledMessage:
+      "Hi, I have unlocked the Vyntegra Trading Automation Masterclass free lessons and need help with the next steps.",
+    accessEmailSubject: "Vyntegra course access support",
+    fullCourseInquirySubject: "Full course access enquiry",
+  },
+  visuals: {
+    heroWorkflowSlide: {
+      src: "/images/course/trading-automation-workflow-slide.svg",
+      alt: "AI trading automation workflow preview",
+    },
+    lessonPreviews: [
+      {
+        src: "/images/course/lecture-1-roadmap-slide.svg",
+        alt: "Lecture 1 roadmap slide preview",
+      },
+      {
+        src: "/images/course/lecture-2-teaching-slide.svg",
+        alt: "Lecture 2 teaching session slide preview",
+      },
+    ],
+    founderPortrait: "/images/sumedhhkumar-bhalerao-profile.png",
+  },
+  founderContext: {
+    copy:
+      "Vyntegra focuses on practical AI automation and trading workflow education with clear scope, review discipline, and responsible implementation thinking.",
+    credibilityPoints: [
+      "Practical AI automation and trading workflow education.",
+      "Beginner-friendly structure for understanding the moving parts.",
+      "No signal-selling or promised-return positioning.",
+    ],
+  },
+  primaryCta: "Get Free Access to Lecture 1 + Lecture 2",
   secondaryCta: "View Curriculum",
   subheading:
     "Learn how trading automation workflows are planned, set up, tested, and understood using MT5 and TradingView.",
@@ -176,7 +243,7 @@ export const algoTradingCourse = {
   privacyNote:
     "We will use these details only to share the free lectures, course updates, and joining instructions.",
   disclaimer:
-    "This is an educational course. It does not provide investment advice, profit guarantees, or assured returns. Trading involves financial risk.",
+    "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk.",
   pricing: {
     valueLabel: "\u20B945,000",
     launchOfferLabel: "\u20B928,999",
@@ -185,7 +252,7 @@ export const algoTradingCourse = {
     activeCopy:
       "Use the external payment page only after reviewing the free lessons and joining instructions. Verification is manual, not instant.",
     placeholderCopy:
-      "Payment link will be added here. For now, use the WhatsApp option to discuss joining the launch batch.",
+      "For full-course joining, contact Vyntegra support to discuss the launch batch.",
     configuredLabel: "External payment page configured",
     pendingLabel: "Payment link will be added after final setup",
   },
@@ -209,42 +276,30 @@ export const algoTradingCourse = {
   ],
   previewLessons: [
     {
-      title: "Intro Video",
-      copy: "A concise orientation to the program, learning flow, and how to approach the free preview.",
-      placeholder: algoTradingCourseLinkPlaceholders.introVideo,
-      videoUrl: configuredCourseLinks.introVideoUrl,
-    },
-    {
-      title: "Lecture 0 - Course Roadmap & What You Get",
-      copy: "Explains the complete roadmap, tools, course structure, and what students receive.",
-      placeholder: algoTradingCourseLinkPlaceholders.lecture0Video,
-      videoUrl: configuredCourseLinks.lecture0VideoUrl,
-    },
-    {
-      title: "Lecture 1 - First Teaching Session",
-      copy: "The first real teaching session before payment, built to help you judge the learning style.",
+      title: "Lecture 1 - Course Roadmap",
+      copy: "A concise overview of the course structure, tools covered, learning path, support, recordings, and joining process.",
       placeholder: algoTradingCourseLinkPlaceholders.lecture1Video,
       videoUrl: configuredCourseLinks.lecture1VideoUrl,
+    },
+    {
+      title: "Lecture 2 - First Teaching Session",
+      copy: "The first teaching session to help you understand the learning style and platform-oriented workflow.",
+      placeholder: algoTradingCourseLinkPlaceholders.lecture2Video,
+      videoUrl: configuredCourseLinks.lecture2VideoUrl,
     },
   ],
   accessLessons: [
     {
-      title: "Intro Video",
-      copy: "A quick orientation to the masterclass, who it is for, and how the free access flow works.",
-      placeholder: algoTradingCourseLinkPlaceholders.introVideo,
-      videoUrl: configuredCourseLinks.introVideoUrl,
-    },
-    {
-      title: "Lecture 0 - Course Roadmap & What You Get",
-      copy: "A complete overview of the course structure, tools covered, learning path, support, recordings, and joining process.",
-      placeholder: algoTradingCourseLinkPlaceholders.lecture0Video,
-      videoUrl: configuredCourseLinks.lecture0VideoUrl,
-    },
-    {
-      title: "Lecture 1 - First Teaching Session",
-      copy: "The first actual teaching session to help you understand the course quality before payment.",
+      title: "Lecture 1 - Course Roadmap",
+      copy: "A concise overview of the course structure, tools covered, learning path, support, recordings, and joining process.",
       placeholder: algoTradingCourseLinkPlaceholders.lecture1Video,
       videoUrl: configuredCourseLinks.lecture1VideoUrl,
+    },
+    {
+      title: "Lecture 2 - First Teaching Session",
+      copy: "The first teaching session to help you understand the learning style and platform-oriented workflow.",
+      placeholder: algoTradingCourseLinkPlaceholders.lecture2Video,
+      videoUrl: configuredCourseLinks.lecture2VideoUrl,
     },
   ],
   learningOutcomes: [
@@ -340,7 +395,7 @@ export const algoTradingCourse = {
     "Recordings",
     "WhatsApp support",
     "MT5 and TradingView focused training",
-    "Intro Video + Lecture 0 + Lecture 1 free before payment",
+    "Lecture 1 + Lecture 2 free before payment",
     "Practical automation workflow understanding",
   ],
   paidProgramIncluded: [
@@ -352,11 +407,10 @@ export const algoTradingCourse = {
     "Practical automation workflow understanding",
   ],
   accessNextSteps: [
-    "Watch the intro video.",
-    "Watch Lecture 0 and Lecture 1.",
+    "Start with Lecture 1.",
+    "Continue to Lecture 2.",
     "Join the WhatsApp group for updates.",
-    "Speak with us or use the payment link once added.",
-    "Join the full 3-month launch batch.",
+    "Speak with us if you need help with access or next steps.",
   ],
   testimonials: [] as CourseTestimonial[],
   audienceFit: [
@@ -374,12 +428,12 @@ export const algoTradingCourse = {
     {
       question: "Is the free access really free?",
       answer:
-        "Yes. The intro video, Lecture 0, and Lecture 1 are available before any payment step.",
+        "Yes. Lecture 1 and Lecture 2 are available before any payment step.",
     },
     {
       question: "What do I get before paying?",
       answer:
-        "You get access to the intro video, Lecture 0, and Lecture 1 before any payment step.",
+        "You get access to Lecture 1 and Lecture 2 before any payment step.",
     },
     {
       question: "Do I need coding experience?",
@@ -418,7 +472,7 @@ export const algoTradingCourse = {
     {
       question: "When does payment happen?",
       answer:
-        "Payment happens only after you create a free account and review the intro video, Lecture 0, and Lecture 1.",
+        "Payment happens only after you create a free account and review Lecture 1 and Lecture 2.",
     },
   ],
 } as const;

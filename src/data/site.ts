@@ -42,7 +42,7 @@ export const site = {
 
 export function getPublicContactDetails() {
   return {
-    email: "support@vyntegra.in",
+    email: process.env.NEXT_PUBLIC_VYNTEGRA_CONTACT_EMAIL ?? "support@vyntegra.in",
     phone: process.env.NEXT_PUBLIC_VYNTEGRA_CONTACT_PHONE ?? "",
   };
 }

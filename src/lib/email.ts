@@ -260,14 +260,13 @@ function buildCourseRegistrationUserBody(input: CourseRegistrationEmailInput) {
     input.fullName ? `Hi ${input.fullName},` : "Hi,",
     `Your free access for ${input.courseName} is active.`,
     "You can now watch:",
-    "- Intro Video",
-    "- Lecture 0 - Course Roadmap & What You Get",
-    "- Lecture 1 - First Teaching Session",
+    "- Lecture 1 - Course Roadmap",
+    "- Lecture 2 - First Teaching Session",
     `Access link: ${input.accessUrl}`,
     "The full 3-month program includes weekend live sessions, recordings, WhatsApp support, and MT5 and TradingView focused training.",
     "Course Value: \u20B945,000",
     "Launch Batch Offer: \u20B928,999",
-    "This is an educational course. It does not provide investment advice, profit guarantees, or assured returns. Trading involves financial risk.",
+    "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk.",
     `For support, contact ${appConfig.supportEmail}.`,
     "Regards,",
     "Vyntegra",
@@ -290,7 +289,7 @@ function buildCourseRegistrationUserHtml(input: CourseRegistrationEmailInput) {
       {
         heading: "Free access includes",
         body:
-          "Intro Video\nLecture 0 - Course Roadmap & What You Get\nLecture 1 - First Teaching Session",
+          "Lecture 1 - Course Roadmap\nLecture 2 - First Teaching Session",
       },
       {
         heading: "Full program includes",
@@ -303,7 +302,7 @@ function buildCourseRegistrationUserHtml(input: CourseRegistrationEmailInput) {
       },
     ],
     note:
-      "This is an educational course. It does not provide investment advice, profit guarantees, or assured returns. Trading involves financial risk.",
+      "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk.",
   });
 }
 

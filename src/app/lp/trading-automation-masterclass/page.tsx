@@ -4,7 +4,7 @@ import AlgoTradingCourseCampaignLanding from "@/components/course/AlgoTradingCou
 export const metadata: Metadata = {
   title: "Trading Automation Masterclass | Vyntegra",
   description:
-    "A mobile-first introduction to the Vyntegra Trading Automation Masterclass with free registration for the first lessons.",
+    "Register free to unlock Lecture 1 and Lecture 2 and learn the workflow behind AI-assisted trading automation.",
   robots: {
     index: false,
     follow: false,
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Trading Automation Masterclass | Vyntegra",
     description:
-      "Register free for the first Vyntegra Trading Automation Masterclass preview lessons.",
+      "Register free to unlock Lecture 1 and Lecture 2 and learn the workflow behind AI-assisted trading automation.",
     siteName: "Vyntegra",
     type: "website",
   },
