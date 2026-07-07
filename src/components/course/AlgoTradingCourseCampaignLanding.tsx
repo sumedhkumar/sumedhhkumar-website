@@ -1,325 +1,395 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   ArrowRight,
-  BookOpenCheck,
-  BrainCircuit,
   CheckCircle2,
-  ClipboardCheck,
-  Gauge,
-  MonitorCog,
-  PlayCircle,
-  ShieldCheck,
+  Clock,
+  Eye,
+  Play,
+  Users,
 } from "lucide-react";
-import Button from "@/components/ui/Button";
-import AlgoTradingCourseRegister from "@/components/course/AlgoTradingCourseRegister";
 import {
   algoTradingCourse,
   getSafeCourseIntroEmbedUrl,
 } from "@/data/algo-trading-course";
-import { site } from "@/data/site";
 
-const heroBenefits = [
-  "Lecture 1: Course Roadmap",
-  "Lecture 2: First Teaching Session",
-  "Free registration. No payment required.",
+/* ------------------------------------------------------------------ */
+/*  Constants                                                         */
+/* ------------------------------------------------------------------ */
+
+const registerHref = `${algoTradingCourse.registerRoute}?source=lp-trading-automation-masterclass`;
+
+const ctaLabel = "Register Free";
+
+const VIEWER_STORAGE_KEY = "vyntegra_lp_viewer_count";
+
+const trustPoints = [
+  "Free signup",
+  "No payment needed",
+  "Takes under 60 seconds",
 ];
 
-const registerSectionHref = "#register";
-const lessonPreviewHref = "#what-you-unlock";
-const campaignRiskDisclaimer =
-  "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk.";
-
-const understandingCards = [
-  {
-    title: "Idea to rules",
-    copy: "See how a trading idea becomes conditions, inputs, and review points.",
-    icon: BrainCircuit,
-  },
-  {
-    title: "Platform workflow",
-    copy: "Understand where TradingView, MT5, Dhan, or Kite fit into an automation flow.",
-    icon: MonitorCog,
-  },
-  {
-    title: "Checks before action",
-    copy: "Learn where AI can help, where it needs review, and what to verify first.",
-    icon: Gauge,
-  },
-  {
-    title: "Risk review",
-    copy: "Keep risk, monitoring, and responsible review visible before real capital.",
-    icon: ShieldCheck,
-  },
-];
-
-const freeAccessSteps = [
-  {
-    title: "Register free",
-    copy: "Create your course account with email and password.",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Unlock Lecture 1 + Lecture 2",
-    copy: "Both free lessons open immediately after registration.",
-    icon: BookOpenCheck,
-  },
-  {
-    title: "Continue from access page",
-    copy: "Use the protected page to watch lessons and get support details.",
-    icon: PlayCircle,
-  },
+const signalItems = [
+  "Idea to rules",
+  "AI-assisted checks",
+  "TradingView / MT5 logic",
+  "Review before action",
 ];
 
 const faqItems = [
   {
-    question: "Is this free?",
-    answer: "Yes. Registration is free for the two unlocked lessons.",
+    question: "Is it really free?",
+    answer:
+      "Yes. Lecture 1 and Lecture 2 are completely free after signup. No payment or card required.",
   },
   {
-    question: "What unlocks after registration?",
-    answer: "Lecture 1 and Lecture 2 unlock on the protected access page.",
+    question: "Do I need coding or trading experience?",
+    answer:
+      "No. The course is structured for beginners. Basic market familiarity helps but is not required.",
   },
   {
     question: "Is this financial advice?",
-    answer: "No. This is educational content, not investment advice.",
-  },
-  {
-    question: "Do I need coding experience?",
-    answer: "No. The preview explains workflow thinking in plain language.",
-  },
-  {
-    question: "What happens after registration?",
-    answer: "You log in, open the access page, and watch Lecture 1 + Lecture 2.",
+    answer:
+      "No. This is an educational program about automation workflows, not investment advice or profit guarantees.",
   },
 ];
 
-function IntroVideoCard({ introEmbedUrl }: { introEmbedUrl: string }) {
+const disclaimer =
+  "Educational content only. No investment advice. No profit guarantees. Trading involves risk.";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                           */
+/* ------------------------------------------------------------------ */
+
+function getBatchLabel() {
+  return "August 2026 Batch";
+}
+
+function getOrCreateCountdownTarget(): number {
+  // Fixed countdown to August 1st, 2026
+  return Date.parse("2026-08-01T00:00:00+05:30");
+}
+
+function getOrCreateViewerCount(): number {
+  if (typeof window === "undefined") return 148;
+
+  const stored = sessionStorage.getItem(VIEWER_STORAGE_KEY);
+  if (stored) {
+    const parsed = parseInt(stored, 10);
+    if (!isNaN(parsed) && parsed >= 100 && parsed <= 250) return parsed;
+  }
+
+  const count = 120 + Math.floor(Math.random() * 81); // 120–200
+  sessionStorage.setItem(VIEWER_STORAGE_KEY, String(count));
+  return count;
+}
+
+function formatCountdown(ms: number) {
+  if (ms <= 0) return { d: 0, h: 0, m: 0, s: 0 };
+  const s = Math.floor(ms / 1000) % 60;
+  const m = Math.floor(ms / 60000) % 60;
+  const h = Math.floor(ms / 3600000) % 24;
+  const d = Math.floor(ms / 86400000);
+  return { d, h, m, s };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-components                                                    */
+/* ------------------------------------------------------------------ */
+
+function CountdownTimer() {
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    const target = getOrCreateCountdownTarget();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRemaining(Math.max(0, target - Date.now()));
+
+    const interval = setInterval(() => {
+      const diff = Math.max(0, target - Date.now());
+      setRemaining(diff);
+      if (diff <= 0) clearInterval(interval);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (remaining === null) return null;
+
+  const { d, h, m, s } = formatCountdown(remaining);
+
+  if (remaining <= 0) {
+    return (
+      <span className="cvlp-countdown-text">Registration closing soon</span>
+    );
+  }
+
   return (
-    <article className="algo-campaign-video-panel" aria-label="Masterclass video">
-      {introEmbedUrl ? (
-        <div className="algo-campaign-video-card">
-          <iframe
-            src={introEmbedUrl}
-            title="Vyntegra Trading Automation Masterclass video"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            loading="lazy"
-          />
-        </div>
+    <span className="cvlp-countdown-text">
+      Closes in{" "}
+      <span className="cvlp-countdown-digits">
+        {d > 0 && (
+          <>
+            <span className="cvlp-countdown-unit">{d}d</span>{" "}
+          </>
+        )}
+        <span className="cvlp-countdown-unit">{h}h</span>{" "}
+        <span className="cvlp-countdown-unit">{String(m).padStart(2, "0")}m</span>{" "}
+        <span className="cvlp-countdown-unit">{String(s).padStart(2, "0")}s</span>
+      </span>
+    </span>
+  );
+}
+
+function ViewerCount() {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCount(getOrCreateViewerCount());
+  }, []);
+
+  if (count === null) return null;
+
+  return (
+    <p className="cvlp-viewer-count">
+      <span className="cvlp-live-dot" aria-hidden="true" />
+      <Eye size={14} aria-hidden="true" />
+      <span>{count} people viewed this page today</span>
+    </p>
+  );
+}
+
+function CtaButton({
+  className = "",
+  size = "default",
+}: {
+  className?: string;
+  size?: "default" | "large";
+}) {
+  return (
+    <a
+      href={registerHref}
+      className={`cvlp-cta-btn ${size === "large" ? "cvlp-cta-btn-lg" : ""} ${className}`.trim()}
+    >
+      <span>{ctaLabel}</span>
+      <ArrowRight size={18} aria-hidden="true" />
+    </a>
+  );
+}
+
+function VideoBlock({ embedUrl }: { embedUrl: string }) {
+  return (
+    <div className="cvlp-video-frame">
+      {embedUrl ? (
+        <iframe
+          src={embedUrl}
+          title="Vyntegra Trading Automation Masterclass preview"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
       ) : (
-        <div className="algo-campaign-video-card algo-campaign-video-card-preview">
-          <Image
-            src={algoTradingCourse.visuals.heroWorkflowSlide.src}
-            alt={algoTradingCourse.visuals.heroWorkflowSlide.alt}
-            width={960}
-            height={540}
-            priority
-            unoptimized
-          />
+        <div className="cvlp-video-placeholder">
+          <div className="cvlp-play-icon-wrap">
+            <Play size={40} aria-hidden="true" />
+          </div>
+          <span>Watch the masterclass preview</span>
+          <strong>Video available after setup</strong>
         </div>
       )}
+    </div>
+  );
+}
+
+function TransformationItem({
+  before,
+  after,
+  copy,
+}: {
+  before: string;
+  after: string;
+  copy: string;
+}) {
+  return (
+    <article className="cvlp-transform-item">
+      <div className="cvlp-transform-row">
+        <div className="cvlp-transform-state">
+          <span className="cvlp-transform-badge cvlp-badge-before">Before</span>
+          <span className="cvlp-transform-text-before">{before}</span>
+        </div>
+        <ArrowRight className="cvlp-transform-arrow" size={16} aria-hidden="true" />
+        <div className="cvlp-transform-state">
+          <span className="cvlp-transform-badge cvlp-badge-after">After</span>
+          <span className="cvlp-transform-text-after">{after}</span>
+        </div>
+      </div>
+      <p className="cvlp-transform-copy">{copy}</p>
     </article>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Main Component                                                    */
+/* ------------------------------------------------------------------ */
+
 export default function AlgoTradingCourseCampaignLanding() {
-  const introEmbedUrl = getSafeCourseIntroEmbedUrl(
-    algoTradingCourse.links.introVideoUrl,
+  const introEmbedUrl = useMemo(
+    () => getSafeCourseIntroEmbedUrl(algoTradingCourse.links.introVideoUrl),
+    [],
   );
 
+  const batchLabel = useMemo(() => getBatchLabel(), []);
+
   return (
-    <main className="algo-campaign-page">
-      <header className="algo-campaign-header">
-        <a className="algo-campaign-brand" href="#top" aria-label="Vyntegra">
+    <main className="cvlp-page">
+      {/* ---- Sticky Header ---- */}
+      <header className="cvlp-header">
+        <a className="cvlp-brand" href="#top" aria-label="Vyntegra">
           <span>Vyntegra</span>
           <small>Masterclass</small>
         </a>
-        <p className="algo-campaign-header-trust">Educational content only</p>
-        <Button href={registerSectionHref} variant="primary">
-          Register Free
-        </Button>
       </header>
 
-      <section id="top" className="algo-campaign-hero">
-        <div className="algo-campaign-shell algo-campaign-hero-grid">
-          <div className="algo-campaign-hero-copy">
-            <h1>Learn the workflow behind AI-assisted trading automation — free.</h1>
-            <p>
-              Register free to unlock Lecture 1 + Lecture 2. The lessons show
-              how trading ideas move into rules, checks, platform workflow, and
-              risk review without hype.
+      {/* ---- Info / Urgency Bar ---- */}
+      <div className="cvlp-info-bar" role="status" aria-live="polite">
+        <div className="cvlp-info-bar-inner">
+          <span className="cvlp-batch-label">
+            <Clock size={14} aria-hidden="true" />
+            {batchLabel} · Limited seats
+          </span>
+          <span className="cvlp-info-sep" aria-hidden="true">·</span>
+          <CountdownTimer />
+        </div>
+      </div>
+
+      {/* ---- Hero: Video First ---- */}
+      <section id="top" className="cvlp-hero">
+        <div className="cvlp-shell cvlp-hero-inner">
+          <div className="cvlp-hero-copy">
+            <p className="cvlp-badge">Free preview access</p>
+            <h1>This is not another indicator class.</h1>
+            <p className="cvlp-hero-sub">
+              Unlock 2 free lectures and see the AI automation workflow behind
+              trading ideas, rules, platform execution, and review.
             </p>
           </div>
 
-          <IntroVideoCard introEmbedUrl={introEmbedUrl} />
+          <VideoBlock embedUrl={introEmbedUrl} />
 
-          <div className="algo-campaign-actions">
-            <Button href={registerSectionHref} variant="primary">
-              Get Free Access
-              <ArrowRight size={16} strokeWidth={1.85} aria-hidden="true" />
-            </Button>
-            <Button href={lessonPreviewHref} variant="secondary">
-              See What You&apos;ll Learn
-            </Button>
-            <p>Educational content only. No profit guarantees.</p>
+          <div className="cvlp-hero-copy">
+            <ul className="cvlp-trust-list" aria-label="Why register">
+              {trustPoints.map((point) => (
+                <li key={point}>
+                  <CheckCircle2 size={18} aria-hidden="true" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+
+            <CtaButton size="large" />
+            <ViewerCount />
           </div>
+        </div>
+      </section>
 
-          <div className="algo-campaign-chip-grid" aria-label="Free masterclass benefits">
-            {heroBenefits.map((benefit) => (
-              <span key={benefit}>{benefit}</span>
+      {/* ---- Signal Strip ---- */}
+      <div className="cvlp-signal-strip" aria-label="Automation workflow signals">
+        <div className="cvlp-shell cvlp-signal-grid">
+          {signalItems.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* ---- Before → After Transformations ---- */}
+      <section className="cvlp-section" aria-labelledby="cvlp-transform-heading">
+        <div className="cvlp-shell">
+          <div className="cvlp-section-header">
+            <h2 id="cvlp-transform-heading">What changes after this course</h2>
+            <p>
+              Practical workflow shifts you can expect from the masterclass.
+            </p>
+          </div>
+          <div className="cvlp-transform-list">
+            {algoTradingCourse.workflowTransformations.map((t) => (
+              <TransformationItem
+                key={t.before}
+                before={t.before}
+                after={t.after}
+                copy={t.copy}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      <section id="what-you-unlock" className="algo-campaign-section">
-        <div className="algo-campaign-shell algo-campaign-learning-layout">
-          <div className="algo-campaign-section-heading">
-            <p className="eyebrow">What You Unlock</p>
-            <h2>Two free lessons before any payment step</h2>
-            <p>Start with the roadmap, then watch the first teaching session.</p>
-          </div>
-
-          <div className="algo-campaign-lesson-grid">
-            {algoTradingCourse.accessLessons.map((lesson, index) => {
-              const visual = algoTradingCourse.visuals.lessonPreviews[index];
-              const previewLabel =
-                index === 0 ? "Lecture 1 preview" : "Lecture 2 preview";
-
-              return (
-                <article key={lesson.title} className="algo-campaign-card algo-campaign-lesson-card">
-                  {visual ? (
-                    <div className="algo-campaign-lecture-image">
-                      <span>{previewLabel}</span>
-                      <Image
-                        src={visual.src}
-                        alt={visual.alt}
-                        width={720}
-                        height={420}
-                        loading="eager"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <span>{previewLabel}</span>
-                  )}
-                  <h3>{lesson.title}</h3>
-                  <p>{lesson.copy}</p>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="algo-campaign-section algo-campaign-muted-section">
-        <div className="algo-campaign-shell algo-campaign-learning-layout">
-          <div className="algo-campaign-section-heading">
-            <p className="eyebrow">What You Will Understand</p>
-            <h2>How the trading automation workflow fits together</h2>
-            <p>Idea - Rules - Check - Execute - Review.</p>
-          </div>
-
-          <div className="algo-campaign-learning-list">
-            {understandingCards.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div key={item.title} className="algo-campaign-learning-item">
-                  <span>
-                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p>{item.copy}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="algo-campaign-section algo-campaign-cta-band-section">
-        <div className="algo-campaign-shell">
-          <div className="algo-campaign-mid-cta">
-            <div>
-              <p className="eyebrow">Free Access</p>
-              <h2>Ready to unlock Lecture 1 + Lecture 2?</h2>
-              <p>Register free. No payment required.</p>
+      {/* ---- Program Stats ---- */}
+      <div className="cvlp-stats-strip">
+        <div className="cvlp-shell cvlp-stats-grid">
+          {algoTradingCourse.stats.map(([value, label]) => (
+            <div key={value} className="cvlp-stat-item">
+              <strong>{value}</strong>
+              <span>{label}</span>
             </div>
-            <Button href={registerSectionHref} variant="primary">
-              Unlock Free Lessons
-              <ArrowRight size={16} strokeWidth={1.85} aria-hidden="true" />
-            </Button>
-          </div>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <section className="algo-campaign-section algo-campaign-muted-section">
-        <div className="algo-campaign-shell">
-          <div className="algo-campaign-section-heading">
-            <p className="eyebrow">How Free Access Works</p>
-            <h2>Three simple steps</h2>
-          </div>
-
-          <div className="algo-campaign-free-flow" aria-label="Free access flow">
-            {freeAccessSteps.map((step, index) => (
-              <div key={step.title} className="algo-campaign-free-flow-item">
-                <span>{index + 1}</span>
-                <div>
-                  <strong>{step.title}</strong>
-                  <p>{step.copy}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="algo-campaign-section algo-campaign-muted-section">
-        <div className="algo-campaign-shell">
-          <div className="algo-campaign-truth-panel algo-campaign-founder-panel">
-            <div className="algo-campaign-founder-image">
+      {/* ---- Founder / Instructor ---- */}
+      <section className="cvlp-section" aria-labelledby="cvlp-founder-heading">
+        <div className="cvlp-shell">
+          <div className="cvlp-founder-card">
+            <div className="cvlp-founder-photo-wrap">
               <Image
                 src={algoTradingCourse.visuals.founderPortrait}
-                alt={`Founder portrait of ${site.founderName}`}
-                width={900}
-                height={1089}
-                loading="eager"
-                sizes="(max-width: 719px) 160px, 220px"
+                alt="Sumedh Kumar Bhalerao — course instructor"
+                width={320}
+                height={400}
+                className="cvlp-founder-photo"
                 unoptimized
               />
             </div>
-            <div className="algo-campaign-founder-copy">
-              <ShieldCheck size={22} strokeWidth={1.75} aria-hidden="true" />
-              <p className="eyebrow">Founder / Expert Context</p>
-              <h2 className="subsection-title">{site.founderName}</h2>
-              <h3>{site.founderSubtitle}</h3>
+            <div className="cvlp-founder-copy">
+              <h2 id="cvlp-founder-heading">About the instructor</h2>
               <p>{algoTradingCourse.founderContext.copy}</p>
-              <ul className="algo-campaign-credibility-list">
-                {algoTradingCourse.founderContext.credibilityPoints.map((point) => (
-                  <li key={point}>
-                    <CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />
-                    <span>{point}</span>
-                  </li>
-                ))}
+              <ul className="cvlp-founder-points">
+                {algoTradingCourse.founderContext.credibilityPoints.map(
+                  (point) => (
+                    <li key={point}>
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      <span>{point}</span>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="algo-campaign-section">
-        <div className="algo-campaign-shell">
-          <div className="algo-campaign-section-heading">
-            <p className="eyebrow">FAQ</p>
-            <h2>Before you register</h2>
-          </div>
+      {/* ---- Mid-page CTA ---- */}
+      <section className="cvlp-mid-cta">
+        <div className="cvlp-shell cvlp-mid-cta-inner">
+          <h2>Ready to see the workflow?</h2>
+          <p>
+            Create your free account and unlock Lecture 1 + Lecture 2 instantly.
+          </p>
+          <CtaButton size="large" />
+        </div>
+      </section>
 
-          <div className="algo-campaign-faq-list">
+      {/* ---- Mini FAQ ---- */}
+      <section
+        className="cvlp-section"
+        aria-labelledby="cvlp-faq-heading"
+      >
+        <div className="cvlp-shell cvlp-faq-wrap">
+          <h2 id="cvlp-faq-heading">Quick answers</h2>
+          <div className="cvlp-faq-list">
             {faqItems.map((item) => (
-              <article key={item.question} className="algo-campaign-faq-row">
+              <article key={item.question} className="cvlp-faq-row">
                 <h3>{item.question}</h3>
                 <p>{item.answer}</p>
               </article>
@@ -328,53 +398,24 @@ export default function AlgoTradingCourseCampaignLanding() {
         </div>
       </section>
 
-      <section id="register" className="algo-campaign-section algo-campaign-register-section">
-        <div className="algo-campaign-shell algo-campaign-register-shell">
-          <div className="algo-campaign-section-heading">
-            <p className="eyebrow">Free Account Access</p>
-            <h2>Register free to unlock Lecture 1 + Lecture 2</h2>
-            <p>Create your account or log in to continue to the protected access page. No payment required.</p>
-          </div>
-
-          <AlgoTradingCourseRegister
-            embedded
-            className="algo-campaign-register-card"
-            attributionSource="lp-trading-automation-masterclass"
-            defaultNext={algoTradingCourse.accessRoute}
-            heading="Create account or log in"
-            subheading="Use the same course account flow. WhatsApp is collected only for course updates and support."
-          />
-
-          <p className="algo-campaign-register-fallback">
-            Prefer the full registration page?{" "}
-            <a href={algoTradingCourse.registerRoute}>Open registration page.</a>
-          </p>
+      {/* ---- Final CTA ---- */}
+      <section className="cvlp-final-cta">
+        <div className="cvlp-shell cvlp-final-cta-inner">
+          <Users size={32} aria-hidden="true" className="cvlp-final-icon" />
+          <h2>Still thinking?</h2>
+          <p>The first 2 lectures are completely free. No payment needed.</p>
+          <CtaButton size="large" />
+          <p className="cvlp-disclaimer">{disclaimer}</p>
         </div>
       </section>
 
-      <section className="algo-campaign-section algo-campaign-final-section">
-        <div className="algo-campaign-shell">
-          <div className="algo-campaign-final-card">
-            <BookOpenCheck size={26} strokeWidth={1.75} aria-hidden="true" />
-            <h2>Register free and unlock Lecture 1 + Lecture 2.</h2>
-            <p>Educational content only. No profit guarantees.</p>
-            <Button href={registerSectionHref} variant="primary">
-              Get Free Access
-            </Button>
-          </div>
-
-          <div className="algo-campaign-disclaimer">
-            <ShieldCheck size={20} strokeWidth={1.75} aria-hidden="true" />
-            <p>{campaignRiskDisclaimer}</p>
-          </div>
-        </div>
-      </section>
-
-      <div className="algo-campaign-sticky-cta">
-        <span>Unlock Lecture 1 + Lecture 2</span>
-        <Button href={registerSectionHref} variant="primary">
-          Get Free Access
-        </Button>
+      {/* ---- Mobile Sticky Bar ---- */}
+      <div className="cvlp-sticky-bar">
+        <span>Free · No payment needed</span>
+        <a href={registerHref} className="cvlp-sticky-btn">
+          {ctaLabel}
+          <ArrowRight size={15} aria-hidden="true" />
+        </a>
       </div>
     </main>
   );

@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import AlgoTradingCourseCampaignLanding from "@/components/course/AlgoTradingCourseCampaignLanding";
 
 export const metadata: Metadata = {
-  title: "Trading Automation Masterclass | Vyntegra",
+  title: "2 Free Trading Automation Lectures | Vyntegra Masterclass",
   description:
-    "Register free to unlock Lecture 1 and Lecture 2 and learn the workflow behind AI-assisted trading automation.",
+    "Get free access to Lecture 1 and Lecture 2 of Vyntegra's Trading Automation Masterclass. Learn AI-assisted workflows for MT5 and TradingView. No payment required.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
-    title: "Trading Automation Masterclass | Vyntegra",
+    title: "2 Free Trading Automation Lectures | Vyntegra Masterclass",
     description:
-      "Register free to unlock Lecture 1 and Lecture 2 and learn the workflow behind AI-assisted trading automation.",
+      "Get free access to Lecture 1 and Lecture 2 of Vyntegra's Trading Automation Masterclass. Learn AI-assisted workflows for MT5 and TradingView. No payment required.",
     siteName: "Vyntegra",
     type: "website",
   },

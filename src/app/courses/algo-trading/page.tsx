@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import AlgoTradingCourseLanding from "@/components/course/AlgoTradingCourseLanding";
+import { redirect } from "next/navigation";
+import { algoTradingCourse } from "@/data/algo-trading-course";
 
 export const metadata: Metadata = {
-  title: "Vyntegra Trading Automation Masterclass | Vyntegra",
+  title: "Unlock 2 Free Trading Automation Lectures | Vyntegra",
   description:
-    "A 3-month weekend trading automation education program covering MT5, TradingView, live sessions, recordings, and WhatsApp support.",
+    "Get free preview access to Lecture 1 and Lecture 2 of Vyntegra's Trading Automation Masterclass. No payment required.",
   openGraph: {
-    title: "Vyntegra Trading Automation Masterclass | Vyntegra",
+    title: "Unlock 2 Free Trading Automation Lectures | Vyntegra",
     description:
-      "A 3-month weekend trading automation education program covering MT5, TradingView, live sessions, recordings, and WhatsApp support.",
+      "Get free preview access to Lecture 1 and Lecture 2 of Vyntegra's Trading Automation Masterclass. No payment required.",
     siteName: "Vyntegra",
     type: "website",
   },
 };
 
 export default function AlgoTradingCoursePage() {
-  return <AlgoTradingCourseLanding />;
+  redirect(algoTradingCourse.route);
 }

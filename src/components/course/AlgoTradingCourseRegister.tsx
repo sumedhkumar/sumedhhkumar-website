@@ -37,11 +37,15 @@ type RegistrationResponse = {
 
 type AlgoTradingCourseRegisterProps = {
   embedded?: boolean;
+  compactEmbedded?: boolean;
+  initialMode?: AuthMode;
   className?: string;
   attributionSource?: string;
   defaultNext?: string;
   heading?: string;
   subheading?: string;
+  modeHrefPath?: string;
+  modeHrefHash?: string;
 };
 
 const courseSlug = "algo-trading";
@@ -382,22 +386,31 @@ function WhatsappNumberFields({
   values,
   errorMessage,
   onChange,
+  compact = false,
 }: {
   idPrefix: string;
   values: WhatsappInputValues;
   errorMessage?: string;
   onChange: (values: WhatsappInputValues) => void;
+  compact?: boolean;
 }) {
   const isManualCountryCode =
     values.whatsappCountryCode === manualCountryCodeValue;
   const errorId = `${idPrefix}Whatsapp-error`;
+  const whatsappGridStyle = compact && !isManualCountryCode
+    ? {
+        display: "grid",
+        gap: 8,
+        gridTemplateColumns: "minmax(112px, 0.84fr) minmax(0, 1.16fr)",
+      }
+    : { display: "grid", gap: 8 };
 
   return (
     <div>
       <label className="form-label" htmlFor={`${idPrefix}WhatsappLocal`}>
         WhatsApp number *
       </label>
-      <div style={{ display: "grid", gap: 8 }}>
+      <div style={whatsappGridStyle}>
         <select
           className="form-control"
           value={values.whatsappCountryCode}
@@ -458,13 +471,17 @@ function WhatsappNumberFields({
 
 export default function AlgoTradingCourseRegister({
   embedded = false,
+  compactEmbedded = false,
+  initialMode = "signup",
   className = "",
   attributionSource = "course_register_page",
   defaultNext = algoTradingCourse.accessRoute,
   heading = "Register or log in to continue",
   subheading = "Your email comes from Supabase Auth. WhatsApp is collected only for course updates and support.",
+  modeHrefPath = algoTradingCourse.registerRoute,
+  modeHrefHash = "",
 }: AlgoTradingCourseRegisterProps = {}) {
-  const [activeMode, setActiveMode] = useState<AuthMode>("signup");
+  const [activeMode, setActiveMode] = useState<AuthMode>(initialMode);
   const [signupValues, setSignupValues] = useState(initialSignupValues);
   const [loginValues, setLoginValues] = useState(initialLoginValues);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -476,15 +493,20 @@ export default function AlgoTradingCourseRegister({
   const [courseAccessLinkIssue, setCourseAccessLinkIssue] = useState(false);
   const [signedInEmail, setSignedInEmail] = useState("");
   const supportEmail = getPublicContactDetails().email;
+  const isCompactEmbedded = embedded && compactEmbedded;
   const fieldIdPrefix = embedded ? "campaignCourse" : "course";
   const authCardClassName = [
     embedded ? "" : "depth-panel",
     "algo-course-auth-card",
     embedded ? "algo-course-auth-card-embedded" : "",
+    isCompactEmbedded ? "algo-course-auth-card-compact-embedded" : "",
     className,
   ]
     .filter(Boolean)
     .join(" ");
+  const modeHrefSeparator = modeHrefPath.includes("?") ? "&" : "?";
+  const compactLoginHref = `${modeHrefPath}${modeHrefSeparator}mode=login${modeHrefHash}`;
+  const compactSignupHref = `${modeHrefPath}${modeHrefHash}`;
 
   function getAuthCallbackReturnPath() {
     if (typeof window === "undefined") {
@@ -636,11 +658,13 @@ export default function AlgoTradingCourseRegister({
     event.preventDefault();
     setStatus(null);
 
-    const confirmPassword = sanitizeClientText(
-      event.currentTarget.querySelector<HTMLInputElement>(
-        `#${fieldIdPrefix}SignupConfirmPassword`,
-      )?.value ?? "",
-    );
+    const confirmPassword = isCompactEmbedded
+      ? signupValues.password
+      : sanitizeClientText(
+          event.currentTarget.querySelector<HTMLInputElement>(
+            `#${fieldIdPrefix}SignupConfirmPassword`,
+          )?.value ?? "",
+        );
     const whatsappResult = buildWhatsappNumber(signupValues);
     const profileErrors = validateProfile(
       signupValues.fullName,
@@ -902,7 +926,9 @@ export default function AlgoTradingCourseRegister({
   const authCard = (
     <div className={authCardClassName}>
             <div className="algo-course-auth-header">
-              <p className="eyebrow">Account Access</p>
+              {!isCompactEmbedded ? (
+                <p className="eyebrow">Account Access</p>
+              ) : null}
               <h2 className="subsection-title">{heading}</h2>
               <p className="body-compact">{subheading}</p>
             </div>
@@ -921,7 +947,9 @@ export default function AlgoTradingCourseRegister({
 
                 <div className="algo-course-auth-action-row">
                   <Button href={algoTradingCourse.accessRoute} variant="primary">
-                    Continue to lessons
+                    {isCompactEmbedded
+                      ? "Continue to My Lectures"
+                      : "Continue to lessons"}
                   </Button>
                   <Button
                     href={courseLogoutHref}
@@ -967,28 +995,32 @@ export default function AlgoTradingCourseRegister({
               </div>
             ) : (
               <>
-                <div className="algo-course-auth-tabs" role="tablist" aria-label="Course auth options">
-                  <button
-                    type="button"
-                    className={activeMode === "signup" ? "is-active" : ""}
-                    onClick={() => {
-                      setActiveMode("signup");
-                      setErrors({});
-                    }}
-                  >
-                    Sign up
-                  </button>
-                  <button
-                    type="button"
-                    className={activeMode === "login" ? "is-active" : ""}
-                    onClick={() => {
-                      setActiveMode("login");
-                      setErrors({});
-                    }}
-                  >
-                    Log in
-                  </button>
-                </div>
+                {!isCompactEmbedded ? (
+                  <div className="algo-course-auth-tabs" role="tablist" aria-label="Course auth options">
+                    <button
+                      type="button"
+                      className={activeMode === "signup" ? "is-active" : ""}
+                      onClick={() => {
+                        setActiveMode("signup");
+                        setErrors({});
+                        setStatus(null);
+                      }}
+                    >
+                      Sign up
+                    </button>
+                    <button
+                      type="button"
+                      className={activeMode === "login" ? "is-active" : ""}
+                      onClick={() => {
+                        setActiveMode("login");
+                        setErrors({});
+                        setStatus(null);
+                      }}
+                    >
+                      Log in
+                    </button>
+                  </div>
+                ) : null}
 
                 {activeMode === "signup" ? (
                   <form className="algo-course-auth-form" onSubmit={handleSignup}>
@@ -1041,6 +1073,21 @@ export default function AlgoTradingCourseRegister({
                       />
                     </div>
 
+                    {isCompactEmbedded ? (
+                      <WhatsappNumberFields
+                        idPrefix={`${fieldIdPrefix}Signup`}
+                        values={signupValues}
+                        onChange={(nextValues) =>
+                          setSignupValues((current) => ({
+                            ...current,
+                            ...nextValues,
+                          }))
+                        }
+                        errorMessage={errors.whatsappNumber}
+                        compact={isCompactEmbedded}
+                      />
+                    ) : null}
+
                     <div>
                       <label
                         className="form-label"
@@ -1069,38 +1116,42 @@ export default function AlgoTradingCourseRegister({
                       />
                     </div>
 
-                    <div>
-                      <label
-                        className="form-label"
-                        htmlFor={`${fieldIdPrefix}SignupConfirmPassword`}
-                      >
-                        Confirm password *
-                      </label>
-                      <input
-                        id={`${fieldIdPrefix}SignupConfirmPassword`}
-                        className="form-control"
-                        autoComplete="new-password"
-                        placeholder="Confirm your password"
-                        type="password"
-                        aria-describedby={`${fieldIdPrefix}SignupConfirmPassword-error`}
-                      />
-                      <FieldError
-                        id={`${fieldIdPrefix}SignupConfirmPassword-error`}
-                        message={errors.confirmPassword}
-                      />
-                    </div>
+                    {!isCompactEmbedded ? (
+                      <div>
+                        <label
+                          className="form-label"
+                          htmlFor={`${fieldIdPrefix}SignupConfirmPassword`}
+                        >
+                          Confirm password *
+                        </label>
+                        <input
+                          id={`${fieldIdPrefix}SignupConfirmPassword`}
+                          className="form-control"
+                          autoComplete="new-password"
+                          placeholder="Confirm your password"
+                          type="password"
+                          aria-describedby={`${fieldIdPrefix}SignupConfirmPassword-error`}
+                        />
+                        <FieldError
+                          id={`${fieldIdPrefix}SignupConfirmPassword-error`}
+                          message={errors.confirmPassword}
+                        />
+                      </div>
+                    ) : null}
 
-                    <WhatsappNumberFields
-                      idPrefix={`${fieldIdPrefix}Signup`}
-                      values={signupValues}
-                      onChange={(nextValues) =>
-                        setSignupValues((current) => ({
-                          ...current,
-                          ...nextValues,
-                        }))
-                      }
-                      errorMessage={errors.whatsappNumber}
-                    />
+                    {!isCompactEmbedded ? (
+                      <WhatsappNumberFields
+                        idPrefix={`${fieldIdPrefix}Signup`}
+                        values={signupValues}
+                        onChange={(nextValues) =>
+                          setSignupValues((current) => ({
+                            ...current,
+                            ...nextValues,
+                          }))
+                        }
+                        errorMessage={errors.whatsappNumber}
+                      />
+                    ) : null}
 
                     <Button
                       type="submit"
@@ -1108,9 +1159,28 @@ export default function AlgoTradingCourseRegister({
                       disabled={loadingAction === "signup"}
                     >
                       {loadingAction === "signup"
-                        ? "Creating Account..."
-                        : "Create Free Account"}
+                        ? isCompactEmbedded
+                          ? "Unlocking..."
+                          : "Creating Account..."
+                        : isCompactEmbedded
+                          ? "Unlock My 2 Free Lectures"
+                          : "Create Free Account"}
                     </Button>
+
+                    {isCompactEmbedded ? (
+                      <a
+                        className="algo-course-auth-mode-link"
+                        href={compactLoginHref}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setActiveMode("login");
+                          setErrors({});
+                          setStatus(null);
+                        }}
+                      >
+                        Already registered? Log in
+                      </a>
+                    ) : null}
                   </form>
                 ) : (
                   <form className="algo-course-auth-form" onSubmit={handleLogin}>
@@ -1185,8 +1255,25 @@ export default function AlgoTradingCourseRegister({
                     >
                       {loadingAction === "login"
                         ? "Checking Access..."
-                        : "Log In and Continue"}
+                        : isCompactEmbedded
+                          ? "Continue to My Lectures"
+                          : "Log In and Continue"}
                     </Button>
+
+                    {isCompactEmbedded ? (
+                      <a
+                        className="algo-course-auth-mode-link"
+                        href={compactSignupHref}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setActiveMode("signup");
+                          setErrors({});
+                          setStatus(null);
+                        }}
+                      >
+                        Need free access? Sign up
+                      </a>
+                    ) : null}
                   </form>
                 )}
               </>
@@ -1208,14 +1295,16 @@ export default function AlgoTradingCourseRegister({
               </div>
             ) : null}
 
-            <div className="algo-course-auth-footnote">
-              <span>Next</span>
-              <p>
-                After registration you will be sent to the protected free
-                access page.
-              </p>
-              <ArrowRight size={17} strokeWidth={1.75} aria-hidden="true" />
-            </div>
+            {!isCompactEmbedded ? (
+              <div className="algo-course-auth-footnote">
+                <span>Next</span>
+                <p>
+                  After registration you will be sent to the protected free
+                  access page.
+                </p>
+                <ArrowRight size={17} strokeWidth={1.75} aria-hidden="true" />
+              </div>
+            ) : null}
     </div>
   );
 

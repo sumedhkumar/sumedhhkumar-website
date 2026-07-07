@@ -9,7 +9,7 @@ export type CourseTestimonial = {
 };
 
 export const algoTradingCourseRoutes = {
-  landing: "/courses/algo-trading",
+  landing: "/lp/trading-automation-masterclass",
   register: "/courses/algo-trading/register",
   access: "/courses/algo-trading/access",
 } as const;
