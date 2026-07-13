@@ -6,9 +6,9 @@ import {
   getAgentSubscriptionPlans,
   getSubscriptionAgentPlan,
 } from "@/data/agent-subscription-plans";
-import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
 import { calculateFinalPrice } from "@/lib/pricing";
+import type { CryptoPaymentConfig, TradingAgentProduct } from "@/types";
 
 type CheckoutPlanClientProps = {
   product: TradingAgentProduct;
@@ -39,6 +39,15 @@ export default function CheckoutPlanClient({
   if (!selectedPlan) {
     return null;
   }
+
+  const defaultPricing = calculateFinalPrice(
+    product.slug,
+    selectedPlan.id,
+    "EARLYACCESS",
+  );
+  const defaultPayablePrice = defaultPricing.ok
+    ? defaultPricing.finalPriceUsd
+    : selectedPlan.priceUsd;
 
   const checkoutProduct = {
     ...product,

@@ -1,6 +1,9 @@
-name: Build legacy Hostinger static output
+name: Build Hostinger static output
 
 on:
+  push:
+    branches:
+      - vyntegra-v2
   workflow_dispatch:
 
 permissions:
@@ -8,6 +11,7 @@ permissions:
 
 jobs:
   build-static:
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[hostinger-static]') }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +25,17 @@ jobs:
 
       - run: npm ci
 
-      - run: node scripts/build-hostinger-static.mjs
+      - name: Prepare encrypted build environment
+        shell: pwsh
+        env:
+          HOSTINGER_ENV_FILE: ${{ secrets.HOSTINGER_ENV_FILE }}
+        run: |
+          if (-not $env:HOSTINGER_ENV_FILE) {
+            throw "HOSTINGER_ENV_FILE secret is not configured."
+          }
+          Set-Content -LiteralPath "$env:RUNNER_TEMP\hostinger.env" -Value $env:HOSTINGER_ENV_FILE -NoNewline
+
+      - run: node scripts/build-hostinger-static.mjs --env-file "$env:RUNNER_TEMP\hostinger.env"
 
       - name: Sync static output to repository root
         shell: pwsh
@@ -37,12 +51,16 @@ jobs:
             "_next",
             "_not-found",
             "404",
+            "admin",
             "ai-trading-agents",
+            "algo-trading-course",
             "contact",
+            "courses",
             "custom-solutions",
             "experts",
             "icon.svg",
             "images",
+            "lp",
             "index.html",
             "index.txt",
             "payments",
@@ -64,7 +82,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f .htaccess 404.html __next.*.txt _next _not-found 404 ai-trading-agents contact custom-solutions experts icon.svg images index.html index.txt payments privacy refund-policy shipping-delivery terms
+          git add -f .htaccess 404.html __next.*.txt _next _not-found 404 admin ai-trading-agents algo-trading-course contact courses custom-solutions experts icon.svg images lp index.html index.txt payments privacy refund-policy shipping-delivery terms
           if (-not (git diff --cached --quiet)) {
             git commit -m "Build Hostinger static output [hostinger-static]"
             git push
