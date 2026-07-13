@@ -269,10 +269,9 @@ export default function AlgoTradingCourseCampaignLanding() {
         <div className="cvlp-shell cvlp-hero-inner">
           <div className="cvlp-hero-copy">
             <p className="cvlp-badge">Free preview access</p>
-            <h1>This is not another indicator class.</h1>
+            <h1>Stop Watching Charts. Start Building Trading Systems.</h1>
             <p className="cvlp-hero-sub">
-              Unlock 2 free lectures and see the AI automation workflow behind
-              trading ideas, rules, platform execution, and review.
+              Learn to build, backtest, and deploy automated trading strategies using industry-standard tools—without spending years figuring it out on your own.
             </p>
           </div>
 
@@ -348,7 +347,6 @@ export default function AlgoTradingCourseCampaignLanding() {
                 width={320}
                 height={400}
                 className="cvlp-founder-photo"
-                unoptimized
               />
             </div>
             <div className="cvlp-founder-copy">

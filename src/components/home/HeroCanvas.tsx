@@ -300,7 +300,9 @@ export default function HeroCanvas() {
         ctx.fill();
       }
 
-      animRef.current = requestAnimationFrame(draw);
+      if (!reducedMotion.current) {
+        animRef.current = requestAnimationFrame(draw);
+      }
     };
 
     animRef.current = requestAnimationFrame(draw);

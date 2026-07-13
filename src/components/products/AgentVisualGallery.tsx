@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Maximize2, Minus, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { TradingAgentProduct } from "@/types";
+import { getImageDimensions } from "@/lib/image-metadata";
 
 export default function AgentVisualGallery({
   product,
@@ -93,14 +95,38 @@ export default function AgentVisualGallery({
     setOpenImageIndex(nextIndex);
   }
 
+  const fallbackDimensions = getImageDimensions(product.image, {
+    width: 1600,
+    height: 913,
+  });
+
   if (!galleryImages?.length || galleryUnavailable) {
     return (
       <section className="agent-visual-gallery agent-visual-gallery-fallback" aria-label={`${product.name} product visual`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={product.image} alt={`${product.name} product visual`} />
+        <Image
+          src={product.image}
+          alt={`${product.name} product visual`}
+          width={fallbackDimensions.width}
+          height={fallbackDimensions.height}
+          sizes="(max-width: 1024px) 100vw, 420px"
+          priority
+        />
       </section>
     );
   }
+
+  const activeImage = galleryImages[activeImageIndex] ?? product.image;
+  const activeImageDimensions = getImageDimensions(
+    activeImage,
+    fallbackDimensions,
+  );
+  const currentOpenImage = openImageIndex === null
+    ? undefined
+    : galleryImages[openImageIndex];
+  const openImageDimensions = getImageDimensions(
+    currentOpenImage,
+    activeImageDimensions,
+  );
 
   return (
     <>
@@ -116,10 +142,13 @@ export default function AgentVisualGallery({
             onClick={() => openImage(activeImageIndex)}
             aria-label={`Open ${galleryImageAlt?.[activeImageIndex] ?? `${product.name} product image ${activeImageIndex + 1}`} at full size`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={galleryImages[activeImageIndex]}
+            <Image
+              src={activeImage}
               alt={galleryImageAlt?.[activeImageIndex] ?? `${product.name} product image ${activeImageIndex + 1}`}
+              width={activeImageDimensions.width}
+              height={activeImageDimensions.height}
+              sizes="(max-width: 1024px) 100vw, 420px"
+              priority
               onError={() => setGalleryUnavailable(true)}
             />
             <span className="agent-gallery-expand" aria-hidden="true">
@@ -129,23 +158,32 @@ export default function AgentVisualGallery({
         </figure>
         {imageCount > 1 ? (
           <div className="agent-gallery-thumbnails" aria-label={`${product.name} image selection`}>
-            {galleryImages.map((image, index) => (
-              <button
-                key={image}
-                type="button"
-                className={`agent-gallery-thumbnail${activeImageIndex === index ? " agent-gallery-thumbnail-active" : ""}`}
-                onClick={() => setActiveImageIndex(index)}
-                aria-label={`Show ${galleryImageAlt?.[index] ?? `${product.name} product image ${index + 1}`}`}
-                aria-pressed={activeImageIndex === index}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image}
-                  alt=""
-                  onError={() => setGalleryUnavailable(true)}
-                />
-              </button>
-            ))}
+            {galleryImages.map((image, index) => {
+              const thumbnailDimensions = getImageDimensions(
+                image,
+                fallbackDimensions,
+              );
+
+              return (
+                <button
+                  key={image}
+                  type="button"
+                  className={`agent-gallery-thumbnail${activeImageIndex === index ? " agent-gallery-thumbnail-active" : ""}`}
+                  onClick={() => setActiveImageIndex(index)}
+                  aria-label={`Show ${galleryImageAlt?.[index] ?? `${product.name} product image ${index + 1}`}`}
+                  aria-pressed={activeImageIndex === index}
+                >
+                  <Image
+                    src={image}
+                    alt=""
+                    width={thumbnailDimensions.width}
+                    height={thumbnailDimensions.height}
+                    sizes="96px"
+                    onError={() => setGalleryUnavailable(true)}
+                  />
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </section>
@@ -237,11 +275,13 @@ export default function AgentVisualGallery({
               </>
             ) : null}
             <div className="agent-image-dialog-canvas">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={galleryImages[openImageIndex]}
+              <Image
+                src={currentOpenImage ?? activeImage}
                 alt={galleryImageAlt?.[openImageIndex] ?? `${product.name} product image ${openImageIndex + 1}`}
-                style={{ width: `${zoom * 100}%` }}
+                width={openImageDimensions.width}
+                height={openImageDimensions.height}
+                sizes="100vw"
+                style={{ width: `${zoom * 100}%`, height: "auto" }}
               />
             </div>
           </div>

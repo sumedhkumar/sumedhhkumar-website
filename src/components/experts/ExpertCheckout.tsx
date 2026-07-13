@@ -11,11 +11,15 @@ import {
 } from "lucide-react";
 import type { CalComSlot, Expert, ExpertSession } from "@/types";
 import { formatIstDateTime } from "@/lib/time";
-import {
-  PaymentResultDialog,
-  RazorpayVerificationOverlay,
-  type PaymentDialogContent,
-} from "@/components/payments/RazorpayPaymentDialogs";
+import dynamic from "next/dynamic";
+import type { PaymentDialogContent } from "@/components/payments/RazorpayPaymentDialogs";
+
+const PaymentResultDialog = dynamic(() =>
+  import("@/components/payments/RazorpayPaymentDialogs").then((mod) => mod.PaymentResultDialog)
+);
+const RazorpayVerificationOverlay = dynamic(() =>
+  import("@/components/payments/RazorpayPaymentDialogs").then((mod) => mod.RazorpayVerificationOverlay)
+);
 import Button from "@/components/ui/Button";
 
 type PaymentFlowState =

@@ -19,7 +19,7 @@ export const site = {
   name: "Vyntegra",
   founderName: "Sumedhhkumar Bhalerao",
   founderSubtitle: "Founder, Vyntegra | Data Scientist",
-  founderPhoto: "/images/sumedhhkumar-bhalerao-avatar.png",
+  founderPhoto: "/images/optimized/sumedhhkumar-bhalerao-avatar.webp",
   founderBio:
     "Sumedhhkumar Bhalerao is a data scientist and founder of Vyntegra, shaped by hands-on work across generative AI, conversational AI, NLP, machine learning, SQL, cloud platforms, and operations-led business systems. His professional experience includes data science work at Builder.ai, supply-chain analysis at Reliance Retail, data-science training and product demonstrations at Skillcart E-Learning, and operations roles across EATCLUB Brands and RIVIGO.",
   founderProfile:

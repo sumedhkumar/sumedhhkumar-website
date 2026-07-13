@@ -55,7 +55,7 @@ export default function AlgoTradingCourseAccess({
   registrationEmail = "",
   registrationFullName = "",
 }: AlgoTradingCourseAccessProps) {
-  const accessLessons = algoTradingCourse.accessLessons.slice(0, 2);
+  const accessLessons = algoTradingCourse.accessLessons.slice(0, 25);
   const portalLessons = accessLessons.map((lesson, index) => ({
     title: lesson.title,
     copy: lesson.copy,
@@ -85,65 +85,41 @@ export default function AlgoTradingCourseAccess({
 
   return (
     <main className="algo-course-page algo-course-access-page">
-      <section className="section algo-course-access-hero">
-        <div className="container algo-course-access-hero-stack">
-          <div className="algo-course-hero-copy">
+      {/* ── Compact LMS Header ── */}
+      <header className="algo-course-lms-header">
+        <div className="container algo-course-lms-header-inner">
+          <div className="algo-course-lms-header-left">
             <p className="eyebrow">{algoTradingCourse.name}</p>
-            <h1 className="hero-title">Your free lesson portal is ready.</h1>
-            <p className="body-large">
-              Start with the roadmap, continue to the first teaching session,
-              and mark each lesson complete as you go.
-            </p>
             <AlgoTradingCourseLeadGreeting
               email={registrationEmail}
               fullName={registrationFullName}
             />
-            <div className="algo-course-access-hero-actions">
-              <Button href="#course-lessons" variant="primary">
-                Start Lecture 1
-                <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
-              </Button>
-            </div>
-            <AlgoTradingCourseAccessLogout email={registrationEmail} />
           </div>
-
-          <div className="algo-course-access-summary" aria-label="Student access summary">
-            <span>Student Access</span>
-            <strong>Lecture 1 - Course Roadmap</strong>
-            <strong>Lecture 2 - First Teaching Session</strong>
-            <span>Free lessons unlocked</span>
-          </div>
+          <AlgoTradingCourseAccessLogout email={registrationEmail} />
         </div>
-      </section>
+      </header>
 
-      <section id="course-lessons" className="section algo-course-access-lessons-section">
-        <div className="container">
-          <div className="section-intro">
-            <p className="eyebrow">Lesson Watch Area</p>
-            <h2 className="section-title">Watch Lecture 1 and Lecture 2</h2>
-            <p className="body-standard">
-              Follow the compact path, open the lessons, and save your progress
-              on this device.
-            </p>
-          </div>
+      {/* ── Two-Column LMS Body ── */}
+      <div className="container algo-course-lms-body">
+        <AlgoTradingCourseAccessLessonPortal
+          lessons={portalLessons}
+          whatsappGroupUrl={safeWhatsappGroupUrl}
+        />
 
-          <AlgoTradingCourseAccessLessonPortal lessons={portalLessons} />
-        </div>
-      </section>
-
-      <section className="section algo-course-access-next-section">
-        <div className="container">
-          <div className="algo-course-access-next-band">
-            <div className="algo-course-access-section-heading">
-              <BookOpenCheck size={22} strokeWidth={1.75} aria-hidden="true" />
+        {/* ── Below-fold content inside the right column space ── */}
+        <div className="algo-course-lms-below-fold">
+          {/* After Watching */}
+          <section className="algo-course-lms-section-card">
+            <div className="algo-course-lms-section-heading">
+              <BookOpenCheck size={20} strokeWidth={1.75} aria-hidden="true" />
               <div>
                 <p className="eyebrow">After Watching</p>
-                <h2 className="subsection-title">After both lessons, choose your next step</h2>
+                <h2 className="subsection-title">After the lessons, choose your next step</h2>
               </div>
             </div>
             <ul className="algo-course-access-next-list">
               <li>
-                Mark both lessons complete when you finish watching them.
+                Mark the lessons complete when you finish watching them.
               </li>
               <li>
                 Join updates or contact support if you need help with access.
@@ -153,15 +129,16 @@ export default function AlgoTradingCourseAccess({
                 learning structure.
               </li>
             </ul>
-          </div>
+          </section>
 
-          <div className="algo-course-access-full-course-cta">
+          {/* Full Course CTA */}
+          <section className="algo-course-lms-section-card algo-course-lms-full-course">
             <div>
               <p className="eyebrow">Full Program</p>
               <h2 className="subsection-title">
                 Want to continue with the full 3-month weekend program?
               </h2>
-              <ul>
+              <ul className="algo-course-lms-tag-list">
                 <li>3-month weekend learning structure</li>
                 <li>2-hour sessions</li>
                 <li>Recordings and updates</li>
@@ -175,102 +152,98 @@ export default function AlgoTradingCourseAccess({
               Ask about full course access
               <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
             </Button>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      <section className="section algo-course-access-support-section">
-        <div className="container">
-          <div
-            className={`algo-course-access-support-band${
-              hasWhatsappSupport ? "" : " is-email-only"
-            }`}
-          >
-            {safeWhatsappGroupUrl ? (
-              <div className="algo-course-access-support-item">
+          {/* Support */}
+          <section className="algo-course-lms-support-section">
+            <div
+              className={`algo-course-lms-support-band${
+                hasWhatsappSupport ? "" : " is-email-only"
+              }`}
+            >
+              {safeWhatsappGroupUrl ? (
+                <div className="algo-course-lms-support-item">
+                  <MessageCircle
+                    size={22}
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="eyebrow">Updates</p>
+                    <h3 className="subsection-title">Join lesson updates</h3>
+                    <p className="body-standard">
+                      Get lesson reminders and course announcements in the
+                      student WhatsApp group.
+                    </p>
+                  </div>
+                  <Button
+                    href={safeWhatsappGroupUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="secondary"
+                  >
+                    Join WhatsApp group
+                  </Button>
+                </div>
+              ) : null}
+
+              {safeWhatsappContactUrl ? (
+                <div className="algo-course-lms-support-item">
+                  <MessageCircle
+                    size={22}
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="eyebrow">Help</p>
+                    <h3 className="subsection-title">Message support</h3>
+                    <p className="body-standard">
+                      Ask for help if you are unable to open lessons or need
+                      guidance on the next step.
+                    </p>
+                  </div>
+                  <Button
+                    href={safeWhatsappContactUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="secondary"
+                  >
+                    Message support
+                  </Button>
+                </div>
+              ) : null}
+
+              <div className="algo-course-lms-support-item">
                 <MessageCircle
-                  size={24}
+                  size={22}
                   strokeWidth={1.75}
                   aria-hidden="true"
                 />
                 <div>
-                  <p className="eyebrow">Updates</p>
-                  <h2 className="subsection-title">Join lesson updates</h2>
+                  <p className="eyebrow">Email Support</p>
+                  <h3 className="subsection-title">
+                    {hasWhatsappSupport
+                      ? "Prefer email?"
+                      : "Need help with lesson access?"}
+                  </h3>
                   <p className="body-standard">
-                    Get lesson reminders and course announcements in the
-                    student WhatsApp group.
+                    Email Vyntegra support for access help, lesson updates, or
+                    questions about the course path.
                   </p>
+                  {supportEmail ? (
+                    <p className="body-compact algo-course-support-email">
+                      {supportEmail}
+                    </p>
+                  ) : null}
                 </div>
-                <Button
-                  href={safeWhatsappGroupUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="secondary"
-                >
-                  Join WhatsApp group
-                </Button>
-              </div>
-            ) : null}
-
-            {safeWhatsappContactUrl ? (
-              <div className="algo-course-access-support-item">
-                <MessageCircle
-                  size={24}
-                  strokeWidth={1.75}
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="eyebrow">Help</p>
-                  <h2 className="subsection-title">Message support</h2>
-                  <p className="body-standard">
-                    Ask for help if you are unable to open lessons or need
-                    guidance on the next step.
-                  </p>
-                </div>
-                <Button
-                  href={safeWhatsappContactUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="secondary"
-                >
-                  Message support
-                </Button>
-              </div>
-            ) : null}
-
-            <div className="algo-course-access-support-item">
-              <MessageCircle
-                size={24}
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
-              <div>
-                <p className="eyebrow">Email Support</p>
-                <h2 className="subsection-title">
-                  {hasWhatsappSupport
-                    ? "Prefer email?"
-                    : "Need help with lesson access?"}
-                </h2>
-                <p className="body-standard">
-                  Email Vyntegra support for access help, lesson updates, or
-                  questions about the course path.
-                </p>
-                {supportEmail ? (
-                  <p className="body-compact algo-course-support-email">
-                    {supportEmail}
-                  </p>
-                ) : null}
-              </div>
                 <Button href={supportHref} variant="secondary">
                   Email support
                 </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      <section className="section algo-course-disclaimer-section">
-        <div className="container">
+          {/* Disclaimer */}
           <div className="algo-course-disclaimer">
             <ShieldCheck
               size={22}
@@ -280,7 +253,7 @@ export default function AlgoTradingCourseAccess({
             <p>{algoTradingCourse.disclaimer}</p>
           </div>
         </div>
-      </section>
+      </div>
     </main>
   );
 }

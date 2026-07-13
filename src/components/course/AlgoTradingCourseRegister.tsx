@@ -996,7 +996,12 @@ export default function AlgoTradingCourseRegister({
             ) : (
               <>
                 {!isCompactEmbedded ? (
-                  <div className="algo-course-auth-tabs" role="tablist" aria-label="Course auth options">
+                  <div
+                    className="algo-course-auth-tabs"
+                    role="tablist"
+                    aria-label="Course auth options"
+                    style={{ position: "relative", zIndex: 100 }}
+                  >
                     <button
                       type="button"
                       className={activeMode === "signup" ? "is-active" : ""}
@@ -1004,6 +1009,17 @@ export default function AlgoTradingCourseRegister({
                         setActiveMode("signup");
                         setErrors({});
                         setStatus(null);
+                      }}
+                      onPointerDown={() => {
+                        setActiveMode("signup");
+                        setErrors({});
+                        setStatus(null);
+                      }}
+                      style={{
+                        touchAction: "manipulation",
+                        width: "100%",
+                        height: "100%",
+                        cursor: "pointer",
                       }}
                     >
                       Sign up
@@ -1015,6 +1031,17 @@ export default function AlgoTradingCourseRegister({
                         setActiveMode("login");
                         setErrors({});
                         setStatus(null);
+                      }}
+                      onPointerDown={() => {
+                        setActiveMode("login");
+                        setErrors({});
+                        setStatus(null);
+                      }}
+                      style={{
+                        touchAction: "manipulation",
+                        width: "100%",
+                        height: "100%",
+                        cursor: "pointer",
                       }}
                     >
                       Log in

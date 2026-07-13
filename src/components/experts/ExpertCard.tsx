@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import type { Expert } from "@/types";
+import { getImageDimensions } from "@/lib/image-metadata";
 import Button from "@/components/ui/Button";
 
 function formatUsd(value: number) {
@@ -15,6 +17,10 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
   const session = expert.sessions.find(
     (item) => item.active && item.durationMinutes === 30,
   );
+  const photoDimensions = getImageDimensions(expert.professionalPhoto, {
+    width: 900,
+    height: 900,
+  });
 
   return (
     <article
@@ -24,11 +30,13 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
       <div className="expert-card-avatar-stage">
         <div className="expert-avatar-ring expert-card-avatar-ring">
           {expert.professionalPhoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               className="expert-avatar-image expert-card-avatar-image"
               src={expert.professionalPhoto}
               alt={`${expert.fullName} professional photograph`}
+              width={photoDimensions.width}
+              height={photoDimensions.height}
+              sizes="(max-width: 768px) 64vw, 280px"
             />
           ) : (
             <div className="expert-avatar-placeholder expert-card-avatar-image">

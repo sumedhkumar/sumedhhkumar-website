@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   Award,
@@ -9,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { experts } from "@/data/experts";
+import { getImageDimensions } from "@/lib/image-metadata";
 import ExpertProfileSummary from "@/components/experts/ExpertProfileSummary";
 import SocialIcon from "@/components/ui/SocialIcon";
 
@@ -160,6 +162,11 @@ export default async function ExpertProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  const photoDimensions = getImageDimensions(expert.professionalPhoto, {
+    width: 900,
+    height: 900,
+  });
+
   return (
     <main className="listing-page expert-page">
       <div className="listing-container expert-shell">
@@ -168,11 +175,14 @@ export default async function ExpertProfilePage({ params }: PageProps) {
             <div className="expert-identity-lockup">
               <div className="expert-avatar-ring">
                 {expert.professionalPhoto ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={expert.professionalPhoto}
                     alt={`${expert.fullName} professional photograph`}
+                    width={photoDimensions.width}
+                    height={photoDimensions.height}
+                    sizes="(max-width: 768px) 48vw, 180px"
                     className="expert-avatar-image"
+                    priority
                   />
                 ) : (
                   <div className="expert-avatar-placeholder">

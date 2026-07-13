@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: false,
       },
+      {
+        source: "/lp",
+        destination: "/lp/trading-automation-masterclass",
+        permanent: false,
+      },
     ];
   },
 };

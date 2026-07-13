@@ -1,6 +1,10 @@
+"use client";
+
 import { ArrowRight, Code2 } from "lucide-react";
 import Button from "@/components/ui/Button";
-import HeroCanvas from "@/components/home/HeroCanvas";
+import dynamic from "next/dynamic";
+
+const HeroCanvas = dynamic(() => import("@/components/home/HeroCanvas"), { ssr: false });
 
 export default function Hero() {
   return (

@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Circle,
+  Clock,
   ExternalLink,
+  MessageCircle,
   PlayCircle,
 } from "lucide-react";
 import Image from "next/image";
@@ -24,6 +26,7 @@ type AccessLesson = {
 
 type AlgoTradingCourseAccessLessonPortalProps = {
   lessons: AccessLesson[];
+  whatsappGroupUrl?: string;
 };
 
 const progressStorageKey = "vyntegra-algo-course-free-lesson-progress-v1";
@@ -45,11 +48,13 @@ function readStoredProgress(lessonCount: number) {
 
 export default function AlgoTradingCourseAccessLessonPortal({
   lessons,
+  whatsappGroupUrl = "",
 }: AlgoTradingCourseAccessLessonPortalProps) {
   const [completedLessons, setCompletedLessons] = useState<boolean[]>(
     () => Array.from({ length: lessons.length }, () => false),
   );
   const [isHydrated, setIsHydrated] = useState(false);
+  const [activeLessonIndex, setActiveLessonIndex] = useState(0);
 
   useEffect(() => {
     const progressTimer = window.setTimeout(() => {
@@ -81,136 +86,244 @@ export default function AlgoTradingCourseAccessLessonPortal({
     );
   }
 
+  const progressPercent = lessons.length > 0
+    ? Math.round((completedCount / lessons.length) * 100)
+    : 0;
+
+  const activeLesson = lessons[activeLessonIndex];
+  const activeIsComplete = completedLessons[activeLessonIndex] === true;
+  const activeCleanTitle = activeLesson
+    ? activeLesson.title.replace(/^Lecture\s+\d+\s+-\s+/, "")
+    : "";
+  const activeHasVideoUrl = Boolean(activeLesson?.videoUrl);
+  const activeHasEmbedUrl = Boolean(activeLesson?.embedUrl);
+
   return (
-    <div className="algo-course-access-portal">
-      <div className="algo-course-access-progress-shell">
-        <div className="algo-course-access-progress-copy">
-          <p className="eyebrow">Progress Path</p>
-          <h2 className="subsection-title">Complete the free lessons in order</h2>
-          <p className="body-standard">
-            {completedCount} of {lessons.length} lessons completed
-          </p>
+    <div className="algo-course-lms-layout">
+      {/* ── Left Column: Course Navigation ── */}
+      <aside className="algo-course-lms-nav">
+        <div className="algo-course-lms-nav-scroll">
+          <div className="algo-course-lms-nav-header">
+            <p className="eyebrow">Course Navigation</p>
+            <h2 className="algo-course-lms-nav-title">Free Lessons</h2>
+          </div>
+
+          {/* Progress bar */}
+          <div className="algo-course-lms-progress-section">
+            <div className="algo-course-lms-progress-label">
+              <span>Course Progress</span>
+              <strong>{progressPercent}%</strong>
+            </div>
+            <div className="algo-course-lms-progress-track">
+              <div
+                className="algo-course-lms-progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="algo-course-lms-progress-count">
+              {completedCount} of {lessons.length} lessons completed
+            </p>
+          </div>
+
+          {/* Lesson list */}
+          <nav className="algo-course-lms-lesson-list" aria-label="Lesson navigation">
+            {lessons.map((lesson, index) => {
+              const isComplete = completedLessons[index] === true;
+              const isActive = activeLessonIndex === index;
+              const cleanTitle = lesson.title.replace(/^Lecture\s+\d+\s+-\s+/, "");
+
+              return (
+                <button
+                  key={lesson.title}
+                  type="button"
+                  className={[
+                    "algo-course-lms-lesson-item",
+                    isActive ? "is-active" : "",
+                    isComplete ? "is-complete" : "",
+                  ].filter(Boolean).join(" ")}
+                  onClick={() => setActiveLessonIndex(index)}
+                  aria-current={isActive ? "true" : undefined}
+                >
+                  <span className="algo-course-lms-lesson-number">
+                    {isComplete ? (
+                      <CheckCircle2 size={16} strokeWidth={1.8} aria-hidden="true" />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
+                  </span>
+                  <span className="algo-course-lms-lesson-info">
+                    <span className="algo-course-lms-lesson-kicker">Lecture {index + 1}</span>
+                    <span className="algo-course-lms-lesson-title">{cleanTitle}</span>
+                    {lesson.duration ? (
+                      <span className="algo-course-lms-lesson-duration">
+                        <Clock size={12} aria-hidden="true" />
+                        {lesson.duration}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="algo-course-lms-lesson-status">
+                    {isActive && !isComplete ? (
+                      <PlayCircle size={18} strokeWidth={1.6} aria-hidden="true" />
+                    ) : isComplete ? (
+                      <CheckCircle2 size={18} strokeWidth={1.6} aria-hidden="true" />
+                    ) : (
+                      <Circle size={18} strokeWidth={1.6} aria-hidden="true" />
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* Informational step */}
+            <div className="algo-course-lms-lesson-item algo-course-lms-step-info">
+              <span className="algo-course-lms-lesson-number">
+                <span>{lessons.length + 1}</span>
+              </span>
+              <span className="algo-course-lms-lesson-info">
+                <span className="algo-course-lms-lesson-kicker">Next Step</span>
+                <span className="algo-course-lms-lesson-title">Join updates or ask questions</span>
+              </span>
+            </div>
+          </nav>
         </div>
 
-        <ol className="algo-course-access-progress-list" aria-label="Lesson progress path">
-          {lessons.map((lesson, index) => {
-            const isComplete = completedLessons[index] === true;
-
-            return (
-              <li key={lesson.title} className={isComplete ? "is-complete" : undefined}>
-                <span>{isComplete ? <CheckCircle2 size={17} aria-hidden="true" /> : index + 1}</span>
-                <p>
-                  Watch Lecture {index + 1}: {lesson.title.replace(/^Lecture\s+\d+\s+-\s+/, "")}
-                </p>
-              </li>
-            );
-          })}
-          <li>
-            <span>3</span>
-            <p>Join updates or ask questions</p>
-          </li>
-        </ol>
-      </div>
-
-      <div className="algo-course-access-video-grid">
-        {lessons.map((lesson, index) => {
-          const isComplete = completedLessons[index] === true;
-          const cleanTitle = lesson.title.replace(/^Lecture\s+\d+\s+-\s+/, "");
-          const hasVideoUrl = Boolean(lesson.videoUrl);
-          const hasEmbedUrl = Boolean(lesson.embedUrl);
-
-          return (
-            <article
-              key={lesson.title}
-              className={`standard-card algo-course-access-video-card${isComplete ? " is-complete" : ""}`}
+        {whatsappGroupUrl && (
+          <div className="algo-course-lms-nav-footer">
+            <Button 
+              href={whatsappGroupUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="algo-course-lms-whatsapp-btn"
             >
-              <div className="algo-course-access-video-thumb">
-                {hasEmbedUrl ? (
-                  <iframe
-                    src={lesson.embedUrl}
-                    title={`${lesson.title} video`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
+              <MessageCircle size={18} strokeWidth={2} aria-hidden="true" />
+              Join WhatsApp Community
+            </Button>
+          </div>
+        )}
+      </aside>
+
+      {/* ── Right Column: Learning Area ── */}
+      <main className="algo-course-lms-main">
+        {/* Large video player */}
+        {activeLesson ? (
+          <>
+            <div className="algo-course-lms-video-frame">
+              {activeHasEmbedUrl ? (
+                <iframe
+                  src={activeLesson.embedUrl}
+                  title={`${activeLesson.title} video`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <>
+                  <Image
+                    src={activeLesson.thumbnail.src}
+                    alt={activeLesson.thumbnail.alt}
+                    width={720}
+                    height={420}
+                    priority
                   />
+                  <div className="algo-course-lms-video-placeholder">
+                    <PlayCircle size={48} strokeWidth={1.4} aria-hidden="true" />
+                    <span>
+                      Lesson video will appear here when configured.
+                    </span>
+                  </div>
+                </>
+              )}
+
+              <span className="algo-course-lms-status-badge">
+                {activeIsComplete ? (
+                  <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
                 ) : (
-                  <>
-                    <Image
-                      src={lesson.thumbnail.src}
-                      alt={lesson.thumbnail.alt}
-                      width={720}
-                      height={420}
-                      unoptimized
-                    />
-                    <div className="algo-course-access-video-placeholder">
-                      <PlayCircle size={34} strokeWidth={1.65} aria-hidden="true" />
-                      <span>
-                        Lesson video will appear here when configured.
-                      </span>
-                    </div>
-                  </>
+                  <Circle size={15} strokeWidth={1.8} aria-hidden="true" />
                 )}
-                <span className="algo-course-access-status-badge">
-                  {isComplete ? (
-                    <CheckCircle2 size={15} strokeWidth={1.8} aria-hidden="true" />
-                  ) : (
-                    <Circle size={15} strokeWidth={1.8} aria-hidden="true" />
-                  )}
-                  {isComplete ? "Completed" : "Unlocked"}
-                </span>
+                {activeIsComplete ? "Completed" : "Unlocked"}
+              </span>
+            </div>
+
+            {/* Lesson information */}
+            <div className="algo-course-lms-lesson-detail">
+              <div className="algo-course-lms-lesson-detail-header">
+                <div>
+                  <span className="algo-course-card-kicker">Lecture {activeLessonIndex + 1}</span>
+                  <h2 className="algo-course-lms-lesson-detail-title">{activeCleanTitle}</h2>
+                </div>
+                <div className="algo-course-lms-lesson-meta-row">
+                  <span>Instructor: <strong>Sumedh Kumar</strong></span>
+                  {activeLesson.duration ? (
+                    <span>
+                      <Clock size={13} aria-hidden="true" />
+                      {activeLesson.duration}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <p className="body-standard">{activeLesson.copy}</p>
+
+              {/* Inline progress */}
+              <div className="algo-course-lms-inline-progress">
+                <div className="algo-course-lms-progress-label">
+                  <span>Course Progress</span>
+                  <strong>{progressPercent}%</strong>
+                </div>
+                <div className="algo-course-lms-progress-track">
+                  <div
+                    className="algo-course-lms-progress-fill"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <p className="algo-course-lms-progress-count">
+                  {completedCount} of {lessons.length} lessons completed
+                </p>
               </div>
 
-              <div className="algo-course-access-video-body">
-                <div className="algo-course-access-lesson-meta">
-                  <span className="algo-course-card-kicker">Lecture {index + 1}</span>
-                  {lesson.duration ? <span>{lesson.duration}</span> : null}
-                </div>
-                <h3 className="card-title">{cleanTitle}</h3>
-                <p className="body-compact">{lesson.copy}</p>
-                <div className="algo-course-access-video-actions">
-                  {hasVideoUrl && !hasEmbedUrl ? (
-                    <Button
-                      href={lesson.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="primary"
-                    >
-                      <PlayCircle size={17} strokeWidth={1.8} aria-hidden="true" />
-                      Watch lesson
-                    </Button>
-                  ) : null}
-                  {hasVideoUrl && hasEmbedUrl ? (
-                    <Button
-                      href={lesson.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="secondary"
-                    >
-                      <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
-                      Open in new tab
-                    </Button>
-                  ) : (
-                    hasVideoUrl ? null : (
-                      <p className="algo-course-access-video-note">
-                        The lesson slot is ready. The video will appear here
-                        when it is available.
-                      </p>
-                    )
-                  )}
+              {/* Actions */}
+              <div className="algo-course-lms-actions">
+                {activeHasVideoUrl && !activeHasEmbedUrl ? (
                   <Button
-                    type="button"
-                    variant={isComplete ? "secondary" : "primary"}
-                    className="algo-course-access-complete-button"
-                    onClick={() => toggleLesson(index)}
+                    href={activeLesson.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="primary"
                   >
-                    <CheckCircle2 size={17} strokeWidth={1.8} aria-hidden="true" />
-                    {isComplete ? "Completed" : "Mark as complete"}
+                    <PlayCircle size={17} strokeWidth={1.8} aria-hidden="true" />
+                    Watch lesson
                   </Button>
-                </div>
+                ) : null}
+                {activeHasVideoUrl && activeHasEmbedUrl ? (
+                  <Button
+                    href={activeLesson.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="secondary"
+                  >
+                    <ExternalLink size={16} strokeWidth={1.8} aria-hidden="true" />
+                    Open in new tab
+                  </Button>
+                ) : (
+                  activeHasVideoUrl ? null : (
+                    <p className="algo-course-lms-video-note">
+                      The lesson slot is ready. The video will appear here
+                      when it is available.
+                    </p>
+                  )
+                )}
+                <Button
+                  type="button"
+                  variant={activeIsComplete ? "secondary" : "primary"}
+                  className="algo-course-lms-complete-btn"
+                  onClick={() => toggleLesson(activeLessonIndex)}
+                >
+                  <CheckCircle2 size={17} strokeWidth={1.8} aria-hidden="true" />
+                  {activeIsComplete ? "Completed" : "Mark as complete"}
+                </Button>
               </div>
-            </article>
-          );
-        })}
-      </div>
+            </div>
+          </>
+        ) : null}
+      </main>
     </div>
   );
 }

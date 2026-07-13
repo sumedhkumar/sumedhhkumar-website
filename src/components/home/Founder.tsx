@@ -1,18 +1,27 @@
+import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/data/site";
+import { getImageDimensions } from "@/lib/image-metadata";
 import SectionIntro from "@/components/ui/SectionIntro";
 import SocialIcon from "@/components/ui/SocialIcon";
 
 export default function Founder() {
+  const founderPhotoDimensions = getImageDimensions(site.founderPhoto, {
+    width: 900,
+    height: 900,
+  });
+
   return (
     <section id="founder" className="section section-bg-primary">
       <div className="container founder-grid">
         <div className="founder-portrait expert-card-profile-treatment">
           <div className="expert-avatar-ring expert-card-avatar-ring">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={site.founderPhoto}
               alt={`${site.founderName} professional portrait`}
+              width={founderPhotoDimensions.width}
+              height={founderPhotoDimensions.height}
+              sizes="(max-width: 768px) 70vw, 320px"
               className="expert-avatar-image expert-card-avatar-image"
             />
           </div>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ArrowRight, CheckCircle2, Cpu } from "lucide-react";
 import type { TradingAgentProduct } from "@/types";
 import {
@@ -5,6 +6,7 @@ import {
   isSubscriptionAgentSlug,
 } from "@/data/agent-subscription-plans";
 import { calculateFinalPrice } from "@/lib/pricing";
+import { getImageDimensions } from "@/lib/image-metadata";
 import Button from "@/components/ui/Button";
 
 function formatUsd(value: number) {
@@ -26,16 +28,22 @@ export default function AgentCard({ product }: { product: TradingAgentProduct })
   const earlyAccessPrice = startingPlan
     ? calculateFinalPrice(product.slug, startingPlan.id, "EARLYACCESS")
     : null;
+  const imageDimensions = getImageDimensions(product.image, {
+    width: 1600,
+    height: 913,
+  });
 
   return (
     <article className="standard-card clickable-card agent-showcase-card agent-catalog-card">
       <div className="agent-card-visual">
         {product.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             className="agent-showcase-image"
             src={product.image}
             alt={`${product.name} product visual`}
+            width={imageDimensions.width}
+            height={imageDimensions.height}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 45vw, 360px"
           />
         ) : (
           <div className="agent-showcase-image agent-card-visual-empty">

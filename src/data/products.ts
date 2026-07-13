@@ -9,12 +9,12 @@ export const products: TradingAgentProduct[] = [
       "A rule-based MT5 XAUUSD trading software agent for selective London-session workflows with fixed-risk execution controls.",
     fullDescription:
       "Astro-Vyn Gold is a rule-based Gold trading software agent for MetaTrader 5, designed for selective XAUUSD setups during the London session. It focuses on fixed-risk execution, controlled trade frequency, and risk-management logic such as spread checks, breakeven, trailing stop, and lot caps.",
-    image: "/images/agents/astro-vyn-gold/image-1.jpeg",
-    screenshots: ["/images/agents/astro-vyn-gold/image-1.jpeg"],
+    image: "/images/optimized/agents/astro-vyn-gold/image-1.webp",
+    screenshots: ["/images/optimized/agents/astro-vyn-gold/image-1.webp"],
     galleryImages: [
-      "/images/agents/astro-vyn-gold/image-1.jpeg",
-      "/images/agents/astro-vyn-gold/image-2.jpeg",
-      "/images/agents/astro-vyn-gold/image-3.jpeg",
+      "/images/optimized/agents/astro-vyn-gold/image-1.webp",
+      "/images/optimized/agents/astro-vyn-gold/image-2.webp",
+      "/images/optimized/agents/astro-vyn-gold/image-3.webp",
     ],
     galleryImageAlt: [
       "Astro-Vyn Gold performance summary by session, weekday, and month",
@@ -74,12 +74,12 @@ export const products: TradingAgentProduct[] = [
       "An MT5 Gold trading software agent built around Donchian breakout logic, ATR-based risk controls, and demo-first evaluation.",
     fullDescription:
       "Sentinel-Vyn is an AI trading software agent for MetaTrader 5 and XAUUSD workflows. It combines Donchian breakout logic, ATR trailing, volatility-adapted rules, fixed-risk controls, day filters, cooldowns, and safeguards that avoid martingale, grid, or doubling-down behavior.",
-    image: "/images/agents/sentinel-vyn/image-1.jpeg",
-    screenshots: ["/images/agents/sentinel-vyn/image-1.jpeg"],
+    image: "/images/optimized/agents/sentinel-vyn/image-1.webp",
+    screenshots: ["/images/optimized/agents/sentinel-vyn/image-1.webp"],
     galleryImages: [
-      "/images/agents/sentinel-vyn/image-1.jpeg",
-      "/images/agents/sentinel-vyn/image-2.jpeg",
-      "/images/agents/sentinel-vyn/image-3.jpeg",
+      "/images/optimized/agents/sentinel-vyn/image-1.webp",
+      "/images/optimized/agents/sentinel-vyn/image-2.webp",
+      "/images/optimized/agents/sentinel-vyn/image-3.webp",
     ],
     galleryImageAlt: [
       "Sentinel-Vyn six-month backtest summary",
@@ -171,9 +171,9 @@ export const products: TradingAgentProduct[] = [
       "A BTCUSD perpetual futures MT5 Expert Advisor using 18 SMA momentum confirmation and dynamic trailing exits on the 5-minute chart.",
     fullDescription:
       "Apex-Flux is a disciplined Bitcoin trading software agent for MetaTrader 5. It is designed for BTCUSD perpetual futures workflows, using selective 18 SMA momentum confirmation, independent trades, configurable risk, and dynamic trailing exits.",
-    image: "/images/agents/apex-flux/performance-report.jpeg",
-    screenshots: ["/images/agents/apex-flux/performance-report.jpeg"],
-    galleryImages: ["/images/agents/apex-flux/performance-report.jpeg"],
+    image: "/images/optimized/agents/apex-flux/performance-report.webp",
+    screenshots: ["/images/optimized/agents/apex-flux/performance-report.webp"],
+    galleryImages: ["/images/optimized/agents/apex-flux/performance-report.webp"],
     galleryImageAlt: [
       "Apex-Flux BTCUSD performance report showing cumulative profit and trade excursions",
     ],
