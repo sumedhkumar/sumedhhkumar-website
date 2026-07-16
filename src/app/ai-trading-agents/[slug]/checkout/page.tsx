@@ -7,6 +7,7 @@ import { hasProductRazorpayCheckoutConfiguration } from "@/lib/config";
 import { getCryptoPaymentConfig } from "@/lib/payments/crypto";
 import { calculateFinalPrice } from "@/lib/pricing";
 import { AgentCheckoutPaymentPanel } from "@/components/products/AgentPurchaseCard";
+import CheckoutPlanClient from "./CheckoutPlanClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;

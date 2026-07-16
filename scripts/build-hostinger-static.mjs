@@ -18,6 +18,10 @@ const disabledPaths = [
     source: "src/app/courses/algo-trading/access",
     destination: ".hostinger-disabled-course-access",
   },
+  {
+    source: "src/app/courses/algo-trading/register",
+    destination: ".hostinger-disabled-course-register",
+  },
 ];
 
 function readArg(name) {
@@ -243,6 +247,36 @@ export default nextConfig;
     /  const couponCode =\r?\n    typeof query\.coupon === "string" \? query\.coupon\.trim\(\) : "";\r?\n  const selectedPlanId =\r?\n    typeof query\.plan === "string" \? query\.plan\.trim\(\) : "";/,
     `  const couponCode = "";
   const selectedPlanId = "";`,
+  );
+
+  // Patch landing page: remove server-side auth check that uses cookies()
+  remember("src/app/lp/trading-automation-masterclass/page.tsx");
+  write(
+    "src/app/lp/trading-automation-masterclass/page.tsx",
+    `import type { Metadata } from "next";
+import AlgoTradingCourseCampaignLanding from "@/components/course/AlgoTradingCourseCampaignLanding";
+
+export const metadata: Metadata = {
+  title: "2 Free Trading Automation Lectures | Vyntegra Masterclass",
+  description:
+    "Get free access to Lecture 1 and Lecture 2 of Vyntegra's Trading Automation Masterclass. Learn AI-assisted workflows for MT5 and TradingView. No payment required.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: "2 Free Trading Automation Lectures | Vyntegra Masterclass",
+    description:
+      "Get free access to Lecture 1 and Lecture 2 of Vyntegra's Trading Automation Masterclass. Learn AI-assisted workflows for MT5 and TradingView. No payment required.",
+    siteName: "Vyntegra",
+    type: "website",
+  },
+};
+
+export default function TradingAutomationMasterclassLandingPage() {
+  return <AlgoTradingCourseCampaignLanding />;
+}
+`,
   );
 
   disablePathsForStaticExport();
