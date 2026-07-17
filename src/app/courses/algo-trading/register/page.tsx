@@ -18,17 +18,6 @@ export const metadata: Metadata = {
   },
 };
 
-type RegisterPageProps = {
-  searchParams?: Promise<{
-    mode?: string | string[];
-  }>;
-};
-
-export default async function AlgoTradingCourseRegisterPage({
-  searchParams,
-}: RegisterPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const mode = resolvedSearchParams?.mode === "login" ? "login" : "signup";
-
-  return <AlgoTradingCourseRegister initialMode={mode} />;
+export default function AlgoTradingCourseRegisterPage() {
+  return <AlgoTradingCourseRegister />;
 }

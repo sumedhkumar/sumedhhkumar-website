@@ -481,7 +481,15 @@ export default function AlgoTradingCourseRegister({
   modeHrefPath = algoTradingCourse.registerRoute,
   modeHrefHash = "",
 }: AlgoTradingCourseRegisterProps = {}) {
-  const [activeMode, setActiveMode] = useState<AuthMode>(initialMode);
+  const [activeMode, setActiveMode] = useState<AuthMode>(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("mode") === "login") {
+        return "login";
+      }
+    }
+    return initialMode;
+  });
   const [signupValues, setSignupValues] = useState(initialSignupValues);
   const [loginValues, setLoginValues] = useState(initialLoginValues);
   const [errors, setErrors] = useState<FormErrors>({});

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import AlgoTradingCourseCampaignLanding from "@/components/course/AlgoTradingCourseCampaignLanding";
-import { getSupabaseAuthUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "2 Free Trading Automation Lectures | Vyntegra Masterclass",
@@ -20,11 +18,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function TradingAutomationMasterclassLandingPage() {
-  const user = await getSupabaseAuthUser();
-  if (user) {
-    redirect("/courses/algo-trading/access");
-  }
-
+export default function TradingAutomationMasterclassLandingPage() {
   return <AlgoTradingCourseCampaignLanding />;
 }

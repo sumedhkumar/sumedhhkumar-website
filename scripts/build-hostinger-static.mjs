@@ -158,6 +158,7 @@ RewriteRule ^ai-trading-agents/vyntegra-pulse/?$ /ai-trading-agents/astro-vyn-go
 RewriteRule ^ai-trading-agents/vyntegra-pulse/(.*)$ /ai-trading-agents/astro-vyn-gold/$1 [R=301,L]
 RewriteRule ^ai-trading-agents/([^/]+)/purchase/?$ /ai-trading-agents/$1/#purchase [R=302,L]
 RewriteRule ^razorpay-test/?$ / [R=302,L]
+RewriteRule ^lp/?$ /lp/trading-automation-masterclass/ [R=302,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -187,6 +188,9 @@ try {
 const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
@@ -280,6 +284,11 @@ export default function TradingAutomationMasterclassLandingPage() {
   );
 
   disablePathsForStaticExport();
+
+  const dotNextPath = filePath(".next");
+  if (fs.existsSync(dotNextPath)) {
+    fs.rmSync(dotNextPath, { recursive: true, force: true });
+  }
 
   execFileSync("npm", ["run", "build"], { stdio: "inherit", shell: true });
   writeHtaccess();

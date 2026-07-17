@@ -55,6 +55,7 @@ export default function CheckoutPlanClient({
     fullDescription:
       `${product.name} subscription access. After payment verification, Vyntegra will send access/setup next steps by email.`,
   };
+
   return (
     <div className="astro-gold-checkout-grid">
       <section className="astro-gold-selected-plan-card">
