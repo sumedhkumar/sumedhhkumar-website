@@ -8,6 +8,7 @@ import {
   Clock,
   Eye,
   Play,
+  Star,
   Users,
 } from "lucide-react";
 import {
@@ -58,6 +59,79 @@ const faqItems = [
 
 const disclaimer =
   "Educational content only. No investment advice. No profit guarantees. Trading involves risk.";
+
+const workshopReviews = [
+  {
+    name: "Darpan Bhagat",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment:
+      "Excellent session done by Sumedh ji. Good learning. The strategy-to-automation workflow was explained brilliantly with real examples.",
+  },
+  {
+    name: "Nitin Taneja",
+    rating: 5,
+    topic: "Live Bot Demo and Agent Walkthrough",
+    comment:
+      "Very nice! Great exposure — it opened up the door for algo trading much more clearly for me. The live bot demo was the highlight.",
+  },
+  {
+    name: "Sagar",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment:
+      "You did an excellent job — keep growing and motivating like this! The concepts were explained from scratch in a very approachable way.",
+  },
+  {
+    name: "Mudaseer Abdar",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment:
+      "Valuable content — I really appreciate you, brother. The workflow from strategy creation to automation was very well structured.",
+  },
+  {
+    name: "Ashpak Patankar",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment:
+      "The session was great. Algo trading concepts were broken down so well that even a beginner could follow along easily.",
+  },
+  {
+    name: "Harsha Vardhan",
+    rating: 4,
+    topic: "Strategy to Algo Automation Workflow",
+    comment:
+      "Very good webinar. The workflow automation section gave me actionable steps I can implement right away with my existing strategies.",
+  },
+  {
+    name: "Mohit Barak",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment:
+      "Overall a great session — it motivated me to work smartly now. The AI integration part was eye-opening and practical.",
+  },
+  {
+    name: "Manish",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment:
+      "Excellent workshop! The AI integration with TradingView was the most valuable part — it showed me possibilities I didn't know existed.",
+  },
+  {
+    name: "Shyam Mishra",
+    rating: 5,
+    topic: "Live Bot Demo and Agent Walkthrough",
+    comment:
+      "You are doing a good job helping and educating people — please keep it up. The live bot walkthrough was very insightful.",
+  },
+  {
+    name: "Praval Patel",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment:
+      "Thank you, bhai! The AI integration demo was fantastic. It clearly showed how to connect TradingView signals to real automation.",
+  },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -230,6 +304,38 @@ function TransformationItem({
   );
 }
 
+function ReviewCard({
+  name,
+  rating,
+  topic,
+  comment,
+}: {
+  name: string;
+  rating: number;
+  topic: string;
+  comment: string;
+}) {
+  return (
+    <article className="cvlp-review-card">
+      <div className="cvlp-review-stars" aria-label={`${rating} out of 5 stars`}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            size={14}
+            className={i < rating ? "cvlp-star-filled" : "cvlp-star-empty"}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+      <p className="cvlp-review-comment">&ldquo;{comment}&rdquo;</p>
+      <div className="cvlp-review-footer">
+        <span className="cvlp-review-name">{name}</span>
+        <span className="cvlp-review-topic">{topic}</span>
+      </div>
+    </article>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Main Component                                                    */
 /* ------------------------------------------------------------------ */
@@ -363,6 +469,45 @@ export default function AlgoTradingCourseCampaignLanding() {
                 )}
               </ul>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Workshop Reviews ---- */}
+      <section className="cvlp-section" aria-labelledby="cvlp-reviews-heading">
+        <div className="cvlp-shell">
+          <div className="cvlp-section-header">
+            <h2 id="cvlp-reviews-heading">What our students say</h2>
+            <p>
+              Real feedback from workshop attendees who experienced the masterclass firsthand.
+            </p>
+          </div>
+          <div className="cvlp-reviews-summary">
+            <div className="cvlp-reviews-avg">
+              <span className="cvlp-reviews-avg-number">4.5</span>
+              <div className="cvlp-reviews-avg-stars" aria-label="4.5 out of 5 stars">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={16}
+                    className={i < 4 ? "cvlp-star-filled" : i === 4 ? "cvlp-star-half" : "cvlp-star-empty"}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
+              <span className="cvlp-reviews-count">Based on 75+ reviews</span>
+            </div>
+          </div>
+          <div className="cvlp-reviews-grid">
+            {workshopReviews.map((review) => (
+              <ReviewCard
+                key={review.name}
+                name={review.name}
+                rating={review.rating}
+                topic={review.topic}
+                comment={review.comment}
+              />
+            ))}
           </div>
         </div>
       </section>

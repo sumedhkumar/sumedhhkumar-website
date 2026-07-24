@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
+import CoursePaymentPopup from "./CoursePaymentPopup";
 
 type AccessLesson = {
   title: string;
@@ -55,6 +56,7 @@ export default function AlgoTradingCourseAccessLessonPortal({
   );
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+  const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
 
   useEffect(() => {
     const progressTimer = window.setTimeout(() => {
@@ -141,7 +143,13 @@ export default function AlgoTradingCourseAccessLessonPortal({
                     isActive ? "is-active" : "",
                     isComplete ? "is-complete" : "",
                   ].filter(Boolean).join(" ")}
-                  onClick={() => setActiveLessonIndex(index)}
+                  onClick={() => {
+                    if (index >= 2) {
+                      setIsPaymentPopupOpen(true);
+                    } else {
+                      setActiveLessonIndex(index);
+                    }
+                  }}
                   aria-current={isActive ? "true" : undefined}
                 >
                   <span className="algo-course-lms-lesson-number">
@@ -324,6 +332,11 @@ export default function AlgoTradingCourseAccessLessonPortal({
           </>
         ) : null}
       </main>
+
+      <CoursePaymentPopup
+        isOpen={isPaymentPopupOpen}
+        onClose={() => setIsPaymentPopupOpen(false)}
+      />
     </div>
   );
 }

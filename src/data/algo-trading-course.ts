@@ -25,10 +25,10 @@ export const algoTradingCourseLinkPlaceholders = {
 const configuredCourseLinks = {
   introVideoUrl: (process.env.NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL ?? "").trim(),
   lecture1VideoUrl: (
-    process.env.NEXT_PUBLIC_COURSE_LECTURE_1_VIDEO_URL ?? ""
+    process.env.NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL ?? ""
   ).trim(),
   lecture2VideoUrl: (
-    process.env.NEXT_PUBLIC_COURSE_LECTURE_2_VIDEO_URL ?? ""
+    process.env.NEXT_PUBLIC_COURSE_INTRO_VIDEO_URL ?? ""
   ).trim(),
   whatsappGroupUrl: (
     process.env.NEXT_PUBLIC_COURSE_WHATSAPP_GROUP_URL ?? ""
@@ -245,8 +245,8 @@ export const algoTradingCourse = {
   disclaimer:
     "This is an educational course. It does not provide investment advice or profit guarantees. Trading involves financial risk.",
   pricing: {
-    valueLabel: "\u20B945,000",
-    launchOfferLabel: "\u20B928,999",
+    valueLabel: "\u20B944,999",
+    launchOfferLabel: "\u20B929,999",
   },
   paymentInstructions: {
     activeCopy:
