@@ -548,7 +548,7 @@ export default function AlgoTradingCourseRegister({
   }
 
   async function loadCourseRegistration() {
-    const response = await fetch("/api/course-registrations", {
+    const response = await fetch(`/api/course-registrations?t=${Date.now()}`, {
       method: "GET",
     });
     const payload = (await response.json().catch(() => ({}))) as RegistrationResponse;
@@ -794,6 +794,8 @@ export default function AlgoTradingCourseRegister({
     setSignedInEmail(data.user?.email ?? sanitizeClientText(loginValues.email));
 
     try {
+      // Ensure Supabase client has finished writing the session to cookies
+      await new Promise((resolve) => setTimeout(resolve, 500));
       const existingRegistration = await loadCourseRegistration();
 
       if (hasCompleteCourseRegistration(existingRegistration)) {

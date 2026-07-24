@@ -23,6 +23,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type CourseRegistrationRequestBody = {
   fullName?: unknown;
