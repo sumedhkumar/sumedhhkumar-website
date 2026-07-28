@@ -63,7 +63,7 @@ const cryptoProofMailFromEmail = cryptoProofSmtpUser
 
 export const appConfig = {
   appBaseUrl: readValue("APP_BASE_URL"),
-  persistenceProvider: readValue("PERSISTENCE_PROVIDER") || "disabled",
+  persistenceProvider: readValue("PERSISTENCE_PROVIDER") || "postgres",
   databaseUrl: readValue("DATABASE_URL"),
   databaseSsl: readFlagDefault("DATABASE_SSL", true),
   autoMigrateDb: readFlag("AUTO_MIGRATE_DB"),
