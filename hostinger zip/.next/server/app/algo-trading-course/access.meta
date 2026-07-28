@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/courses/algo-trading/access",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/algo-trading-course/layout,_N_T_/algo-trading-course/access/layout,_N_T_/algo-trading-course/access/page,_N_T_/algo-trading-course/access"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/algo-trading-course/access/__PAGE__",
+    "/algo-trading-course/access",
+    "/algo-trading-course",
+    "/_index",
+    "/_head"
+  ]
+}

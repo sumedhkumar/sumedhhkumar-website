@@ -94,6 +94,7 @@ if (!standaloneRoot) {
 copyDirectory(standaloneRoot, outputDir);
 copyDirectory(path.join(root, ".next", "static"), path.join(outputDir, ".next", "static"));
 copyDirectory(path.join(root, "public"), path.join(outputDir, "public"));
+copyDirectory(path.join(root, "db"), path.join(outputDir, "db"));
 
 if (embedEnv && Object.keys(deploymentEnv).length > 0) {
   fs.writeFileSync(

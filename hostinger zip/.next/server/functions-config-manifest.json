@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/admin/course-registrations": {},
+    "/api/admin/course-registrations/[id]": {},
+    "/api/admin/razorpay-payments": {},
+    "/api/admin/submissions": {},
+    "/api/admin/submissions/[submissionId]/attachments/[attachmentId]": {},
+    "/api/contact": {},
+    "/api/course-registrations": {},
+    "/api/custom-solutions": {},
+    "/api/exchange-rates/usd-inr": {},
+    "/api/exchange-rates/usd-inr/refresh": {},
+    "/api/experts/[expertId]/calcom-slots": {},
+    "/api/payments/crypto/submit": {},
+    "/api/payments/razorpay/create-order": {},
+    "/api/payments/razorpay/verify": {},
+    "/api/razorpay/create-order": {},
+    "/api/razorpay/verify-payment": {},
+    "/auth/callback": {},
+    "/auth/logout": {}
+  }
+}

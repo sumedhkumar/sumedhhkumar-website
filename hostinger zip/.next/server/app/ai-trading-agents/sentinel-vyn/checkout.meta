@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/ai-trading-agents/layout,_N_T_/ai-trading-agents/[slug]/layout,_N_T_/ai-trading-agents/[slug]/checkout/layout,_N_T_/ai-trading-agents/[slug]/checkout/page,_N_T_/ai-trading-agents/sentinel-vyn/checkout"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/ai-trading-agents/$d$slug/checkout/__PAGE__",
+    "/ai-trading-agents/$d$slug/checkout",
+    "/ai-trading-agents/$d$slug",
+    "/ai-trading-agents",
+    "/_index",
+    "/_head"
+  ]
+}

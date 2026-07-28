@@ -1,0 +1,7 @@
+Application type: Node.js
+Node.js version: 22
+Entry point: server.js
+Start command: node server.js
+Application URL: https://vyntegra.in
+
+Configure runtime environment variables in hPanel before starting the app.

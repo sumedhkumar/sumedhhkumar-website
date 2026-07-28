@@ -1,0 +1,3 @@
+{
+  "/api/exchange-rates/usd-inr/route": "app/api/exchange-rates/usd-inr/route.js"
+}

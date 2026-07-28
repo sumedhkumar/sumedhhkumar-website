@@ -1,0 +1,449 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    },
+    {
+      "source": "/experts/sumedhhkumar",
+      "destination": "/experts/sumedh-kumar",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/experts/sumedhhkumar(?:/)?$"
+    },
+    {
+      "source": "/experts/sumedh",
+      "destination": "/experts/sumedh-kumar",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/experts/sumedh(?:/)?$"
+    },
+    {
+      "source": "/experts/sumedhhkumar-bhalerao",
+      "destination": "/experts/sumedh-kumar",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/experts/sumedhhkumar-bhalerao(?:/)?$"
+    },
+    {
+      "source": "/experts/sumedhkumar-bhalerao",
+      "destination": "/experts/sumedh-kumar",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/experts/sumedhkumar-bhalerao(?:/)?$"
+    },
+    {
+      "source": "/ai-trading-agents/agent-pulse",
+      "destination": "/ai-trading-agents/astro-vyn-gold",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/ai-trading-agents/agent-pulse(?:/)?$"
+    },
+    {
+      "source": "/ai-trading-agents/pulse",
+      "destination": "/ai-trading-agents/astro-vyn-gold",
+      "statusCode": 308,
+      "regex": "^(?!/_next)/ai-trading-agents/pulse(?:/)?$"
+    },
+    {
+      "source": "/ai-trading-agents/:slug/purchase",
+      "destination": "/ai-trading-agents/:slug#purchase",
+      "statusCode": 307,
+      "regex": "^(?!/_next)/ai-trading-agents(?:/([^/]+?))/purchase(?:/)?$"
+    },
+    {
+      "source": "/razorpay-test",
+      "destination": "/",
+      "statusCode": 307,
+      "regex": "^(?!/_next)/razorpay-test(?:/)?$"
+    },
+    {
+      "source": "/lp",
+      "destination": "/lp/trading-automation-masterclass",
+      "statusCode": 307,
+      "regex": "^(?!/_next)/lp(?:/)?$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/ai-trading-agents/[slug]",
+      "regex": "^/ai\\-trading\\-agents/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/ai\\-trading\\-agents/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/ai-trading-agents/[slug]/checkout",
+      "regex": "^/ai\\-trading\\-agents/([^/]+?)/checkout(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/ai\\-trading\\-agents/(?<nxtPslug>[^/]+?)/checkout(?:/)?$"
+    },
+    {
+      "page": "/ai-trading-agents/[slug]/crypto-payment",
+      "regex": "^/ai\\-trading\\-agents/([^/]+?)/crypto\\-payment(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/ai\\-trading\\-agents/(?<nxtPslug>[^/]+?)/crypto\\-payment(?:/)?$"
+    },
+    {
+      "page": "/ai-trading-agents/[slug]/plans",
+      "regex": "^/ai\\-trading\\-agents/([^/]+?)/plans(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/ai\\-trading\\-agents/(?<nxtPslug>[^/]+?)/plans(?:/)?$"
+    },
+    {
+      "page": "/api/admin/course-registrations/[id]",
+      "regex": "^/api/admin/course\\-registrations/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/admin/course\\-registrations/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/admin/submissions/[submissionId]/attachments/[attachmentId]",
+      "regex": "^/api/admin/submissions/([^/]+?)/attachments/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPsubmissionId": "nxtPsubmissionId",
+        "nxtPattachmentId": "nxtPattachmentId"
+      },
+      "namedRegex": "^/api/admin/submissions/(?<nxtPsubmissionId>[^/]+?)/attachments/(?<nxtPattachmentId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/experts/[expertId]/calcom-slots",
+      "regex": "^/api/experts/([^/]+?)/calcom\\-slots(?:/)?$",
+      "routeKeys": {
+        "nxtPexpertId": "nxtPexpertId"
+      },
+      "namedRegex": "^/api/experts/(?<nxtPexpertId>[^/]+?)/calcom\\-slots(?:/)?$"
+    },
+    {
+      "page": "/experts/[slug]",
+      "regex": "^/experts/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/experts/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/experts/[slug]/booking",
+      "regex": "^/experts/([^/]+?)/booking(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/experts/(?<nxtPslug>[^/]+?)/booking(?:/)?$"
+    },
+    {
+      "page": "/experts/[slug]/checkout",
+      "regex": "^/experts/([^/]+?)/checkout(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/experts/(?<nxtPslug>[^/]+?)/checkout(?:/)?$"
+    },
+    {
+      "page": "/experts/[slug]/confirmation",
+      "regex": "^/experts/([^/]+?)/confirmation(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/experts/(?<nxtPslug>[^/]+?)/confirmation(?:/)?$"
+    },
+    {
+      "page": "/experts/[slug]/crypto-payment",
+      "regex": "^/experts/([^/]+?)/crypto\\-payment(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/experts/(?<nxtPslug>[^/]+?)/crypto\\-payment(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin/course-registrations",
+      "regex": "^/admin/course\\-registrations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/course\\-registrations(?:/)?$"
+    },
+    {
+      "page": "/ai-trading-agents",
+      "regex": "^/ai\\-trading\\-agents(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/ai\\-trading\\-agents(?:/)?$"
+    },
+    {
+      "page": "/algo-trading-course",
+      "regex": "^/algo\\-trading\\-course(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/algo\\-trading\\-course(?:/)?$"
+    },
+    {
+      "page": "/algo-trading-course/access",
+      "regex": "^/algo\\-trading\\-course/access(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/algo\\-trading\\-course/access(?:/)?$"
+    },
+    {
+      "page": "/algo-trading-course/register",
+      "regex": "^/algo\\-trading\\-course/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/algo\\-trading\\-course/register(?:/)?$"
+    },
+    {
+      "page": "/api/admin/course-registrations",
+      "regex": "^/api/admin/course\\-registrations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/course\\-registrations(?:/)?$"
+    },
+    {
+      "page": "/api/admin/razorpay-payments",
+      "regex": "^/api/admin/razorpay\\-payments(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/razorpay\\-payments(?:/)?$"
+    },
+    {
+      "page": "/api/admin/submissions",
+      "regex": "^/api/admin/submissions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/submissions(?:/)?$"
+    },
+    {
+      "page": "/api/contact",
+      "regex": "^/api/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/contact(?:/)?$"
+    },
+    {
+      "page": "/api/coupons/validate",
+      "regex": "^/api/coupons/validate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/coupons/validate(?:/)?$"
+    },
+    {
+      "page": "/api/course-registrations",
+      "regex": "^/api/course\\-registrations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/course\\-registrations(?:/)?$"
+    },
+    {
+      "page": "/api/custom-solutions",
+      "regex": "^/api/custom\\-solutions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/custom\\-solutions(?:/)?$"
+    },
+    {
+      "page": "/api/exchange-rates/usd-inr",
+      "regex": "^/api/exchange\\-rates/usd\\-inr(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/exchange\\-rates/usd\\-inr(?:/)?$"
+    },
+    {
+      "page": "/api/exchange-rates/usd-inr/refresh",
+      "regex": "^/api/exchange\\-rates/usd\\-inr/refresh(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/exchange\\-rates/usd\\-inr/refresh(?:/)?$"
+    },
+    {
+      "page": "/api/payments/crypto/submit",
+      "regex": "^/api/payments/crypto/submit(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/crypto/submit(?:/)?$"
+    },
+    {
+      "page": "/api/payments/razorpay/create-order",
+      "regex": "^/api/payments/razorpay/create\\-order(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/razorpay/create\\-order(?:/)?$"
+    },
+    {
+      "page": "/api/payments/razorpay/verify",
+      "regex": "^/api/payments/razorpay/verify(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/razorpay/verify(?:/)?$"
+    },
+    {
+      "page": "/api/payments/stripe/create-checkout-session",
+      "regex": "^/api/payments/stripe/create\\-checkout\\-session(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/payments/stripe/create\\-checkout\\-session(?:/)?$"
+    },
+    {
+      "page": "/api/product-access",
+      "regex": "^/api/product\\-access(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/product\\-access(?:/)?$"
+    },
+    {
+      "page": "/api/razorpay/create-order",
+      "regex": "^/api/razorpay/create\\-order(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/razorpay/create\\-order(?:/)?$"
+    },
+    {
+      "page": "/api/razorpay/verify-payment",
+      "regex": "^/api/razorpay/verify\\-payment(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/razorpay/verify\\-payment(?:/)?$"
+    },
+    {
+      "page": "/api/webhooks/razorpay",
+      "regex": "^/api/webhooks/razorpay(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/webhooks/razorpay(?:/)?$"
+    },
+    {
+      "page": "/api/webhooks/stripe",
+      "regex": "^/api/webhooks/stripe(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/webhooks/stripe(?:/)?$"
+    },
+    {
+      "page": "/auth/callback",
+      "regex": "^/auth/callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/callback(?:/)?$"
+    },
+    {
+      "page": "/auth/logout",
+      "regex": "^/auth/logout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/logout(?:/)?$"
+    },
+    {
+      "page": "/auth/reset-password",
+      "regex": "^/auth/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset\\-password(?:/)?$"
+    },
+    {
+      "page": "/contact",
+      "regex": "^/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contact(?:/)?$"
+    },
+    {
+      "page": "/courses",
+      "regex": "^/courses(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/courses(?:/)?$"
+    },
+    {
+      "page": "/courses/algo-trading",
+      "regex": "^/courses/algo\\-trading(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/courses/algo\\-trading(?:/)?$"
+    },
+    {
+      "page": "/courses/algo-trading/access",
+      "regex": "^/courses/algo\\-trading/access(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/courses/algo\\-trading/access(?:/)?$"
+    },
+    {
+      "page": "/courses/algo-trading/register",
+      "regex": "^/courses/algo\\-trading/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/courses/algo\\-trading/register(?:/)?$"
+    },
+    {
+      "page": "/custom-solutions",
+      "regex": "^/custom\\-solutions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/custom\\-solutions(?:/)?$"
+    },
+    {
+      "page": "/experts",
+      "regex": "^/experts(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/experts(?:/)?$"
+    },
+    {
+      "page": "/icon.svg",
+      "regex": "^/icon\\.svg(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.svg(?:/)?$"
+    },
+    {
+      "page": "/lp/trading-automation-masterclass",
+      "regex": "^/lp/trading\\-automation\\-masterclass(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/lp/trading\\-automation\\-masterclass(?:/)?$"
+    },
+    {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
+      "page": "/refund-policy",
+      "regex": "^/refund\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/refund\\-policy(?:/)?$"
+    },
+    {
+      "page": "/shipping-delivery",
+      "regex": "^/shipping\\-delivery(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/shipping\\-delivery(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

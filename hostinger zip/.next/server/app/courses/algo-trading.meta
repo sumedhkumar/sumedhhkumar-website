@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/lp/trading-automation-masterclass",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/courses/layout,_N_T_/courses/algo-trading/layout,_N_T_/courses/algo-trading/page,_N_T_/courses/algo-trading"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/courses/algo-trading/__PAGE__",
+    "/courses/algo-trading",
+    "/courses",
+    "/_index",
+    "/_head"
+  ]
+}

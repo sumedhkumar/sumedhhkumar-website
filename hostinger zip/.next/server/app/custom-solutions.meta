@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/custom-solutions/layout,_N_T_/custom-solutions/page,_N_T_/custom-solutions"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/custom-solutions/__PAGE__",
+    "/custom-solutions",
+    "/_index",
+    "/_head"
+  ]
+}

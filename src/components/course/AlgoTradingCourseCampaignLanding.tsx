@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import {
+  ArrowLeft,
   ArrowRight,
+  Award,
+  Briefcase,
   CheckCircle2,
   Clock,
   Eye,
+  GraduationCap,
   Play,
   Star,
   Users,
@@ -15,6 +19,7 @@ import {
   algoTradingCourse,
   getSafeCourseIntroEmbedUrl,
 } from "@/data/algo-trading-course";
+import { experts } from "@/data/experts";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
@@ -32,11 +37,10 @@ const trustPoints = [
   "Takes under 60 seconds",
 ];
 
-const signalItems = [
-  "Idea to rules",
-  "AI-assisted checks",
-  "TradingView / MT5 logic",
-  "Review before action",
+const instructorCredibility = [
+  { label: "AI AUTOMATION", value: "8 Years" },
+  { label: "TRADING EXPERIENCE", value: "9 Years" },
+  { label: "FOCUS", value: "AI & Algo Trading" },
 ];
 
 const faqItems = [
@@ -239,16 +243,18 @@ function ViewerCount() {
 function CtaButton({
   className = "",
   size = "default",
+  label = ctaLabel,
 }: {
   className?: string;
   size?: "default" | "large";
+  label?: string;
 }) {
   return (
     <a
       href={registerHref}
       className={`cvlp-cta-btn ${size === "large" ? "cvlp-cta-btn-lg" : ""} ${className}`.trim()}
     >
-      <span>{ctaLabel}</span>
+      <span>{label}</span>
       <ArrowRight size={18} aria-hidden="true" />
     </a>
   );
@@ -316,7 +322,7 @@ function ReviewCard({
   comment: string;
 }) {
   return (
-    <article className="cvlp-review-card">
+    <article className="cvlp-review-card h-full">
       <div className="cvlp-review-stars" aria-label={`${rating} out of 5 stars`}>
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
@@ -347,6 +353,17 @@ export default function AlgoTradingCourseCampaignLanding() {
   );
 
   const batchLabel = useMemo(() => getBatchLabel(), []);
+
+  const reviewsScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollReviews = (direction: "left" | "right") => {
+    if (!reviewsScrollRef.current) return;
+    const scrollAmount = 340; // Approx card width + gap
+    reviewsScrollRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <main className="cvlp-page">
@@ -399,37 +416,6 @@ export default function AlgoTradingCourseCampaignLanding() {
         </div>
       </section>
 
-      {/* ---- Signal Strip ---- */}
-      <div className="cvlp-signal-strip" aria-label="Automation workflow signals">
-        <div className="cvlp-shell cvlp-signal-grid">
-          {signalItems.map((item) => (
-            <span key={item}>{item}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* ---- Before → After Transformations ---- */}
-      <section className="cvlp-section" aria-labelledby="cvlp-transform-heading">
-        <div className="cvlp-shell">
-          <div className="cvlp-section-header">
-            <h2 id="cvlp-transform-heading">What changes after this course</h2>
-            <p>
-              Practical workflow shifts you can expect from the masterclass.
-            </p>
-          </div>
-          <div className="cvlp-transform-list">
-            {algoTradingCourse.workflowTransformations.map((t) => (
-              <TransformationItem
-                key={t.before}
-                before={t.before}
-                after={t.after}
-                copy={t.copy}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ---- Program Stats ---- */}
       <div className="cvlp-stats-strip">
         <div className="cvlp-shell cvlp-stats-grid">
@@ -443,30 +429,53 @@ export default function AlgoTradingCourseCampaignLanding() {
       </div>
 
       {/* ---- Founder / Instructor ---- */}
-      <section className="cvlp-section" aria-labelledby="cvlp-founder-heading">
+      <section className="cvlp-section cvlp-instructor-section" aria-labelledby="cvlp-founder-heading">
         <div className="cvlp-shell">
           <div className="cvlp-founder-card">
-            <div className="cvlp-founder-photo-wrap">
-              <Image
-                src={algoTradingCourse.visuals.founderPortrait}
-                alt="Sumedh Kumar Bhalerao — course instructor"
-                width={320}
-                height={400}
-                className="cvlp-founder-photo"
-              />
+            <div className="cvlp-instructor-identity">
+              <div className="cvlp-instructor-avatar-ring">
+                <Image
+                  src={experts[0]?.professionalPhoto || algoTradingCourse.visuals.founderPortrait}
+                  alt="Sumedh Kumar Bhalerao — course instructor"
+                  width={180}
+                  height={180}
+                  className="cvlp-instructor-avatar-img"
+                />
+              </div>
+              <div className="cvlp-instructor-name-block">
+                <p className="cvlp-instructor-eyebrow">Your Instructor</p>
+                <h2 id="cvlp-founder-heading">Sumedhhkumar Bhalerao</h2>
+                <p className="cvlp-instructor-role">Expert, Vyntegra · Data Scientist</p>
+              </div>
             </div>
+
+            <div className="cvlp-instructor-credibility-grid">
+              {instructorCredibility.map((item) => (
+                <div key={item.label} className="cvlp-instructor-credibility-item">
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
+
             <div className="cvlp-founder-copy">
-              <h2 id="cvlp-founder-heading">About the instructor</h2>
-              <p>{algoTradingCourse.founderContext.copy}</p>
+              <p>
+                Data Scientist with hands-on experience across generative AI, conversational AI, NLP, machine learning, and cloud platforms. Professional background includes Builder.ai, Reliance Retail, and multiple operations-led companies.
+              </p>
               <ul className="cvlp-founder-points">
-                {algoTradingCourse.founderContext.credibilityPoints.map(
-                  (point) => (
-                    <li key={point}>
-                      <CheckCircle2 size={16} aria-hidden="true" />
-                      <span>{point}</span>
-                    </li>
-                  ),
-                )}
+                <li>
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>BE from MGM&apos;s JNEC · MBA in AI from DY Patil University</span>
+                </li>
+                <li>
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>Certified in Azure, AWS SageMaker, Kubernetes, Docker &amp; Lean Six Sigma</span>
+                </li>
+                <li>
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  <span>Practical AI automation and trading workflow education</span>
+                </li>
+
               </ul>
             </div>
           </div>
@@ -479,7 +488,7 @@ export default function AlgoTradingCourseCampaignLanding() {
           <div className="cvlp-section-header">
             <h2 id="cvlp-reviews-heading">What our students say</h2>
             <p>
-              Real feedback from workshop attendees who experienced the masterclass firsthand.
+              Real feedback from attendees who experienced the workshop firsthand.
             </p>
           </div>
           <div className="cvlp-reviews-summary">
@@ -498,14 +507,59 @@ export default function AlgoTradingCourseCampaignLanding() {
               <span className="cvlp-reviews-count">Based on 75+ reviews</span>
             </div>
           </div>
-          <div className="cvlp-reviews-grid">
-            {workshopReviews.map((review) => (
-              <ReviewCard
-                key={review.name}
-                name={review.name}
-                rating={review.rating}
-                topic={review.topic}
-                comment={review.comment}
+          <div className="relative group">
+            <button
+              onClick={() => scrollReviews("left")}
+              className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-lg border border-gray-100 text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Scroll left"
+            >
+              <ArrowLeft size={20} />
+            </button>
+
+            <div 
+              ref={reviewsScrollRef}
+              className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: 'none' }}
+            >
+              {workshopReviews.map((review) => (
+                <div key={review.name} className="flex-none w-[320px] max-w-[85vw] snap-start h-full">
+                  <ReviewCard
+                    name={review.name}
+                    rating={review.rating}
+                    topic={review.topic}
+                    comment={review.comment}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => scrollReviews("right")}
+              className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-lg border border-gray-100 text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Scroll right"
+            >
+              <ArrowRight size={20} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Before → After Transformations ---- */}
+      <section className="cvlp-section" aria-labelledby="cvlp-transform-heading">
+        <div className="cvlp-shell">
+          <div className="cvlp-section-header">
+            <h2 id="cvlp-transform-heading">What changes after this course</h2>
+            <p>
+              Practical workflow shifts you can expect from the masterclass.
+            </p>
+          </div>
+          <div className="cvlp-transform-list">
+            {algoTradingCourse.workflowTransformations.map((t) => (
+              <TransformationItem
+                key={t.before}
+                before={t.before}
+                after={t.after}
+                copy={t.copy}
               />
             ))}
           </div>
@@ -547,7 +601,7 @@ export default function AlgoTradingCourseCampaignLanding() {
           <Users size={32} aria-hidden="true" className="cvlp-final-icon" />
           <h2>Still thinking?</h2>
           <p>The first 2 lectures are completely free. No payment needed.</p>
-          <CtaButton size="large" />
+          <CtaButton size="large" label="Claim Your Free Access" className="cvlp-cta-btn-final" />
           <p className="cvlp-disclaimer">{disclaimer}</p>
         </div>
       </section>
