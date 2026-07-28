@@ -96,6 +96,10 @@ copyDirectory(path.join(root, ".next", "static"), path.join(outputDir, ".next", 
 copyDirectory(path.join(root, "public"), path.join(outputDir, "public"));
 copyDirectory(path.join(root, "db"), path.join(outputDir, "db"));
 
+if (fs.existsSync(path.join(root, ".htaccess"))) {
+  fs.copyFileSync(path.join(root, ".htaccess"), path.join(outputDir, ".htaccess"));
+}
+
 if (embedEnv && Object.keys(deploymentEnv).length > 0) {
   fs.writeFileSync(
     path.join(outputDir, ".env.production"),
