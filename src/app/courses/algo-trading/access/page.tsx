@@ -65,6 +65,7 @@ export default async function AlgoTradingCourseProtectedAccessPage() {
     <AlgoTradingCourseAccess
       registrationEmail={registration.email}
       registrationFullName={registration.fullName}
+      initialProgress={registration.progressState}
     />
   );
 }

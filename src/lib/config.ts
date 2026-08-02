@@ -61,6 +61,11 @@ const cryptoProofMailFromEmail = cryptoProofSmtpUser
   ? `Vyntegra AI <${cryptoProofMailbox}>`
   : "";
 
+const adminBccEmails = (readValue("ADMIN_BCC_EMAILS") || "mahajanshardul1@gmail.com,sumedh.bhalerao07@gmail.com")
+  .split(",")
+  .map(e => e.trim())
+  .filter(Boolean);
+
 export const appConfig = {
   appBaseUrl: readValue("APP_BASE_URL"),
   persistenceProvider: readValue("PERSISTENCE_PROVIDER") || "postgres",
@@ -126,6 +131,7 @@ export const appConfig = {
   cryptoProofSmtpUser,
   cryptoProofSmtpPass: readValue("CRYPTO_PROOF_SMTP_PASS"),
   cryptoProofMailFromEmail,
+  adminBccEmails,
 };
 
 export function isProductionPersistenceConfigured() {

@@ -237,22 +237,22 @@ export default function AlgoTradingCourseLanding() {
         <div className="container">
           <div className="section-intro">
             <p className="eyebrow">Course Roadmap</p>
-            <h2 className="section-title">Three months, one structured path</h2>
+            <h2 className="section-title">Six modules, one structured path</h2>
             <p className="body-standard">
-              The curriculum moves from foundation and setup into workflow
-              logic, then practical deployment and monitoring discipline.
+              The curriculum moves through foundations, platform setup, strategy
+              logic, automation workflows, testing, and deployment discipline.
             </p>
           </div>
 
           <div className="algo-course-curriculum-grid">
-            {algoTradingCourse.curriculum.map((month, index) => (
-              <article key={month.title} className="standard-card algo-course-month-card">
+            {algoTradingCourse.curriculum.map((mod, index) => (
+              <article key={mod.title} className="standard-card algo-course-month-card">
                 <span className="algo-course-card-kicker">
-                  Month {index + 1}
+                  Module {index + 1}
                 </span>
-                <h3 className="card-title">{month.title}</h3>
+                <h3 className="card-title">{mod.title}</h3>
                 <ul className="pdp-checklist">
-                  {month.items.map((item) => (
+                  {mod.items.map((item) => (
                     <li key={item} className="body-standard pdp-checklist-item">
                       <CheckCircle2
                         size={16}

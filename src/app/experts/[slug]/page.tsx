@@ -201,7 +201,7 @@ export default async function ExpertProfilePage({ params }: PageProps) {
             </div>
 
             <p className="expert-summary-lede">
-              Get practical guidance on using AI, automation, and rule-based systems for trading workflows — from strategy logic and backtesting to TradingView, MT5, and broker API execution planning.
+              Get practical guidance on using AI, automation, and rule-based systems for trading workflows - from strategy logic and backtesting to TradingView, MT5, and broker API execution planning.
             </p>
 
             <div className="expert-credibility-grid" aria-label="Expert highlights">
