@@ -5,8 +5,6 @@ import { CheckCircle2, CircleAlert, ShieldCheck, X } from "lucide-react";
 import { algoTradingCourse } from "@/data/algo-trading-course";
 import Button from "@/components/ui/Button";
 import FieldError from "@/components/ui/FieldError";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
 
 type FormErrors = Record<string, string>;
 
@@ -37,6 +35,7 @@ export default function AlgoTradingCourseRegister({
   const [signupValues, setSignupValues] = useState({
     fullName: "",
     email: "",
+    whatsappPrefix: "+91",
     whatsappNumber: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -123,13 +122,14 @@ export default function AlgoTradingCourseRegister({
 
     const fullName = sanitizeClientText(signupValues.fullName);
     const email = sanitizeClientText(signupValues.email);
-    const whatsappNumber = sanitizeClientText(signupValues.whatsappNumber);
 
     const nextErrors: FormErrors = {};
 
     if (fullName.length < 2) nextErrors.fullName = "Enter your full name.";
     if (!email.includes("@")) nextErrors.email = "Enter a valid email.";
-    if (whatsappNumber.length < 8) nextErrors.whatsappNumber = "Enter a valid WhatsApp number.";
+    if (!/^\d{6,15}$/.test(signupValues.whatsappNumber.replace(/\s/g, ""))) nextErrors.whatsappNumber = "Enter a valid phone number (digits only).";
+
+    const whatsappNumber = signupValues.whatsappPrefix + signupValues.whatsappNumber.replace(/\s/g, "");
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -229,38 +229,55 @@ export default function AlgoTradingCourseRegister({
           </div>
 
           <div>
-            <label className="form-label" htmlFor={`${fieldIdPrefix}SignupWhatsApp`}>
+            <label className="form-label">
               WhatsApp Number *
             </label>
-            <PhoneInput
-              id={`${fieldIdPrefix}SignupWhatsApp`}
-              className="form-control phone-input-wrapper"
-              value={signupValues.whatsappNumber}
-              onChange={(value) => setSignupValues({ ...signupValues, whatsappNumber: value ? String(value) : "" })}
-              defaultCountry="IN"
-              placeholder="+91..."
-            />
-            <style jsx global>{`
-              .phone-input-wrapper {
-                display: flex;
-                align-items: center;
-              }
-              .phone-input-wrapper .PhoneInputCountry {
-                margin-right: 0.5rem;
-                display: flex;
-                align-items: center;
-              }
-              .phone-input-wrapper input {
-                border: none;
-                background: transparent;
-                flex: 1;
-                outline: none;
-                color: inherit;
-                font-family: inherit;
-                font-size: inherit;
-                min-width: 0;
-              }
-            `}</style>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <select
+                id={`${fieldIdPrefix}SignupWhatsAppPrefix`}
+                className="form-control"
+                value={signupValues.whatsappPrefix}
+                onChange={(e) => setSignupValues({ ...signupValues, whatsappPrefix: e.target.value })}
+                style={{ width: '7.5rem', flexShrink: 0 }}
+                aria-label="Country prefix"
+              >
+                <option value="+91">🇮🇳 +91</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+61">🇦🇺 +61</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+65">🇸🇬 +65</option>
+                <option value="+60">🇲🇾 +60</option>
+                <option value="+966">🇸🇦 +966</option>
+                <option value="+974">🇶🇦 +974</option>
+                <option value="+973">🇧🇭 +973</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+81">🇯🇵 +81</option>
+                <option value="+82">🇰🇷 +82</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+62">🇮🇩 +62</option>
+                <option value="+63">🇵🇭 +63</option>
+                <option value="+92">🇵🇰 +92</option>
+                <option value="+880">🇧🇩 +880</option>
+                <option value="+94">🇱🇰 +94</option>
+                <option value="+977">🇳🇵 +977</option>
+                <option value="+27">🇿🇦 +27</option>
+                <option value="+234">🇳🇬 +234</option>
+                <option value="+254">🇰🇪 +254</option>
+              </select>
+              <input
+                id={`${fieldIdPrefix}SignupWhatsApp`}
+                className="form-control"
+                type="tel"
+                inputMode="numeric"
+                value={signupValues.whatsappNumber}
+                onChange={(e) => setSignupValues({ ...signupValues, whatsappNumber: e.target.value.replace(/[^\d\s]/g, "") })}
+                placeholder="9876543210"
+                maxLength={15}
+                style={{ flex: 1, minWidth: 0 }}
+              />
+            </div>
             <FieldError id={`${fieldIdPrefix}SignupWhatsApp-error`} message={errors.whatsappNumber} />
           </div>
 

@@ -14,10 +14,6 @@ const disabledPaths = [
     source: "src/app/auth",
     destination: ".hostinger-disabled-auth",
   },
-  {
-    source: "src/app/courses/algo-trading/access",
-    destination: ".hostinger-disabled-course-access",
-  },
 ];
 
 function readArg(name) {
