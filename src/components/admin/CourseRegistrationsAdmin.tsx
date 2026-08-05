@@ -64,6 +64,24 @@ type Filters = {
 const tokenStorageKey = "vyntegra_admin_course_registrations_token";
 const defaultLimit = 50;
 
+/** On static Hostinger hosting the Next.js API routes don't exist.
+ *  We fall back to the PHP proxy endpoint. */
+function isStaticHosting() {
+  return typeof window !== 'undefined' &&
+    !window.location.hostname.includes('localhost') &&
+    !window.location.hostname.includes('127.0.0.1');
+}
+
+function adminApiUrl(path: string, params?: Record<string, string>) {
+  if (isStaticHosting()) {
+    // Use PHP proxy
+    const base = '/api/admin-registrations.php';
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return base + qs;
+  }
+  return path;
+}
+
 const initialFilters: Filters = {
   search: "",
   accessStatus: "",
@@ -211,8 +229,18 @@ export default function CourseRegistrationsAdmin() {
     setNotice("");
 
     try {
+      const url = isStaticHosting()
+        ? adminApiUrl('/api/admin-registrations.php', { limit: String(defaultLimit), offset: String(nextOffset), ...Object.fromEntries(Object.entries({
+            search: filters.search.trim() || undefined,
+            accessStatus: filters.accessStatus || undefined,
+            paymentStatus: filters.paymentStatus || undefined,
+            loginProvider: filters.loginProvider || undefined,
+            courseSlug: filters.courseSlug.trim() || undefined,
+          }).filter(([, v]) => v !== undefined) as [string, string][])})
+        : `/api/admin/course-registrations?${buildQuery(filters, nextOffset)}`;
+
       const response = await fetch(
-        `/api/admin/course-registrations?${buildQuery(filters, nextOffset)}`,
+        url,
         {
           headers: {
             Authorization: `Bearer ${nextToken}`,
@@ -292,8 +320,12 @@ export default function CourseRegistrationsAdmin() {
     setNotice("");
 
     try {
+      const patchUrl = isStaticHosting()
+        ? `/api/admin-registrations.php?id=${encodeURIComponent(registration.id)}`
+        : `/api/admin/course-registrations/${registration.id}`;
+
       const response = await fetch(
-        `/api/admin/course-registrations/${registration.id}`,
+        patchUrl,
         {
           method: "PATCH",
           headers: {
