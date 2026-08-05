@@ -71,11 +71,14 @@ curl_close($ch);
 $authData = json_decode($authResult, true);
 $userId = null;
 
+$errMsg = $authData['msg'] ?? $authData['message'] ?? '';
+$errCode = $authData['error_code'] ?? '';
+
 if ($authHttpCode >= 200 && $authHttpCode < 300 && isset($authData['id'])) {
     $userId = $authData['id'];
-} else if (isset($authData['message']) && (strpos(strtolower($authData['message']), 'already registered') !== false || strpos(strtolower($authData['message']), 'already been registered') !== false || strpos(strtolower($authData['message']), 'already exists') !== false)) {
+} else if ($errCode === 'email_exists' || (strpos(strtolower($errMsg), 'already registered') !== false || strpos(strtolower($errMsg), 'already been registered') !== false || strpos(strtolower($errMsg), 'already exists') !== false)) {
     // User exists, we need to fetch their ID
-    $ch2 = curl_init("$supabaseUrl/auth/v1/admin/users");
+    $ch2 = curl_init("$supabaseUrl/auth/v1/admin/users?per_page=1000");
     curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch2, CURLOPT_HTTPHEADER, [
         "apikey: $supabaseServiceKey",
@@ -99,7 +102,8 @@ if ($authHttpCode >= 200 && $authHttpCode < 300 && isset($authData['id'])) {
 
 if (!$userId) {
     http_response_code(500);
-    echo json_encode(["ok" => false, "message" => "Could not register user. " . ($authData['message'] ?? '')]);
+    $finalErrMsg = $authData['msg'] ?? $authData['message'] ?? json_encode($authData);
+    echo json_encode(["ok" => false, "message" => "Could not register user. " . $finalErrMsg]);
     exit;
 }
 
