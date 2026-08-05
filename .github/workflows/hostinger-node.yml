@@ -3,7 +3,7 @@ name: Build Hostinger Node application
 on:
   push:
     branches:
-      - vyntegra-v2
+      - master
   workflow_dispatch:
 
 permissions:

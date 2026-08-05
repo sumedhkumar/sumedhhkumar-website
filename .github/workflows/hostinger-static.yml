@@ -3,7 +3,7 @@ name: Build Hostinger static output
 on:
   push:
     branches:
-      - vyntegra-v2
+      - master
   workflow_dispatch:
 
 permissions:
