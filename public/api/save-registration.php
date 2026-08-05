@@ -8,7 +8,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Get the env variables from Hostinger
+// Try to load .env file from root directory if it exists
+$envPath = __DIR__ . '/../.env';
+if (file_exists($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            putenv(trim($name) . '=' . trim($value));
+        }
+    }
+}
+
+// Get the env variables from Hostinger environment or .env file
 $supabaseUrl = getenv('NEXT_PUBLIC_SUPABASE_URL') ?: '';
 $supabaseServiceKey = getenv('SUPABASE_SERVICE_ROLE_KEY') ?: '';
 
