@@ -54,6 +54,7 @@ jobs:
             "admin",
             "ai-trading-agents",
             "algo-trading-course",
+            "api",
             "contact",
             "courses",
             "custom-solutions",
@@ -82,7 +83,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f .htaccess 404.html __next.*.txt _next _not-found 404 admin ai-trading-agents algo-trading-course contact courses custom-solutions experts icon.svg images lp index.html index.txt payments privacy refund-policy shipping-delivery terms
+          git add -f .htaccess 404.html __next.*.txt _next _not-found 404 admin ai-trading-agents algo-trading-course api contact courses custom-solutions experts icon.svg images lp index.html index.txt payments privacy refund-policy shipping-delivery terms
           if (-not (git diff --cached --quiet)) {
             git commit -m "Build Hostinger static output [hostinger-static]"
             git push

@@ -5,6 +5,8 @@ import { CheckCircle2, CircleAlert, ShieldCheck, X } from "lucide-react";
 import { algoTradingCourse } from "@/data/algo-trading-course";
 import Button from "@/components/ui/Button";
 import FieldError from "@/components/ui/FieldError";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 type FormErrors = Record<string, string>;
 
@@ -230,14 +232,35 @@ export default function AlgoTradingCourseRegister({
             <label className="form-label" htmlFor={`${fieldIdPrefix}SignupWhatsApp`}>
               WhatsApp Number *
             </label>
-            <input
+            <PhoneInput
               id={`${fieldIdPrefix}SignupWhatsApp`}
-              className="form-control"
-              type="tel"
+              className="form-control phone-input-wrapper"
               value={signupValues.whatsappNumber}
-              onChange={(e) => setSignupValues({ ...signupValues, whatsappNumber: e.target.value })}
+              onChange={(value) => setSignupValues({ ...signupValues, whatsappNumber: value ? String(value) : "" })}
+              defaultCountry="IN"
               placeholder="+91..."
             />
+            <style jsx global>{`
+              .phone-input-wrapper {
+                display: flex;
+                align-items: center;
+              }
+              .phone-input-wrapper .PhoneInputCountry {
+                margin-right: 0.5rem;
+                display: flex;
+                align-items: center;
+              }
+              .phone-input-wrapper input {
+                border: none;
+                background: transparent;
+                flex: 1;
+                outline: none;
+                color: inherit;
+                font-family: inherit;
+                font-size: inherit;
+                min-width: 0;
+              }
+            `}</style>
             <FieldError id={`${fieldIdPrefix}SignupWhatsApp-error`} message={errors.whatsappNumber} />
           </div>
 
@@ -250,7 +273,7 @@ export default function AlgoTradingCourseRegister({
                 onChange={(e) => setAcceptCookiesToRememberMe(e.target.checked)}
                 style={{ marginTop: '0.25rem' }}
               />
-              <label htmlFor="acceptCookiesRememberMe" style={{ fontSize: '0.875rem', lineHeight: 1.4, color: 'rgba(255,255,255,0.7)' }}>
+              <label htmlFor="acceptCookiesRememberMe" style={{ fontSize: '0.875rem', lineHeight: 1.4, color: 'inherit', opacity: 0.8 }}>
                 Accept cookies to remember me for my next visit
               </label>
             </div>
