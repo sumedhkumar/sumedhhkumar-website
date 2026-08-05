@@ -24,64 +24,83 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, fullName, whatsappNumber, courseSlug, source } = body;
 
-    if (!email || !fullName || !whatsappNumber) {
+    // Only fullName is required
+    if (!fullName) {
       return NextResponse.json(
-        { ok: false, message: "Missing required fields." },
+        { ok: false, message: "Full name is required." },
         { status: 400 }
       );
     }
 
-    // 1. Create or get user in auth.users
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: Math.random().toString(36).slice(-10) + "A1!", // random password
-      user_metadata: { full_name: fullName },
-      email_confirm: true,
-    });
+    let userId: string | undefined;
 
-    let userId = authData?.user?.id;
+    // If email is provided, create or find the user
+    if (email) {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: Math.random().toString(36).slice(-10) + "A1!", // random password
+        user_metadata: { full_name: fullName },
+        email_confirm: true,
+      });
 
-    if (authError && (authError.message.includes("already registered") || authError.message.includes("already been registered") || authError.message.includes("already exists"))) {
-      // Find the user ID
-      const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
-      if (!usersError && usersData) {
-        const existingUser = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-        if (existingUser) {
-          userId = existingUser.id;
+      userId = authData?.user?.id;
+
+      if (authError && (
+        authError.message.includes("already registered") ||
+        authError.message.includes("already been registered") ||
+        authError.message.includes("already exists")
+      )) {
+        // Returning user — find existing user ID and allow login
+        const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+        if (!usersError && usersData) {
+          const existingUser = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+          if (existingUser) {
+            userId = existingUser.id;
+          }
         }
+      } else if (authError) {
+        // Non-fatal: continue without a Supabase user ID
+        console.warn("Could not create Supabase auth user:", authError.message);
       }
-    } else if (authError) {
-      return NextResponse.json(
-        { ok: false, message: "Could not register user via admin API.", error: authError.message },
-        { status: 500 }
-      );
     }
 
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, message: "Could not resolve user ID for registration." },
-        { status: 500 }
-      );
-    }
+    // If we have a userId, upsert into course_registrations
+    if (userId) {
+      const { error: regError } = await supabaseAdmin
+        .from("course_registrations")
+        .upsert({
+          user_id: userId,
+          full_name: fullName,
+          email: email || "",
+          whatsapp_number: whatsappNumber || "",
+          course_slug: courseSlug || "algo-trading",
+          source: source || "",
+          login_provider: "email_password",
+        }, { onConflict: "user_id,course_slug" });
 
-    // 2. Insert into course_registrations
-    const { error: regError } = await supabaseAdmin
-      .from("course_registrations")
-      .upsert({
-        user_id: userId,
-        full_name: fullName,
-        email: email,
-        whatsapp_number: whatsappNumber,
-        course_slug: courseSlug || "algo-trading",
-        source: source || "",
-        login_provider: "email_password",
-      }, { onConflict: "user_id,course_slug" });
+      if (regError) {
+        console.warn("Could not upsert course registration:", regError.message);
+        // Non-fatal — still allow access
+      }
+    } else {
+      // No Supabase user — try inserting with just the name (guest registration)
+      const guestId = `guest_${Date.now()}_${Math.random().toString(36).slice(-6)}`;
+      const { error: regError } = await supabaseAdmin
+        .from("course_registrations")
+        .insert({
+          user_id: guestId,
+          full_name: fullName,
+          email: email || "",
+          whatsapp_number: whatsappNumber || "",
+          course_slug: courseSlug || "algo-trading",
+          source: source || "",
+          login_provider: "email_password",
+        });
 
-    if (regError) {
-      return NextResponse.json(
-        { ok: false, message: "Could not save registration.", error: regError.message },
-        { status: 500 }
-      );
+      if (regError) {
+        console.warn("Guest registration insert failed:", regError.message);
+        // Still return ok — access is cookie-based
+      }
     }
 
     return NextResponse.json({ ok: true, message: "Registration successful!" });

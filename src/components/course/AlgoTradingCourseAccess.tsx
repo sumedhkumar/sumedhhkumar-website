@@ -1,5 +1,6 @@
+"use client";
+
 import {
-  ArrowRight,
   BookOpenCheck,
   CircleAlert,
   MessageCircle,
@@ -109,6 +110,22 @@ export default function AlgoTradingCourseAccess({
     safeWhatsappGroupUrl || safeWhatsappContactUrl,
   );
 
+  function handleLogout() {
+    // Clear all vyn_ cookies
+    const cookieNames = ["vyn_user_email", "vyn_user_name", "vyn_cookie_consent"];
+    cookieNames.forEach((name) => {
+      document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+    });
+    // Also clear any sb- (Supabase) cookies
+    document.cookie.split(";").forEach((c) => {
+      const name = c.trim().split("=")[0];
+      if (name.startsWith("sb-")) {
+        document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+      }
+    });
+    window.location.assign(algoTradingCourse.registerRoute);
+  }
+
   return (
     <main className="algo-course-page algo-course-access-page">
       {/* ── Compact LMS Header ── */}
@@ -121,8 +138,8 @@ export default function AlgoTradingCourseAccess({
                 email={registrationEmail}
                 fullName={registrationFullName}
               />
-              <a
-                href={`/auth/logout?next=${encodeURIComponent(algoTradingCourse.registerRoute)}`}
+              <button
+                onClick={handleLogout}
                 className="algo-course-access-logout-link"
                 style={{
                   display: "inline-flex",
@@ -131,14 +148,16 @@ export default function AlgoTradingCourseAccess({
                   fontSize: "14px",
                   fontWeight: 600,
                   color: "#475569",
-                  textDecoration: "none",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
                   padding: "4px 8px",
                   transition: "color 0.2s"
                 }}
               >
                 <LogOut size={15} strokeWidth={2.5} aria-hidden="true" />
                 LOG OUT
-              </a>
+              </button>
             </div>
           </div>
           {safeWhatsappGroupUrl ? (
