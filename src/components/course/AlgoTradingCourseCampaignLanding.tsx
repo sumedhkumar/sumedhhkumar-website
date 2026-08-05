@@ -667,8 +667,8 @@ export default function AlgoTradingCourseCampaignLanding() {
               className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: 'none' }}
             >
-              {workshopReviews.map((review) => (
-                <div key={review.name} className="flex-none w-[320px] max-w-[85vw] snap-start h-full">
+              {workshopReviews.map((review, index) => (
+                <div key={`${review.name}-${index}`} className="flex-none w-[320px] max-w-[85vw] snap-start h-full">
                   <ReviewCard
                     name={review.name}
                     rating={review.rating}

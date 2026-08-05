@@ -265,7 +265,7 @@ export default function CoursePaymentPopup({ isOpen, onClose }: CoursePaymentPop
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <Button
-              href="https://rzp.io/l/demo"
+              href={algoTradingCourse.links.paymentLink || "#"}
               target="_blank"
               rel="noopener noreferrer"
               variant="primary"

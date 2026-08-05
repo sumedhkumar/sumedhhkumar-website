@@ -101,6 +101,7 @@ export default function CourseQueryForm({
           padding: "12px",
           border: "1px solid #E4DDCF",
           fontSize: "14px",
+          color: "#111319",
           backgroundColor: status?.type === "success" ? "#F9FAFB" : "#FFFFFF"
         }}
       />
@@ -130,24 +131,21 @@ export default function CourseQueryForm({
       ) : null}
 
       {!status || status.type === "error" ? (
-        <Button 
-          type="submit" 
-          variant="secondary" 
-          disabled={sending} 
-          style={{ 
-            justifySelf: "start", 
-            backgroundColor: "#171A1F", 
-            color: "#FFF",
-            borderColor: "#171A1F"
-          }}
-        >
-          {sending ? "Sending..." : (
-            <>
-              <Send size={15} aria-hidden="true" />
-              Send Query
-            </>
-          )}
-        </Button>
+        <div style={{ display: "flex", justifyContent: "flex-start" }}>
+          <Button 
+            type="submit" 
+            variant="secondary" 
+            disabled={sending} 
+            style={{ width: "fit-content" }}
+          >
+            {sending ? "Sending..." : (
+              <>
+                <Send size={15} aria-hidden="true" />
+                Send Query
+              </>
+            )}
+          </Button>
+        </div>
       ) : null}
     </form>
   );

@@ -30,6 +30,16 @@ function expireSupabaseCookies(request: NextRequest, response: NextResponse) {
         secure: request.nextUrl.protocol === "https:",
       });
     });
+
+  // Clear Vyntegra user cookies
+  response.cookies.set("vyn_user_email", "", {
+    maxAge: 0,
+    path: "/",
+  });
+  response.cookies.set("vyn_user_name", "", {
+    maxAge: 0,
+    path: "/",
+  });
 }
 
 async function logout(request: NextRequest) {
