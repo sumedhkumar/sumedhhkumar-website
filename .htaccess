@@ -16,7 +16,6 @@ RewriteRule ^ai-trading-agents/([^/]+)/purchase/?$ /ai-trading-agents/$1/#purcha
 RewriteRule ^razorpay-test/?$ / [R=302,L]
 RewriteRule ^lp/?$ /lp/trading-automation-masterclass/ [R=302,L]
 
-RewriteCond %{REQUEST_URI} !^/api
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.+[^/])$ /$1/ [R=301,L]
