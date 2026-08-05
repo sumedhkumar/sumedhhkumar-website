@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS course_registrations (
   utm_medium TEXT,
   utm_campaign TEXT,
   hidden_bonus_agent_access_eligible BOOLEAN NOT NULL DEFAULT false,
+  progress_state JSONB NOT NULL DEFAULT '[]'::jsonb,
   last_login_at TIMESTAMPTZ,
   registered_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

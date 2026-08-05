@@ -8,6 +8,19 @@ export type CourseTestimonial = {
   displayApproved: boolean;
 };
 
+export type CourseLesson = {
+  title: string;
+  copy: string;
+  placeholder: string;
+  videoUrl: string;
+};
+
+export type CourseModule = {
+  title: string;
+  description: string;
+  lessons: CourseLesson[];
+};
+
 export const algoTradingCourseRoutes = {
   landing: "/lp/trading-automation-masterclass",
   register: "/courses/algo-trading/register",
@@ -288,156 +301,192 @@ export const algoTradingCourse = {
       videoUrl: configuredCourseLinks.lecture2VideoUrl,
     },
   ],
-  accessLessons: [
+  courseModules: [
     {
-      title: "Lecture 1 - Course Roadmap",
-      copy: "A concise overview of the course structure, tools covered, learning path, support, recordings, and joining process.",
-      placeholder: algoTradingCourseLinkPlaceholders.lecture1Video,
-      videoUrl: configuredCourseLinks.lecture1VideoUrl,
+      title: "Foundations & Course Overview",
+      description: "Understand the course structure, tools, and the fundamentals of trading automation before diving in.",
+      lessons: [
+        {
+          title: "Lecture 1 - Course Roadmap",
+          copy: "A concise overview of the course structure, tools covered, learning path, support, recordings, and joining process.",
+          placeholder: algoTradingCourseLinkPlaceholders.lecture1Video,
+          videoUrl: configuredCourseLinks.lecture1VideoUrl,
+        },
+        {
+          title: "Lecture 2 - First Teaching Session",
+          copy: "The first teaching session to help you understand the learning style and platform-oriented workflow.",
+          placeholder: algoTradingCourseLinkPlaceholders.lecture2Video,
+          videoUrl: configuredCourseLinks.lecture2VideoUrl,
+        },
+        {
+          title: "Lecture 3 - What Is Trading Automation",
+          copy: "A clear explanation of what trading automation means, how it works at a high level, and what to realistically expect.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 4 - Manual vs Automated Workflows",
+          copy: "Comparing manual and automated trading workflows to understand when automation adds value and when it does not.",
+          placeholder: "",
+          videoUrl: "",
+        },
+      ],
     },
     {
-      title: "Lecture 2 - First Teaching Session",
-      copy: "The first teaching session to help you understand the learning style and platform-oriented workflow.",
-      placeholder: algoTradingCourseLinkPlaceholders.lecture2Video,
-      videoUrl: configuredCourseLinks.lecture2VideoUrl,
+      title: "Platform Setup & Configuration",
+      description: "Install, configure, and connect the platforms you will use throughout the course.",
+      lessons: [
+        {
+          title: "Lecture 5 - MT5 Installation & Orientation",
+          copy: "Step-by-step walkthrough of downloading, installing, and navigating the MetaTrader 5 platform interface.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 6 - TradingView Account & Chart Setup",
+          copy: "Setting up your TradingView account, configuring chart layouts, and understanding the workspace for automation.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 7 - Broker Connection & Demo Account",
+          copy: "Connecting your broker to MT5 and setting up a demo account for safe practice and testing.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 8 - Platform Integration Checkpoint",
+          copy: "Verifying that all platform connections are working correctly and troubleshooting common setup issues.",
+          placeholder: "",
+          videoUrl: "",
+        },
+      ],
     },
     {
-      title: "Lecture 3 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
+      title: "Strategy Logic & Indicators",
+      description: "Learn how to read indicators, structure rules, and think about strategy logic before automating.",
+      lessons: [
+        {
+          title: "Lecture 9 - Moving Averages & Trend Detection",
+          copy: "Understanding moving averages, crossover signals, and how trend detection forms the basis of many automation rules.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 10 - RSI & Momentum Indicators",
+          copy: "How RSI and momentum indicators work, when they are useful, and how to interpret their signals for rule-based logic.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 11 - Applying Indicators on Charts",
+          copy: "Hands-on session adding indicators to TradingView charts, adjusting parameters, and reading combined signals.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 12 - Building Rule-Based Strategy Notes",
+          copy: "Converting observations into clear, written rules that define entry conditions, exit conditions, and filters.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 13 - Strategy Logic Review & Refinement",
+          copy: "Reviewing strategy notes for clarity, removing ambiguity, and preparing the logic for automation implementation.",
+          placeholder: "",
+          videoUrl: "",
+        },
+      ],
     },
     {
-      title: "Lecture 4 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
+      title: "Alert & Automation Workflows",
+      description: "Set up alerts, webhooks, and the execution flow that turns strategy rules into automated actions.",
+      lessons: [
+        {
+          title: "Lecture 14 - TradingView Alerts Deep Dive",
+          copy: "Creating, configuring, and managing TradingView alerts with conditions that match your strategy rules.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 15 - Webhook Setup & Signal Flow",
+          copy: "Understanding webhooks, how signals travel from TradingView to execution endpoints, and setting up the connection.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 16 - Pine Script Basics for Alerts",
+          copy: "Writing simple Pine Script conditions that power your TradingView alerts and automate signal generation.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 17 - End-to-End Execution Flow",
+          copy: "Walking through the complete flow from alert trigger to order execution, understanding each step in the chain.",
+          placeholder: "",
+          videoUrl: "",
+        },
+      ],
     },
     {
-      title: "Lecture 5 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
+      title: "Testing & Risk Management",
+      description: "Validate your setup with testing discipline and build risk controls before going live.",
+      lessons: [
+        {
+          title: "Lecture 18 - Backtesting Fundamentals",
+          copy: "Understanding backtesting concepts, limitations, and how to use historical data to evaluate strategy logic.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 19 - Paper Trading & Forward Testing",
+          copy: "Running your automation in paper trading mode to observe behavior without financial risk before going live.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 20 - Position Sizing & Capital Allocation",
+          copy: "Learning position sizing principles, how to allocate capital responsibly, and why this matters for automation.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 21 - Risk Controls & Safety Checks",
+          copy: "Implementing stop-loss rules, maximum drawdown limits, and circuit-breaker logic to protect against unexpected behavior.",
+          placeholder: "",
+          videoUrl: "",
+        },
+      ],
     },
     {
-      title: "Lecture 6 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 7 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 8 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 9 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 10 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 11 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 12 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 13 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 14 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 15 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 16 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 17 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 18 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 19 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 20 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 21 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 22 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 23 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 24 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
-    },
-    {
-      title: "Lecture 25 - Trading Automation Session",
-      copy: "Continuing the practical workflow of building, testing, and understanding automation setups in this module.",
-      placeholder: "",
-      videoUrl: "",
+      title: "Deployment & Monitoring",
+      description: "Go live with confidence, monitor your workflows, and maintain discipline in real market conditions.",
+      lessons: [
+        {
+          title: "Lecture 22 - Going Live Checklist",
+          copy: "The final pre-launch review covering every check you need before switching from demo to live trading.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 23 - Monitoring Dashboards & Alerts",
+          copy: "Setting up monitoring tools, notification systems, and dashboards to keep track of live automation behavior.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 24 - Troubleshooting & Common Issues",
+          copy: "Identifying and resolving common automation issues including connection drops, missed signals, and order failures.",
+          placeholder: "",
+          videoUrl: "",
+        },
+        {
+          title: "Lecture 25 - Course Wrap-Up & Next Steps",
+          copy: "Reviewing everything covered, consolidating your workflow, and planning your continued learning and practice path.",
+          placeholder: "",
+          videoUrl: "",
+        },
+      ],
     },
   ],
   learningOutcomes: [
@@ -499,31 +548,58 @@ export const algoTradingCourse = {
   ],
   curriculum: [
     {
-      title: "Month 1 - Foundations & Setup",
+      title: "Module 1 - Foundations & Course Overview",
       items: [
-        "Trading automation basics",
-        "Platform orientation",
-        "MT5 and TradingView setup concepts",
-        "How automation workflows are structured",
+        "Course roadmap and learning path",
+        "First teaching session and learning style",
+        "What trading automation means",
+        "Manual vs automated workflows",
       ],
     },
     {
-      title: "Month 2 - Strategy to Automation",
+      title: "Module 2 - Platform Setup & Configuration",
       items: [
-        "Converting rules into workflow logic",
-        "Alerts and execution flow",
-        "Testing workflows",
-        "Avoiding common automation mistakes",
+        "MT5 installation and orientation",
+        "TradingView account and chart setup",
+        "Broker connection and demo account",
+        "Platform integration checkpoint",
       ],
     },
     {
-      title: "Month 3 - Practical Deployment & Monitoring",
+      title: "Module 3 - Strategy Logic & Indicators",
       items: [
-        "Managing automated workflows",
-        "Risk checks",
-        "Monitoring behavior",
-        "Final practical walkthrough",
-        "Course wrap-up",
+        "Moving averages and trend detection",
+        "RSI and momentum indicators",
+        "Applying indicators on charts",
+        "Building rule-based strategy notes",
+        "Strategy logic review and refinement",
+      ],
+    },
+    {
+      title: "Module 4 - Alert & Automation Workflows",
+      items: [
+        "TradingView alerts deep dive",
+        "Webhook setup and signal flow",
+        "Pine Script basics for alerts",
+        "End-to-end execution flow",
+      ],
+    },
+    {
+      title: "Module 5 - Testing & Risk Management",
+      items: [
+        "Backtesting fundamentals",
+        "Paper trading and forward testing",
+        "Position sizing and capital allocation",
+        "Risk controls and safety checks",
+      ],
+    },
+    {
+      title: "Module 6 - Deployment & Monitoring",
+      items: [
+        "Going live checklist",
+        "Monitoring dashboards and alerts",
+        "Troubleshooting common issues",
+        "Course wrap-up and next steps",
       ],
     },
   ],
@@ -614,3 +690,9 @@ export const algoTradingCourse = {
     },
   ],
 } as const;
+
+/** Flat list of all lessons across all modules (derived from courseModules). */
+export const algoTradingCourseAccessLessons: CourseLesson[] =
+  algoTradingCourse.courseModules.flatMap(
+    (m): readonly CourseLesson[] => m.lessons,
+  );

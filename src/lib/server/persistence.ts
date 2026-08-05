@@ -170,6 +170,7 @@ export type CourseRegistration = {
   registeredAt: string;
   createdAt: string;
   updatedAt: string;
+  progressState: boolean[];
 };
 
 export type UpsertCourseRegistrationInput = {
@@ -259,6 +260,7 @@ type CourseRegistrationRow = QueryResultRow & {
   registered_at: Date | string;
   created_at: Date | string;
   updated_at: Date | string;
+  progress_state: boolean[];
 };
 
 function toIso(value: Date | string | null) {
@@ -327,6 +329,7 @@ function toCourseRegistration(row: CourseRegistrationRow): CourseRegistration {
     registeredAt: toIso(row.registered_at) ?? "",
     createdAt: toIso(row.created_at) ?? "",
     updatedAt: toIso(row.updated_at) ?? "",
+    progressState: row.progress_state ?? [],
   };
 }
 
@@ -664,6 +667,26 @@ export async function updateCourseRegistrationLastLogin(
     [
       requiredTrimmed(userId, "User ID"),
       requiredTrimmed(courseSlug, "Course slug"),
+    ],
+  );
+
+  return result.rows[0] ? toCourseRegistration(result.rows[0]) : null;
+}
+
+export async function updateCourseRegistrationProgress(
+  userId: string,
+  courseSlug: string,
+  progressState: boolean[]
+) {
+  const result = await queryDb<CourseRegistrationRow>(
+    `UPDATE course_registrations
+     SET progress_state = $3::jsonb, updated_at = now()
+     WHERE user_id = $1 AND course_slug = $2
+     RETURNING *`,
+    [
+      requiredTrimmed(userId, "User ID"),
+      requiredTrimmed(courseSlug, "Course slug"),
+      JSON.stringify(progressState),
     ],
   );
 

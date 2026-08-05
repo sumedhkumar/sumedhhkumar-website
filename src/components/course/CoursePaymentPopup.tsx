@@ -15,7 +15,7 @@ export default function CoursePaymentPopup({ isOpen, onClose }: CoursePaymentPop
   
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>("LAUNCH25");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState("");
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function CoursePaymentPopup({ isOpen, onClose }: CoursePaymentPop
     
     // Reset state when opened
     setCouponInput("");
-    setAppliedCoupon("LAUNCH25");
+    setAppliedCoupon(null);
     setCouponError("");
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -231,6 +231,34 @@ export default function CoursePaymentPopup({ isOpen, onClose }: CoursePaymentPop
                     <X size={14} /> {couponError}
                   </p>
                 )}
+                
+                {/* Available Coupons */}
+                <div style={{ marginTop: "16px" }}>
+                  <p style={{ fontSize: "0.85rem", color: "#6F747C", fontWeight: 600, marginBottom: "8px" }}>Available Coupons</p>
+                  <div 
+                    onClick={() => { 
+                      setAppliedCoupon("LAUNCH25");
+                      setCouponInput("");
+                      setCouponError("");
+                    }}
+                    style={{ 
+                      display: "flex", alignItems: "center", justifyContent: "space-between", 
+                      padding: "10px 12px", borderRadius: "6px", border: "1px dashed rgba(184, 145, 74, 0.4)", 
+                      cursor: "pointer", backgroundColor: "#FCFAF5", transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#F9F6ED"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#FCFAF5"}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <Tag size={15} color="#B8914A" />
+                      <div>
+                        <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#111319", display: "block" }}>LAUNCH25</span>
+                        <span style={{ fontSize: "0.75rem", color: "#6F747C", marginTop: "2px", display: "block" }}>Save big on the full program</span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#B8914A" }}>Apply</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>

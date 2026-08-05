@@ -950,6 +950,7 @@ export async function sendContactEmails(input: ContactEmailInput) {
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: appConfig.supportEmail,
+    bcc: appConfig.adminBccEmails,
     replyTo: appConfig.supportEmail,
     subject: "New Vyntegra enquiry submitted",
     text: buildContactAdminBody(input),
@@ -993,6 +994,7 @@ export async function sendCourseRegistrationAdminEmail(
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: appConfig.supportEmail,
+    bcc: appConfig.adminBccEmails,
     replyTo: appConfig.supportEmail,
     subject: "New Course Registration: Vyntegra Trading Automation Masterclass",
     text: buildCourseRegistrationAdminBody(input),
@@ -1020,6 +1022,7 @@ export async function sendCustomSolutionsEmails(
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: appConfig.supportEmail,
+    bcc: appConfig.adminBccEmails,
     replyTo: appConfig.supportEmail,
     subject: "New custom solution requirement submitted",
     text: buildCustomSolutionsAdminBody(input),
@@ -1058,6 +1061,7 @@ export async function sendCryptoPaymentProofEmails(
     salesTransporter.sendMail({
       from: appConfig.paymentMailFromEmail,
       to: appConfig.paymentMailFrom,
+      bcc: appConfig.adminBccEmails,
       replyTo: appConfig.paymentMailReplyTo,
       subject: `New crypto payment proof submitted - ${input.productName}`,
       text: buildCryptoPaymentProofBody(input, false),
@@ -1066,6 +1070,7 @@ export async function sendCryptoPaymentProofEmails(
     aiTransporter.sendMail({
       from: appConfig.cryptoProofMailFromEmail,
       to: appConfig.cryptoProofMailbox,
+      bcc: appConfig.adminBccEmails,
       replyTo: appConfig.cryptoProofMailbox,
       subject: `Crypto payment proof attachment - ${input.productName}`,
       text: buildCryptoPaymentProofBody(input, true),
@@ -1089,6 +1094,7 @@ export async function sendPaymentQueryEmail(input: PaymentQueryEmailInput) {
   await transporter.sendMail({
     from: appConfig.smtpFromEmail,
     to: appConfig.supportEmail,
+    bcc: appConfig.adminBccEmails,
     replyTo: appConfig.supportEmail,
     subject: "New payment query submitted",
     text: buildPaymentQueryAdminBody(input),
@@ -1124,6 +1130,7 @@ export async function sendRazorpayPaymentSuccessEmails(
   await transporter.sendMail({
     from: appConfig.paymentMailFromEmail,
     to: appConfig.adminPaymentEmail,
+    bcc: appConfig.adminBccEmails,
     replyTo: appConfig.paymentMailReplyTo,
     subject: `Razorpay payment verified - ${input.purchaseName}`,
     text: buildRazorpayAdminBody(input),

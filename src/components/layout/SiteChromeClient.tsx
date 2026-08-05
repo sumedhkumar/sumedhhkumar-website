@@ -6,12 +6,10 @@ import type { ReactNode } from "react";
 export default function SiteChromeClient({
   navbar,
   footer,
-  announcementBanner,
   children,
 }: {
   navbar: ReactNode;
   footer: ReactNode;
-  announcementBanner: ReactNode;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -26,8 +24,8 @@ export default function SiteChromeClient({
 
   return (
     <>
-      {announcementBanner}
       {navbar}
+      <div style={{ height: "var(--navbar-height)" }} aria-hidden="true" />
       {children}
       {hideFooter ? null : footer}
     </>

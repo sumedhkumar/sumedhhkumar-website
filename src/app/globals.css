@@ -6567,7 +6567,7 @@ textarea.form-control {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   Product Detail Page (PDP) — Professional layout system
+   Product Detail Page (PDP) - Professional layout system
    ═══════════════════════════════════════════════════════════════════ */
 
 /* -- Hero -- */
@@ -7126,10 +7126,15 @@ textarea.form-control {
   text-transform: uppercase;
 }
 
-.algo-course-preview-grid,
-.algo-course-curriculum-grid {
+.algo-course-preview-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.algo-course-curriculum-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 18px;
 }
 
@@ -8911,7 +8916,7 @@ textarea.form-control {
 }
 
 /* ===================================================================
-   LMS Layout — Two-column access page redesign
+   LMS Layout - Two-column access page redesign
    Uses existing --access-* CSS variables for all styling.
    =================================================================== */
 
@@ -8954,6 +8959,10 @@ textarea.form-control {
   margin-top: 0;
   padding: 0;
   border-top: 0;
+}
+
+.algo-course-access-logout-link:hover {
+  color: #0f172a !important;
 }
 
 /* -- LMS Body Container -- */
@@ -9090,6 +9099,176 @@ textarea.form-control {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
+}
+
+/* -- Module Groups -- */
+.algo-course-lms-module-group {
+  border: 1px solid rgba(15, 118, 110, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.algo-course-lms-module-group:hover {
+  border-color: rgba(15, 118, 110, 0.16);
+}
+
+.algo-course-lms-module-group.is-expanded {
+  border-color: rgba(15, 118, 110, 0.18);
+  box-shadow: 0 2px 12px rgba(15, 118, 110, 0.06);
+}
+
+.algo-course-lms-module-group.is-module-complete {
+  border-color: rgba(4, 120, 87, 0.22);
+}
+
+/* Module header button */
+.algo-course-lms-module-header {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 28px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 14px 14px;
+  border: none;
+  background: rgba(238, 246, 255, 0.40);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  transition: background 0.2s ease;
+}
+
+.algo-course-lms-module-header:hover {
+  background: rgba(238, 246, 255, 0.70);
+}
+
+.algo-course-lms-module-group.is-expanded .algo-course-lms-module-header {
+  background: rgba(4, 120, 87, 0.04);
+  border-bottom: 1px solid rgba(15, 118, 110, 0.08);
+}
+
+/* Module number badge */
+.algo-course-lms-module-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid rgba(15, 118, 110, 0.22);
+  background: rgba(255, 255, 255, 0.90);
+  color: var(--access-green);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.algo-course-lms-module-group.is-module-complete .algo-course-lms-module-number {
+  background: var(--access-green);
+  border-color: var(--access-green);
+  color: #ffffff;
+}
+
+/* Module info text */
+.algo-course-lms-module-info {
+  display: grid;
+  gap: 3px;
+}
+
+.algo-course-lms-module-kicker {
+  color: var(--access-green);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.algo-course-lms-module-title {
+  color: var(--access-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* Module meta (progress) */
+.algo-course-lms-module-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.algo-course-lms-module-progress-mini {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.10);
+  overflow: hidden;
+}
+
+.algo-course-lms-module-progress-mini-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--access-green), #059669);
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+
+.algo-course-lms-module-progress-text {
+  color: var(--access-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Chevron */
+.algo-course-lms-module-chevron {
+  display: grid;
+  place-items: center;
+  color: var(--access-muted);
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.algo-course-lms-module-chevron.is-open {
+  transform: rotate(180deg);
+  color: var(--access-green);
+}
+
+/* Module lessons container */
+.algo-course-lms-module-lessons {
+  display: grid;
+  gap: 2px;
+  padding: 6px 4px 8px 4px;
+  background: rgba(255, 255, 255, 0.50);
+}
+
+.algo-course-lms-module-lessons .algo-course-lms-lesson-item {
+  padding-left: 10px;
+  border-radius: 8px;
+}
+
+.algo-course-lms-module-lessons .algo-course-lms-lesson-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* Module label in lesson detail area */
+.algo-course-lms-lesson-module-label {
+  margin: 2px 0 4px;
+  color: var(--access-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* -- Lesson List -- */
@@ -9234,18 +9413,24 @@ textarea.form-control {
 /* -- Right Column: Main -- */
 .algo-course-lms-main {
   display: grid;
-  gap: 24px;
+  gap: 0;
+  border-radius: 16px;
+  background: var(--access-surface);
+  border: 1px solid var(--access-border);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 /* -- Video Frame -- */
 .algo-course-lms-video-frame {
   position: relative;
   aspect-ratio: 16 / 9;
-  border-radius: 16px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: none;
+  border-bottom: 1px solid var(--access-border);
   background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 }
 
 .algo-course-lms-video-frame iframe {
@@ -9316,10 +9501,10 @@ textarea.form-control {
 /* -- Lesson Detail -- */
 .algo-course-lms-lesson-detail {
   padding: 24px 28px 28px;
-  border: 1px solid var(--access-border);
-  border-radius: 12px;
-  background: var(--access-surface);
-  box-shadow: var(--access-shadow);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   display: grid;
   gap: 20px;
 }
@@ -9428,6 +9613,9 @@ textarea.form-control {
 .algo-course-lms-full-course {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  background: linear-gradient(135deg, #0f766e 0%, #042f2e 100%);
+  border: none;
+  box-shadow: 0 10px 40px rgba(15, 118, 110, 0.2);
 }
 
 .algo-course-lms-full-course > div {
@@ -9435,7 +9623,12 @@ textarea.form-control {
   gap: 12px;
 }
 
+.algo-course-lms-full-course .eyebrow {
+  color: #99f6e4;
+}
+
 .algo-course-lms-full-course h2 {
+  color: #ffffff;
   max-width: 560px;
 }
 
@@ -9457,6 +9650,22 @@ textarea.form-control {
   font-size: 13px;
   font-weight: 700;
   line-height: 1.25;
+}
+
+.algo-course-lms-full-course .algo-course-lms-tag-list li {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.algo-course-upgrade-btn {
+  background: #ffffff !important;
+  color: #0f766e !important;
+  border-color: #ffffff !important;
+}
+
+.algo-course-upgrade-btn:hover {
+  background: #f1f8f5 !important;
 }
 
 /* -- Support Section -- */
@@ -11547,7 +11756,7 @@ textarea.form-control {
 }
 
 /* ===================================================================
-   Conversion Landing Page  —  /lp/trading-automation-masterclass
+   Conversion Landing Page  -  /lp/trading-automation-masterclass
    Light, trust-forward, video-first persuasion page.
    Class prefix: cvlp-  (conversion-video-landing-page)
    =================================================================== */
@@ -12857,7 +13066,7 @@ textarea.form-control {
 }
 
 /* ===================================================================
-   Course Registration Page  —  /courses/algo-trading/register
+   Course Registration Page  -  /courses/algo-trading/register
    Light theme aligned with the conversion LP and protected access page.
    =================================================================== */
 

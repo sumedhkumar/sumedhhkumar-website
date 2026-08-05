@@ -69,71 +69,217 @@ const workshopReviews = [
     name: "Darpan Bhagat",
     rating: 5,
     topic: "Strategy to Algo Automation Workflow",
-    comment:
-      "Excellent session done by Sumedh ji. Good learning. The strategy-to-automation workflow was explained brilliantly with real examples.",
+    comment: "Excellent session done by Sumedhji . Good learning.",
   },
   {
-    name: "Nitin Taneja",
-    rating: 5,
+    name: "Sagar Sugriv Dadhe",
+    rating: 4,
     topic: "Live Bot Demo and Agent Walkthrough",
-    comment:
-      "Very nice! Great exposure — it opened up the door for algo trading much more clearly for me. The live bot demo was the highlight.",
+    comment: "Good",
+  },
+  {
+    name: "Jigar patel",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "Apke efforts ko selute hey.aapne ache se smjaya.thank you sumedhh ji",
+  },
+  {
+    name: "Shoaibmushtaq",
+    rating: 4,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "Great job done",
   },
   {
     name: "Sagar",
     rating: 5,
     topic: "Algo Trading Concepts (Basic to Advanced)",
-    comment:
-      "You did an excellent job — keep growing and motivating like this! The concepts were explained from scratch in a very approachable way.",
+    comment: "You did Excellent job, keep growing and motivating like this❤️",
   },
   {
     name: "Mudaseer Abdar",
     rating: 5,
     topic: "Strategy to Algo Automation Workflow",
-    comment:
-      "Valuable content — I really appreciate you, brother. The workflow from strategy creation to automation was very well structured.",
+    comment: "Valueable on content creator appricate you brother lot of love form Karnataka basavakalyan",
+  },
+  {
+    name: "NITIN TANEJA",
+    rating: 5,
+    topic: "Live Bot Demo and Agent Walkthrough",
+    comment: "very nice good exposure it opens up door for my algo trading more clearly",
+  },
+  {
+    name: "Darpan Bhagat",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "Excellent session and good knowledge shared",
+  },
+  {
+    name: "Reeyaj gulabhusen sande",
+    rating: 4,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "Good ",
   },
   {
     name: "Ashpak Patankar",
     rating: 5,
     topic: "Algo Trading Concepts (Basic to Advanced)",
-    comment:
-      "The session was great. Algo trading concepts were broken down so well that even a beginner could follow along easily.",
+    comment: "Session achcha tha",
   },
   {
     name: "Harsha Vardhan",
     rating: 4,
     topic: "Strategy to Algo Automation Workflow",
-    comment:
-      "Very good webinar. The workflow automation section gave me actionable steps I can implement right away with my existing strategies.",
-  },
-  {
-    name: "Mohit Barak",
-    rating: 5,
-    topic: "AI Integration with TradingView and MT5",
-    comment:
-      "Overall a great session — it motivated me to work smartly now. The AI integration part was eye-opening and practical.",
-  },
-  {
-    name: "Manish",
-    rating: 5,
-    topic: "AI Integration with TradingView and MT5",
-    comment:
-      "Excellent workshop! The AI integration with TradingView was the most valuable part — it showed me possibilities I didn't know existed.",
+    comment: "Very Good Webinar ",
   },
   {
     name: "Shyam Mishra",
     rating: 5,
     topic: "Live Bot Demo and Agent Walkthrough",
-    comment:
-      "You are doing a good job helping and educating people — please keep it up. The live bot walkthrough was very insightful.",
+    comment: "You are doing good job, helping people and educating them, please keep it up",
   },
   {
     name: "Praval Patel",
     rating: 5,
     topic: "AI Integration with TradingView and MT5",
-    comment:
-      "Thank you, bhai! The AI integration demo was fantastic. It clearly showed how to connect TradingView signals to real automation.",
+    comment: "Thank you bhaiii",
+  },
+  {
+    name: "Mohit Barak",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "Over all good session motivated to work smartly now",
+  },
+  {
+    name: "Manish",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "Excellent workshop ",
+  },
+  {
+    name: "Hemant Bharali",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "Please need pine script ",
+  },
+  {
+    name: "Jyotiranjan mahanand",
+    rating: 5,
+    topic: "Live Bot Demo and Agent Walkthrough",
+    comment: "Very good session but some time sound is not clear",
+  },
+  {
+    name: "Hemant Kumar",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "I want more information ",
+  },
+  {
+    name: "ASHISH PANCHAL",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "Please add in course how to make a bot and ea and pine scripts profitable. ",
+  },
+  {
+    name: "Ronak Tumma",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "Need integration demo with real accounts",
+  },
+  {
+    name: "Patel Hetkumar Satishbhai",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "Sir one more live session deeply knowledge of algo tqrd startgeis and backtest details ",
+  },
+  {
+    name: "Sanju Devi",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "Automatically algo mt5 Trading view like",
+  },
+  {
+    name: "Chandan Kumar Saw",
+    rating: 5,
+    topic: "",
+    comment: "",
+  },
+  {
+    name: "Chethan",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "",
+  },
+  {
+    name: "Sarfaraz Khan",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "",
+  },
+  {
+    name: "Ali Raza",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "",
+  },
+  {
+    name: "Rushikesh Palande",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "",
+  },
+  {
+    name: "MIAN HABIB",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "",
+  },
+  {
+    name: "Tanish Singh",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "",
+  },
+  {
+    name: "Raj Khanna",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "",
+  },
+  {
+    name: "Dhiren Pradhan",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "",
+  },
+  {
+    name: "Pratik Dhamdhere",
+    rating: 5,
+    topic: "AI Integration with TradingView and MT5",
+    comment: "",
+  },
+  {
+    name: "Karan kumar",
+    rating: 5,
+    topic: "Live Bot Demo and Agent Walkthrough",
+    comment: "",
+  },
+  {
+    name: "Pinal Shah",
+    rating: 5,
+    topic: "Algo Trading Concepts (Basic to Advanced)",
+    comment: "",
+  },
+  {
+    name: "M Fahim",
+    rating: 5,
+    topic: "",
+    comment: "",
+  },
+  {
+    name: "Karan kumar",
+    rating: 5,
+    topic: "Strategy to Algo Automation Workflow",
+    comment: "",
   },
 ];
 
@@ -333,7 +479,7 @@ function ReviewCard({
           />
         ))}
       </div>
-      <p className="cvlp-review-comment">&ldquo;{comment}&rdquo;</p>
+      {comment && <p className="cvlp-review-comment">&ldquo;{comment}&rdquo;</p>}
       <div className="cvlp-review-footer">
         <span className="cvlp-review-name">{name}</span>
         <span className="cvlp-review-topic">{topic}</span>
@@ -394,7 +540,7 @@ export default function AlgoTradingCourseCampaignLanding() {
             <p className="cvlp-badge">Free preview access</p>
             <h1>Stop Watching Charts. Start Building Trading Systems.</h1>
             <p className="cvlp-hero-sub">
-              Learn to build, backtest, and deploy automated trading strategies using industry-standard tools—without spending years figuring it out on your own.
+              Learn to build, backtest, and deploy automated trading strategies using industry-standard tools-without spending years figuring it out on your own.
             </p>
           </div>
 
@@ -436,7 +582,7 @@ export default function AlgoTradingCourseCampaignLanding() {
               <div className="cvlp-instructor-avatar-ring">
                 <Image
                   src={experts[0]?.professionalPhoto || algoTradingCourse.visuals.founderPortrait}
-                  alt="Sumedh Kumar Bhalerao — course instructor"
+                  alt="Sumedh Kumar Bhalerao - course instructor"
                   width={180}
                   height={180}
                   className="cvlp-instructor-avatar-img"
