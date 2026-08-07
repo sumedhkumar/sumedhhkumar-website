@@ -10,7 +10,6 @@ import EmptyState from "@/components/ui/EmptyState";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 function findProduct(slug: string) {
@@ -28,20 +27,16 @@ export function generateStaticParams() {
 
 export default async function CryptoPaymentPage({
   params,
-  searchParams,
 }: PageProps) {
   const { slug } = await params;
-  const query = await searchParams;
   const product = findProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  const couponCode =
-    typeof query.coupon === "string" ? query.coupon.trim() : "";
-  const selectedPlanId =
-    typeof query.plan === "string" ? query.plan.trim() : "";
+  const couponCode = "";
+  const selectedPlanId = "";
   const selectedPlan =
     selectedPlanId
       ? getSubscriptionAgentPlan(product.slug, selectedPlanId)

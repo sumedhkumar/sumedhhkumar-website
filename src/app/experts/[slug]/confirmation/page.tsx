@@ -6,7 +6,6 @@ import EmptyState from "@/components/ui/EmptyState";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export const metadata: Metadata = {
@@ -20,17 +19,15 @@ export function generateStaticParams() {
 
 export default async function ExpertConfirmationPage({
   params,
-  searchParams,
 }: PageProps) {
   const { slug } = await params;
-  const query = await searchParams;
   const expert = experts.find((item) => item.slug === slug);
 
   if (!expert) {
     notFound();
   }
 
-  const token = typeof query.token === "string" ? query.token : "";
+  const token = "";
 
   if (!token || !validateBookingAccessToken(token)) {
     return (

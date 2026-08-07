@@ -91,7 +91,7 @@ export default function AlgoTradingCourseRegister({
     const nextErrors: FormErrors = {};
 
     if (fullName.length < 2) nextErrors.fullName = "Enter your full name.";
-    if (email && !email.includes("@")) nextErrors.email = "Enter a valid email.";
+    if (!email || !email.includes("@")) nextErrors.email = "Enter a valid email.";
 
     const whatsappNumber = signupValues.whatsappNumber
       ? signupValues.whatsappPrefix + signupValues.whatsappNumber.replace(/\s/g, "")
@@ -184,7 +184,7 @@ export default function AlgoTradingCourseRegister({
 
           <div>
             <label className="form-label" htmlFor={`${fieldIdPrefix}SignupEmail`}>
-              Email address
+              Email address *
             </label>
             <input
               id={`${fieldIdPrefix}SignupEmail`}
@@ -193,14 +193,14 @@ export default function AlgoTradingCourseRegister({
               value={signupValues.email}
               onChange={(e) => setSignupValues({ ...signupValues, email: e.target.value })}
               autoComplete="email"
-              placeholder="you@example.com (optional)"
+              placeholder="you@example.com"
             />
             <FieldError id={`${fieldIdPrefix}SignupEmail-error`} message={errors.email} />
           </div>
 
           <div>
             <label className="form-label">
-              WhatsApp Number
+              Mobile Number
             </label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <select
@@ -243,7 +243,7 @@ export default function AlgoTradingCourseRegister({
                 inputMode="numeric"
                 value={signupValues.whatsappNumber}
                 onChange={(e) => setSignupValues({ ...signupValues, whatsappNumber: e.target.value.replace(/[^\d\s]/g, "") })}
-                placeholder="Optional"
+                placeholder="Enter mobile number"
                 maxLength={15}
                 style={{ flex: 1, minWidth: 0 }}
               />

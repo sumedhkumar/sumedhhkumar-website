@@ -173,14 +173,14 @@ export default function AlgoTradingCourseLeadForm() {
 
       <div>
         <label className="form-label" htmlFor="algoCourseWhatsappNumber">
-          WhatsApp number *
+          Mobile number *
         </label>
         <input
           id="algoCourseWhatsappNumber"
           name="whatsappNumber"
           type="tel"
           required
-          placeholder="Enter your WhatsApp number"
+          placeholder="Enter your mobile number"
           value={values.whatsappNumber}
           onChange={(event) =>
             updateField("whatsappNumber", event.target.value)
