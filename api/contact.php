@@ -226,11 +226,13 @@ function smtpSend($host, $port, $user, $pass, $from, $fromName, $to, $subject, $
     $read = fgets($sock, 512);
     if (!$read || substr((string)$read, 0, 3) !== '220') { fclose($sock); return "SMTP greeting failed: " . (string)$read; }
 
-    function smtpCmd($sock, $cmd, $expect) {
-        fwrite($sock, $cmd . "\r\n");
-        $resp = fgets($sock, 512);
-        if (!$resp || substr((string)$resp, 0, 3) !== (string)$expect) return (string)$resp;
-        return '';
+    if (!function_exists('smtpCmd')) {
+        function smtpCmd($sock, $cmd, $expect) {
+            fwrite($sock, $cmd . "\r\n");
+            $resp = fgets($sock, 512);
+            if (!$resp || substr((string)$resp, 0, 3) !== (string)$expect) return (string)$resp;
+            return '';
+        }
     }
 
     $err = smtpCmd($sock, "EHLO " . gethostname(), 250);
