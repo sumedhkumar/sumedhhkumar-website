@@ -18,6 +18,7 @@ import {
   isSubscriptionAgentSlug,
   type AgentSubscriptionPlan,
 } from "@/data/agent-subscription-plans";
+import { calculateFinalPrice } from "@/lib/pricing";
 
 import dynamic from "next/dynamic";
 import type { PaymentDialogContent } from "@/components/payments/RazorpayPaymentDialogs";
@@ -240,9 +241,15 @@ function createInitialState(product: TradingAgentProduct, selectedPlan?: AgentSu
   let defaultFinalUsd = product.priceUsd;
 
   if (selectedPlan) {
-    defaultCoupon = "EARLYACCESS";
-    defaultDiscountUsd = selectedPlan.priceUsd * 0.5;
-    defaultFinalUsd = selectedPlan.priceUsd - defaultDiscountUsd;
+    // Use calculateFinalPrice to correctly apply EARLYACCESS discount to the plan price
+    const pricing = calculateFinalPrice(product.slug, selectedPlan.id, "EARLYACCESS");
+    if (pricing.ok) {
+      defaultCoupon = "EARLYACCESS";
+      defaultDiscountUsd = pricing.discountUsd;
+      defaultFinalUsd = pricing.finalPriceUsd;
+    } else {
+      defaultFinalUsd = selectedPlan.originalPriceUsd;
+    }
   }
 
   return {
@@ -1260,7 +1267,7 @@ export function AgentPurchaseForm({
             {state.discountAmountUsd > 0 ? (
               <>
                 <span style={{ color: "#9CA0A7", textDecoration: "line-through" }}>
-                  {formatUsd(product.priceUsd)}
+                  {formatUsd(selectedPlan ? selectedPlan.originalPriceUsd : product.priceUsd)}
                 </span>{" "}
                 {formatUsd(state.finalAmountUsd)}
               </>

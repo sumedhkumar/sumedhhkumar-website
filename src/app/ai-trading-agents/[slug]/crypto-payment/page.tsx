@@ -8,8 +8,12 @@ import { calculateFinalPrice } from "@/lib/pricing";
 import { CryptoPaymentPanel } from "@/components/products/AgentPurchaseCard";
 import EmptyState from "@/components/ui/EmptyState";
 
+// Force dynamic rendering so searchParams (coupon, plan) are always read from the URL
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ coupon?: string; plan?: string; amount?: string }>;
 };
 
 function findProduct(slug: string) {
@@ -27,16 +31,19 @@ export function generateStaticParams() {
 
 export default async function CryptoPaymentPage({
   params,
+  searchParams,
 }: PageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
   const product = findProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  const couponCode = "";
-  const selectedPlanId = "";
+  // Read coupon and plan from URL query params set by the checkout flow
+  const couponCode = (resolvedSearchParams.coupon ?? "").trim().toUpperCase();
+  const selectedPlanId = (resolvedSearchParams.plan ?? "").trim();
   const selectedPlan =
     selectedPlanId
       ? getSubscriptionAgentPlan(product.slug, selectedPlanId)
