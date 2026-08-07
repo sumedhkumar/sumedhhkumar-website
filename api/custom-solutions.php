@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: https://vyntegra.in');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -200,7 +202,7 @@ function smtpSend($host, $port, $user, $pass, $from, $fromName, $to, $subject, $
     }
 
     $read = fgets($sock, 512);
-    if (substr($read, 0, 3) !== '220') { fclose($sock); return "SMTP greeting: $read"; }
+    if (!$read || substr((string)$read, 0, 3) !== '220') { fclose($sock); return "SMTP greeting: " . (string)$read; }
 
     fwrite($sock, "EHLO " . gethostname() . "\r\n");
     do { $line = fgets($sock, 512); } while ($line && $line[3] !== ' ');
@@ -211,29 +213,29 @@ function smtpSend($host, $port, $user, $pass, $from, $fromName, $to, $subject, $
     fgets($sock, 512);
     fwrite($sock, base64_encode($pass) . "\r\n");
     $authResp = fgets($sock, 512);
-    if (substr($authResp, 0, 3) !== '235') { fclose($sock); return "AUTH failed: $authResp"; }
+    if (!$authResp || substr((string)$authResp, 0, 3) !== '235') { fclose($sock); return "AUTH failed: " . (string)$authResp; }
 
     fwrite($sock, "MAIL FROM: <$from>\r\n");
     $resp = fgets($sock, 512);
-    if (substr($resp, 0, 3) !== '250') { fclose($sock); return "MAIL FROM: $resp"; }
+    if (!$resp || substr((string)$resp, 0, 3) !== '250') { fclose($sock); return "MAIL FROM: " . (string)$resp; }
 
     $allRecipients = is_array($to) ? $to : [$to];
     if (!empty($bcc)) $allRecipients = array_merge($allRecipients, $bcc);
     foreach ($allRecipients as $rcpt) {
-        $rcpt = trim($rcpt);
+        $rcpt = trim((string)$rcpt);
         if (!$rcpt) continue;
         fwrite($sock, "RCPT TO: <$rcpt>\r\n");
         $resp = fgets($sock, 512);
-        if (substr($resp, 0, 3) !== '250') { fclose($sock); return "RCPT <$rcpt>: $resp"; }
+        if (!$resp || substr((string)$resp, 0, 3) !== '250') { fclose($sock); return "RCPT <$rcpt>: " . (string)$resp; }
     }
 
     fwrite($sock, "DATA\r\n");
     $resp = fgets($sock, 512);
-    if (substr($resp, 0, 3) !== '354') { fclose($sock); return "DATA: $resp"; }
+    if (!$resp || substr((string)$resp, 0, 3) !== '354') { fclose($sock); return "DATA: " . (string)$resp; }
 
     fwrite($sock, $headers . "\r\n" . $body . "\r\n.\r\n");
     $resp = fgets($sock, 512);
-    if (substr($resp, 0, 3) !== '250') { fclose($sock); return "DATA body: $resp"; }
+    if (!$resp || substr((string)$resp, 0, 3) !== '250') { fclose($sock); return "DATA body: " . (string)$resp; }
 
     fwrite($sock, "QUIT\r\n");
     fclose($sock);
