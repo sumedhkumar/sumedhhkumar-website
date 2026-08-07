@@ -139,6 +139,10 @@ DirectoryIndex index.html
 
 RewriteEngine On
 
+# Internal rewrite: route /api/contact/ and /api/custom-solutions/ to PHP handlers
+RewriteRule ^api/contact/?$ /api/contact.php [L,QSA]
+RewriteRule ^api/custom-solutions/?$ /api/custom-solutions.php [L,QSA]
+
 RewriteRule ^experts/sumedhhkumar/?$ /experts/sumedh-kumar/ [R=301,L]
 RewriteRule ^experts/sumedh/?$ /experts/sumedh-kumar/ [R=301,L]
 RewriteRule ^experts/sumedhhkumar-bhalerao/?$ /experts/sumedh-kumar/ [R=301,L]
@@ -170,6 +174,11 @@ try {
     );
     process.env.APP_BASE_URL = "https://vyntegra.in";
     process.env.NODE_ENV = "production";
+    // Auto-derive the Supabase Edge Functions URL from the Supabase project URL
+    if (!process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      process.env.NEXT_PUBLIC_SUPABASE_FUNCTIONS_URL =
+        process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "") + "/functions/v1";
+    }
   }
 
   remember("next.config.ts");
