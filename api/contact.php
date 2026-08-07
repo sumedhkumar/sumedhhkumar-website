@@ -298,74 +298,79 @@ if ($phoneOrWhatsapp) $adminDetails[] = ['label' => 'Phone / WhatsApp', 'value' 
 if ($subject)         $adminDetails[] = ['label' => 'Subject',          'value' => $subject];
 $adminDetails[] = ['label' => 'Submitted At', 'value' => $istDisplay];
 
-// Admin email
-$adminText  = implode("\n\n", array_merge(
-    ["A new enquiry has been submitted.", "Full Name: $fullName", "Email: $emailAddress"],
-    $phoneOrWhatsapp ? ["Phone / WhatsApp: $phoneOrWhatsapp"] : [],
-    $subject ? ["Subject: $subject"] : [],
-    ["Message:", $message, "Submitted At: $istDisplay"]
-));
-$adminHtml  = buildEmailHtml(
-    'New Vyntegra enquiry submitted',
-    'A new enquiry has been submitted.',
-    $adminDetails,
-    [['heading' => 'Message', 'body' => $message]]
-);
+try {
+    // Admin email
+    $adminText  = implode("\n\n", array_merge(
+        ["A new enquiry has been submitted.", "Full Name: $fullName", "Email: $emailAddress"],
+        $phoneOrWhatsapp ? ["Phone / WhatsApp: $phoneOrWhatsapp"] : [],
+        $subject ? ["Subject: $subject"] : [],
+        ["Message:", $message, "Submitted At: $istDisplay"]
+    ));
+    $adminHtml  = buildEmailHtml(
+        'New Vyntegra enquiry submitted',
+        'A new enquiry has been submitted.',
+        $adminDetails,
+        [['heading' => 'Message', 'body' => $message]]
+    );
 
-$smtpErr1 = smtpSend($smtpHost, $smtpPort, $smtpUser, $smtpPass,
-    $smtpUser, $fromName, $adminEmail,
-    'New Vyntegra enquiry submitted',
-    $adminText, $adminHtml, $supportEmail, $adminBccEmails);
+    $smtpErr1 = smtpSend($smtpHost, $smtpPort, $smtpUser, $smtpPass,
+        $smtpUser, $fromName, $adminEmail,
+        'New Vyntegra enquiry submitted',
+        $adminText, $adminHtml, $supportEmail, $adminBccEmails);
 
-if ($smtpErr1) error_log("contact.php admin email error: $smtpErr1");
+    if ($smtpErr1) error_log("contact.php admin email error: $smtpErr1");
 
-// Customer confirmation email
-$custText = implode("\n\n", array_merge(
-    ["Hi $fullName,", "We have received your enquiry."],
-    $subject ? ["Subject: $subject"] : [],
-    ["Your submitted message:", $message, "Our team will review your message and get back to you within 24 hours.", "Regards,", "Vyntegra"]
-));
-$custDetails = [];
-if ($subject) $custDetails[] = ['label' => 'Subject', 'value' => $subject];
-$custDetails[] = ['label' => 'Submitted At', 'value' => $istDisplay];
+    // Customer confirmation email
+    $custText = implode("\n\n", array_merge(
+        ["Hi $fullName,", "We have received your enquiry."],
+        $subject ? ["Subject: $subject"] : [],
+        ["Your submitted message:", $message, "Our team will review your message and get back to you within 24 hours.", "Regards,", "Vyntegra"]
+    ));
+    $custDetails = [];
+    if ($subject) $custDetails[] = ['label' => 'Subject', 'value' => $subject];
+    $custDetails[] = ['label' => 'Submitted At', 'value' => $istDisplay];
 
-$custHtml = buildEmailHtml(
-    'Vyntegra enquiry received',
-    "Hi $fullName, we have received your enquiry.",
-    $custDetails,
-    [
-        ['heading' => 'Your submitted message', 'body' => $message],
-        ['body' => 'Our team will review your message and get back to you within 24 hours.'],
-    ]
-);
+    $custHtml = buildEmailHtml(
+        'Vyntegra enquiry received',
+        "Hi $fullName, we have received your enquiry.",
+        $custDetails,
+        [
+            ['heading' => 'Your submitted message', 'body' => $message],
+            ['body' => 'Our team will review your message and get back to you within 24 hours.'],
+        ]
+    );
 
-$smtpErr2 = smtpSend($smtpHost, $smtpPort, $smtpUser, $smtpPass,
-    $smtpUser, $fromName, $emailAddress,
-    'Vyntegra enquiry received',
-    $custText, $custHtml, $supportEmail);
+    $smtpErr2 = smtpSend($smtpHost, $smtpPort, $smtpUser, $smtpPass,
+        $smtpUser, $fromName, $emailAddress,
+        'Vyntegra enquiry received',
+        $custText, $custHtml, $supportEmail);
 
-if ($smtpErr2) error_log("contact.php customer email error: $smtpErr2");
+    if ($smtpErr2) error_log("contact.php customer email error: $smtpErr2");
 
-// Update email_status in Supabase
-if ($supabaseUrl && $supabaseKey) {
-    $emailStatus  = (!$smtpErr1 && !$smtpErr2) ? 'sent' : 'failed';
-    $emailError   = trim("$smtpErr1 $smtpErr2");
-    $updatePayload = json_encode(['email_status' => $emailStatus] + ($emailError ? ['email_error' => $emailError] : []));
+    // Update email_status in Supabase
+    if ($supabaseUrl && $supabaseKey) {
+        $emailStatus  = (!$smtpErr1 && !$smtpErr2) ? 'sent' : 'failed';
+        $emailError   = trim("$smtpErr1 $smtpErr2");
+        $updatePayload = json_encode(['email_status' => $emailStatus] + ($emailError ? ['email_error' => $emailError] : []));
 
-    $ch = curl_init("$supabaseUrl/rest/v1/form_submissions?id=eq." . urlencode($submissionId));
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER   => true,
-        CURLOPT_CUSTOMREQUEST    => 'PATCH',
-        CURLOPT_POSTFIELDS       => $updatePayload,
-        CURLOPT_HTTPHEADER       => [
-            "apikey: $supabaseKey",
-            "Authorization: Bearer $supabaseKey",
-            "Content-Type: application/json",
-            "Prefer: return=minimal",
-        ],
-    ]);
-    curl_exec($ch);
-    curl_close($ch);
+        $ch = curl_init("$supabaseUrl/rest/v1/form_submissions?id=eq." . urlencode($submissionId));
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER   => true,
+            CURLOPT_CUSTOMREQUEST    => 'PATCH',
+            CURLOPT_POSTFIELDS       => $updatePayload,
+            CURLOPT_HTTPHEADER       => [
+                "apikey: $supabaseKey",
+                "Authorization: Bearer $supabaseKey",
+                "Content-Type: application/json",
+                "Prefer: return=minimal",
+            ],
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
+    echo json_encode(['ok' => true, 'message' => 'Your enquiry has been submitted. Vyntegra will get back to you soon.']);
+} catch (\Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Exception caught: ' . $e->getMessage(), 'line' => $e->getLine()]);
 }
-
-echo json_encode(['ok' => true, 'message' => 'Your enquiry has been submitted. Vyntegra will get back to you soon.']);
